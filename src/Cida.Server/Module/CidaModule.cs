@@ -12,6 +12,7 @@ namespace Cida.Server.Module
         private const string PackagesInfo = "PackagesInfo.json";
         private readonly IDictionary<string, Stream> moduleFiles;
         private readonly CidaModuleLoadContext loadContext;
+        private readonly Type entryType;
 
         public Assembly Assembly { get; }
 
@@ -32,6 +33,13 @@ namespace Cida.Server.Module
             }
             
             this.Assembly = this.loadContext.LoadFromStream(assembly);
+
+            this.entryType = this.Assembly.GetType(this.Metadata.EntryType);
+            if (this.entryType is null)
+            {
+                // TODO: Replace this with custom exception
+                throw new InvalidOperationException($"Entry type '{this.Metadata.EntryType}' not found in assembly");
+            }
         }
 
         private CidaModuleLoadContext InitializeLoadContext()
@@ -53,8 +61,7 @@ namespace Cida.Server.Module
 
         public void Load()
         {
-            var moduleType = this.Assembly.GetType(this.Metadata.EntryType);
-            var instance = (Api.IModule)Activator.CreateInstance(moduleType);
+            var instance = (Api.IModule)Activator.CreateInstance(this.entryType);
             instance.Load();
         }
 
