@@ -6,6 +6,7 @@ namespace Cida.Server.Module
     public class ModuleLoaderManager
     {
         public const string ModuleFolderName = "Modules";
+        public const string ModuleFileExtension = "cidam";
         private readonly string moduleDirectory;
         private readonly List<CidaModule> modules;
         
@@ -17,7 +18,7 @@ namespace Cida.Server.Module
 
         public void LoadModules()
         {
-            foreach (var modulePath in Directory.GetFiles(this.moduleDirectory, "*.cidam"))
+            foreach (var modulePath in Directory.GetFiles(this.moduleDirectory, $"*.{ModuleFileExtension}"))
             {
                 var module = CidaModule.Extract(modulePath);
                 this.modules.Add(module);
