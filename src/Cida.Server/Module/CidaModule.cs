@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Cida.Server.Module
 {
-    public class CidaModule
+    public class CidaModule : IDisposable
     {
         private const string PackagesInfo = "PackagesInfo.json";
         private readonly IDictionary<string, Stream> moduleFiles;
@@ -60,11 +60,7 @@ namespace Cida.Server.Module
 
         ~CidaModule()
         {
-            this.loadContext.Unload();
-            foreach (var moduleFile in this.moduleFiles)
-            {
-                moduleFile.Value.Close();
-            }
+            this.Dispose();
         }
 
         public static CidaModule Extract(string path)
@@ -114,6 +110,17 @@ namespace Cida.Server.Module
             }
 
             return fileStreams;
+        }
+
+        public void Dispose()
+        {
+            this.loadContext.Unload();
+            foreach (var file in this.moduleFiles.Values)
+            {
+                file.Close();
+            }
+            
+            GC.SuppressFinalize(this);
         }
     }
 }
