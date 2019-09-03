@@ -14,6 +14,11 @@ namespace Cida.Server.Module
         {
             this.moduleDirectory = moduleDirectory;
             this.modules = new List<CidaModule>();
+
+            if (!Directory.Exists(moduleDirectory))
+            {
+                Directory.CreateDirectory(moduleDirectory);
+            }
         }
 
         public void LoadModules()
