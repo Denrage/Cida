@@ -9,7 +9,7 @@ namespace Cida.Server.Console
     {
         static void Main(string[] args)
         {
-            var server = new Cida.Server.CidaServer(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase).Replace("file:", string.Empty));
+            var server = new Cida.Server.CidaServer(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase).Replace("file:", string.Empty).TrimStart('\\'));
         }
     }
 }
