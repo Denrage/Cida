@@ -61,7 +61,7 @@ namespace Cida.Server.Module
 
         public void Load()
         {
-            var instance = (Api.IModule)Activator.CreateInstance(this.entryType);
+            var instance = (Cida.Api.IModule)Activator.CreateInstance(this.entryType);
             instance.Load();
         }
 
