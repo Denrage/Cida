@@ -4,10 +4,9 @@ using System.Text;
 
 namespace Cida.Server.Api
 {
-    interface IGrpcConfiguration
+    // TODO: Add credentials to interface
+    public interface IGrpcConfiguration
     {
         (string Endpoint, int Port)[] Endpoints { get; }
-
-
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,13 +21,14 @@ namespace Cida.Server.Api
             }
         }
 
-        private readonly ServerPort defaultPort = new ServerPort("localhost", 50051, ServerCredentials.Insecure);
+        private readonly ServerPort[] ports;
         private readonly List<ServerServiceDefinition> services = new List<ServerServiceDefinition>();
 
         private Grpc.Core.Server grpcServer;
 
-        public GrpcManager()
+        public GrpcManager(IGrpcConfiguration configuration)
         {
+            this.ports = configuration.Endpoints.Select(x => new ServerPort(x.Endpoint, x.Port, ServerCredentials.Insecure)).ToArray();
             this.grpcServer = this.CreateServer(Array.Empty<ServerServiceDefinition>());
 
             this.grpcServer.Start();
@@ -46,7 +48,11 @@ namespace Cida.Server.Api
         public Grpc.Core.Server CreateServer(IEnumerable<ServerServiceDefinition> services)
         {
             var result = new Grpc.Core.Server();
-            result.Ports.Add(defaultPort);
+
+            foreach (var serverPort in this.ports)
+            {
+                result.Ports.Add(serverPort);
+            }
 
             foreach (var service in services)
             {
