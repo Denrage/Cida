@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
+using Cida.Api;
 using Newtonsoft.Json;
 
 namespace Cida.Server.Module
@@ -59,10 +60,11 @@ namespace Cida.Server.Module
             return loadContext;
         }
 
-        public void Load()
+        public IModule Load()
         {
             var instance = (Cida.Api.IModule)Activator.CreateInstance(this.entryType);
             instance.Load();
+            return instance;
         }
 
         ~CidaModule()

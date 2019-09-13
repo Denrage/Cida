@@ -8,7 +8,7 @@ using Grpc.Core;
 
 namespace Cida.Server.Api
 {
-    public class GrpcManager
+    public class GrpcManager : IGrpcRegistrar
     {
         public class CidaApiService : Cida.CidaApiService.CidaApiServiceBase
         {
@@ -29,16 +29,15 @@ namespace Cida.Server.Api
         public GrpcManager(IGrpcConfiguration configuration)
         {
             this.ports = configuration.Endpoints.Select(x => new ServerPort(x.Endpoint, x.Port, ServerCredentials.Insecure)).ToArray();
-            this.grpcServer = this.CreateServer(Array.Empty<ServerServiceDefinition>());
-
+            this.grpcServer = this.CreateServer(new[] { Cida.CidaApiService.BindService(new CidaApiService()) });
             this.grpcServer.Start();
         }
 
-        public async Task AddService()
+        public async Task AddServiceAsync(ServerServiceDefinition definition)
         {
             await this.grpcServer.ShutdownAsync();
 
-            this.services.Add(Cida.CidaApiService.BindService(new CidaApiService()));
+            this.services.Add(definition);
 
             this.grpcServer = this.CreateServer(this.services);
 

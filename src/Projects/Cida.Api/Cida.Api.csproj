@@ -6,4 +6,8 @@
     <NullableContextOptions>enable</NullableContextOptions>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Grpc.Core.Api" Version="2.23.0" />
+  </ItemGroup>
+
 </Project>
