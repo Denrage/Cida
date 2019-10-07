@@ -1,5 +1,6 @@
 ﻿using System;
 using Cida.Api;
+using Grpc.Core;
 
 namespace Module.Hsnr
 {
@@ -8,5 +9,7 @@ namespace Module.Hsnr
         public void Load()
         {
         }
+
+        public ServerServiceDefinition GrpcService { get; }
     }
 }

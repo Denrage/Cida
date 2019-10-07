@@ -6,11 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Cida.Api\Cida.Api.csproj" />
+    <PackageReference Include="Grpc.Core.Api" Version="2.24.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.7" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.7" />
+    <ProjectReference Include="..\..\..\Projects\Cida.Api\Cida.Api.csproj" />
   </ItemGroup>
 
 </Project>
