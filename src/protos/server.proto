@@ -1,0 +1,14 @@
+syntax  = "proto3";
+
+package cida;
+
+service CidaApiService {
+	rpc Version (VersionRequest) returns (VersionResponse);
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+	int32 Version = 1;
+}
