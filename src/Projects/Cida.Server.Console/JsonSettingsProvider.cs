@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Cida.Server.Interfaces;
 
 namespace Cida.Server.Console
