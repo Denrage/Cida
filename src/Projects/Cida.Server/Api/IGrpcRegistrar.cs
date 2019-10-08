@@ -8,6 +8,6 @@ namespace Cida.Server.Api
 {
     public interface IGrpcRegistrar
     {
-        Task AddServiceAsync(ServerServiceDefinition definition);
+        Task AddServicesAsync(IEnumerable<ServerServiceDefinition> definitions);
     }
 }

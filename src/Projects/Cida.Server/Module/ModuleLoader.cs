@@ -32,7 +32,7 @@ namespace Cida.Server.Module
                 var module = CidaModule.Extract(modulePath);
                 this.modules.Add(module);
                 var loadedModule = module.Load();
-                await this.grpcRegistrar.AddServiceAsync(loadedModule.GrpcService);
+                await this.grpcRegistrar.AddServicesAsync(loadedModule.GrpcServices);
             }
         }
     }

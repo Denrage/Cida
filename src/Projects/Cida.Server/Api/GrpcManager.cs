@@ -33,11 +33,11 @@ namespace Cida.Server.Api
             this.grpcServer.Start();
         }
 
-        public async Task AddServiceAsync(ServerServiceDefinition definition)
+        public async Task AddServicesAsync(IEnumerable<ServerServiceDefinition> definitions)
         {
             await this.grpcServer.ShutdownAsync();
 
-            this.services.Add(definition);
+            this.services.AddRange(definitions);
 
             this.grpcServer = this.CreateServer(this.services);
 

@@ -1,0 +1,17 @@
+syntax  = "proto3";
+
+package hsnr;
+
+service HsnrService {
+	rpc Version (VersionRequest) returns (VersionResponse);
+}
+
+service HsnrTimetableService{
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+	int32 Version = 1;
+}

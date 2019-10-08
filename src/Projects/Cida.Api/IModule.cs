@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Grpc.Core;
 
 namespace Cida.Api
@@ -8,6 +9,6 @@ namespace Cida.Api
     {
         void Load();
 
-        ServerServiceDefinition GrpcService { get; }
+        IEnumerable<ServerServiceDefinition> GrpcServices { get; }
     }
 }
