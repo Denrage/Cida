@@ -27,6 +27,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{0BA560C3-E268-4F51-AF46-C5293685AA0E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B}"
+ProjectSection(SolutionItems) = preProject
+	protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

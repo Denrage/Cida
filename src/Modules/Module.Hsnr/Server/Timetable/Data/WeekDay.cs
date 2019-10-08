@@ -10,15 +10,16 @@ namespace Module.Hsnr.Timetable.Data
 
         public List<Subject> Subjects { get; }
 
-        public WeekDay(IEnumerable<HtmlNode> tableRows, Days day, List<(int, int)> times)
+        public WeekDay(IEnumerable<HtmlNode> tableRows, Days day, IEnumerable<TimetableTime> times)
         {
             this.Day = day;
             this.Subjects = new List<Subject>();
             this.ParseRows(tableRows, times);
         }
 
-        private void ParseRows(IEnumerable<HtmlNode> tableRows, List<(int, int)> times)
+        private void ParseRows(IEnumerable<HtmlNode> tableRows, IEnumerable<TimetableTime> times)
         {
+            var timesArray = times.ToArray();
             foreach (var row in tableRows)
             {
                 var currentTime = 0;
@@ -28,8 +29,8 @@ namespace Module.Hsnr.Timetable.Data
                     var duration = child.GetAttributeValue("colspan", 1);
                     if (firstChildOfChild != null)
                     {
-                        var start = times[currentTime].Item1;
-                        var end = times[currentTime + duration - 1].Item2;
+                        var start = timesArray[currentTime].Start;
+                        var end = timesArray[currentTime + duration - 1].End;
                     }
 
                     if (!child.Id.Contains("WT"))
