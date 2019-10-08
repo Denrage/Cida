@@ -8,16 +8,18 @@ namespace Module.Hsnr.Timetable.Parser
     public class WeekDayParser : IWeekDayParser
     {
         private readonly ITimetableTimeParser timeParser;
+        private readonly ISubjectParser subjectParser;
 
-        public WeekDayParser(ITimetableTimeParser timeParser)
+        public WeekDayParser(ITimetableTimeParser timeParser, ISubjectParser subjectParser)
         {
             this.timeParser = timeParser;
+            this.subjectParser = subjectParser;
         }
         // Parsing will easily break on a website change
         public IEnumerable<WeekDay> Parse(IEnumerable<HtmlNode> rows)
         {
             var htmlNodes = rows.ToList();
-            var times = this.timeParser.Parse(htmlNodes.First());
+            var times = this.timeParser.Parse(htmlNodes.First()).ToArray();
             var listOfDays = new List<List<HtmlNode>>
             {
                 new List<HtmlNode>()
@@ -46,23 +48,8 @@ namespace Module.Hsnr.Timetable.Parser
                 }
             }
 
-            var result = new List<WeekDay>();
-            for (var i = 0; i < listOfDays.Count; i++)
-            {
-                result.Add(new WeekDay(listOfDays[i], (Days) i, times));
-            }
-
-            return result;
+            return listOfDays
+                .Select((t, i) => new WeekDay((Days) i, this.subjectParser.Parse((t, times))));
         }
-    }
-
-    public interface IWeekDayParser :
-        IParser<IEnumerable<HtmlNode>, IEnumerable<WeekDay>>
-    {
-    }
-
-    public interface IParser<in TIn, out TOut>
-    {
-        TOut Parse(TIn value);
     }
 }
