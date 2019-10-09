@@ -26,11 +26,11 @@ namespace Cida.Server.Console
 
             if (!string.IsNullOrEmpty(type.FullName))
             {
-                var dictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(this.settingsWriter.Get());
+                var dictionary = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(this.settingsWriter.Get());
 
                 if (dictionary.TryGetValue(type.FullName, out var settings))
                 {
-                    return (T)settings;
+                    return JsonSerializer.Deserialize<T>(settings.GetRawText());
                 }
             }
 

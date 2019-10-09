@@ -28,7 +28,7 @@ namespace Cida.Server.Api
 
         public GrpcManager(IGrpcConfiguration configuration)
         {
-            this.ports = configuration.Endpoints.Select(x => new ServerPort(x.Endpoint, x.Port, ServerCredentials.Insecure)).ToArray();
+            this.ports = configuration.Endpoints.Select(x => new ServerPort(x.Host, x.Port, ServerCredentials.Insecure)).ToArray();
             this.grpcServer = this.CreateServer(new[] { Cida.CidaApiService.BindService(new CidaApiService()) });
             this.grpcServer.Start();
         }
