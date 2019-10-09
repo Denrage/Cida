@@ -6,7 +6,7 @@ namespace Module.Hsnr.Timetable.Data
         
         public int End { get; }
 
-        public TimetableTime(int end, int start)
+        public TimetableTime(int start, int end)
         {
             this.End = end;
             this.Start = start;
