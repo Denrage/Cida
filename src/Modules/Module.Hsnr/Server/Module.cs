@@ -16,6 +16,7 @@ namespace Module.Hsnr
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; } = new[]
         {
             HsnrService.BindService(new HsnrServiceImplementation()),
+            HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation()),
         };
 
     }
@@ -26,5 +27,10 @@ namespace Module.Hsnr
         {
             return Task.FromResult(new VersionResponse() {Version = 1});
         }
+    }
+
+    public class HsnrTimetableServiceImplementation : HsnrTimetableService.HsnrTimetableServiceBase
+    {
+        
     }
 }
