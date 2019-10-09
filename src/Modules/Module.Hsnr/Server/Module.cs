@@ -8,6 +8,7 @@ using Module.Hsnr.Extensions;
 using Module.Hsnr.Timetable;
 using Module.Hsnr.Timetable.Data;
 using Module.Hsnr.Timetable.Parser;
+using CalendarType = Hsnr.CalendarType;
 using SemesterType = Module.Hsnr.Timetable.Data.SemesterType;
 
 namespace Module.Hsnr
@@ -47,9 +48,11 @@ namespace Module.Hsnr
         {
             var result = (await this.timetableService.GetTimetableAsync(new FormData()
             {
-                Calendar = CalendarType.BranchOfStudy,
-                Semester = SemesterType.WinterSemester,
-                BranchOfStudy = "KBI4",
+                Calendar = request.Calendar.ToModel(),
+                Semester = request.Semester.ToModel(),
+                BranchOfStudy = request.BranchOfStudy,
+                Lecturer = request.Lecturer,
+                Room = request.Room,
             })).ToGrpc();
             
             return new TimetableResponse()

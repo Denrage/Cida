@@ -17,8 +17,6 @@ message VersionResponse {
     int32 Version = 1;
 }
 
-message TimetableRequest {
-}
 
 enum CalendarType {
     BranchOfStudy = 0;
@@ -29,6 +27,18 @@ enum CalendarType {
 enum SemesterType {
     SummerSemester = 0;
     WinterSemester = 1;
+}
+
+message TimetableRequest {
+    SemesterType Semester = 1;
+
+    CalendarType Calendar = 2;
+
+    string Lecturer = 3;
+
+    string Room = 4;
+    
+    string BranchOfStudy = 5;
 }
 
 message TimetableResponse {
