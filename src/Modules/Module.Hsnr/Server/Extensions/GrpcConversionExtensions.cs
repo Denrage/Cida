@@ -1,4 +1,6 @@
 using System;
+using System.Data.Common;
+using System.Linq;
 using GrpcData = Hsnr;
 using Module.Hsnr.Timetable.Data;
 
@@ -8,17 +10,35 @@ namespace Module.Hsnr.Extensions
     {
         public static GrpcData.TimetableResponse.Types.Timetable ToGrpc(this Timetable.Data.Timetable timetable)
         {
-            return new GrpcData.TimetableResponse.Types.Timetable();
+            return new GrpcData.TimetableResponse.Types.Timetable()
+            {
+                Semester = timetable.Semester.ToGrpc(),
+                Type = timetable.Type.ToGrpc(),
+                WeekDays = {timetable.WeekDays.Select(x => x.ToGrpc())},
+            };
         }
 
-        public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay ToGrpc(this Timetable.Data.WeekDay weekDay)
+        public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay ToGrpc(
+            this Timetable.Data.WeekDay weekDay)
         {
-            return new GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay();
+            return new GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay()
+            {
+                Day = weekDay.Day.ToGrpc(),
+                Subjects = {weekDay.Subjects.Select(x => x.ToGrpc())},
+            };
         }
-        
-        public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Subject ToGrpc(this Timetable.Data.Subject subject)
+
+        public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Subject ToGrpc(
+            this Timetable.Data.Subject subject)
         {
-            return new GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Subject();
+            return new GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Subject()
+            {
+                End = subject.End,
+                Lecturer = subject.Lecturer,
+                Name = subject.Name,
+                Room = subject.Room,
+                Start = subject.Start,
+            };
         }
 
         public static GrpcData.CalenderType ToGrpc(
@@ -42,7 +62,7 @@ namespace Module.Hsnr.Extensions
         {
             switch (semesterType)
             {
-                case  SemesterType.SummerSemester:
+                case SemesterType.SummerSemester:
                     return GrpcData.SemesterType.SummerSemester;
                 case SemesterType.WinterSemester:
                     return GrpcData.SemesterType.WinterSemester;
@@ -51,7 +71,8 @@ namespace Module.Hsnr.Extensions
             }
         }
 
-        public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days ToGrpc(this Timetable.Data.Days day)
+        public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days ToGrpc(
+            this Timetable.Data.Days day)
         {
             switch (day)
             {
