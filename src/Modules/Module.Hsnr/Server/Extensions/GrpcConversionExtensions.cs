@@ -1,6 +1,7 @@
 using System;
 using System.Data.Common;
 using System.Linq;
+using Google.Protobuf;
 using GrpcData = Hsnr;
 using Module.Hsnr.Timetable.Data;
 
@@ -41,17 +42,17 @@ namespace Module.Hsnr.Extensions
             };
         }
 
-        public static GrpcData.CalenderType ToGrpc(
+        public static GrpcData.CalendarType ToGrpc(
             this Timetable.Data.CalendarType calendarType)
         {
             switch (calendarType)
             {
                 case CalendarType.Lecturer:
-                    return GrpcData.CalenderType.Lecturer;
+                    return GrpcData.CalendarType.Lecturer;
                 case CalendarType.Room:
-                    return GrpcData.CalenderType.Room;
+                    return GrpcData.CalendarType.Room;
                 case CalendarType.BranchOfStudy:
-                    return GrpcData.CalenderType.BranchOfStudy;
+                    return GrpcData.CalendarType.BranchOfStudy;
                 default:
                     throw new InvalidOperationException("Missing calender type");
             }
@@ -91,6 +92,70 @@ namespace Module.Hsnr.Extensions
                 default:
                     throw new InvalidOperationException("Missing day");
             }
+        }
+        
+        public static Timetable.Data.SemesterType ToModel(
+            this GrpcData.SemesterType  semesterType)
+        {
+            switch (semesterType)
+            {
+                case GrpcData.SemesterType.SummerSemester:
+                    return SemesterType.SummerSemester;
+                case GrpcData.SemesterType.WinterSemester:
+                    return SemesterType.WinterSemester;
+                default:
+                    throw new InvalidOperationException("Missing semester type");
+            }
+        }
+
+        public static Timetable.Data.Days ToModel(
+            this GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days  day)
+        {
+            switch (day)
+            {
+                case GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days.Monday:
+                    return Days.Monday;
+                case GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days.Tuesday:
+                    return Days.Tuesday;
+                case GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days.Wednesday:
+                    return Days.Wednesday;
+                case GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days.Thursday:
+                    return Days.Thursday;
+                case GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days.Friday:
+                    return Days.Friday;
+                case GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days.Saturday:
+                    return Days.Saturday;
+                default:
+                    throw new InvalidOperationException("Missing day");
+            }
+        }
+        
+        public static Timetable.Data.CalendarType ToModel(
+            this  GrpcData.CalendarType calendarType)
+        {
+            switch (calendarType)
+            {
+                case GrpcData.CalendarType.Lecturer:
+                    return CalendarType.Lecturer;
+                case GrpcData.CalendarType.Room:
+                    return CalendarType.Room;
+                case GrpcData.CalendarType.BranchOfStudy:
+                    return CalendarType.BranchOfStudy;
+                default:
+                    throw new InvalidOperationException("Missing calender type");
+            }
+        }
+
+        public static FormData ToModel(this GrpcData.TimetableRequest request)
+        {
+            return new FormData()
+            {
+Calendar = request.Calendar.ToModel(),
+Lecturer = request.Lecturer,
+Room = request.Room,
+Semester = request.Semester.ToModel(),
+BranchOfStudy = request.BranchOfStudy,
+            };
         }
     }
 }

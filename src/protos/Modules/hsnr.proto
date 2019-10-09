@@ -20,7 +20,7 @@ message VersionResponse {
 message TimetableRequest {
 }
 
-enum CalenderType {
+enum CalendarType {
     BranchOfStudy = 0;
     Room = 1;
     Lecturer = 2;
@@ -56,7 +56,7 @@ message TimetableResponse {
             repeated Subject Subjects = 2;
         }
 
-        CalenderType Type = 1;
+        CalendarType Type = 1;
         SemesterType Semester = 2;
         repeated WeekDay WeekDays = 3;
     }
