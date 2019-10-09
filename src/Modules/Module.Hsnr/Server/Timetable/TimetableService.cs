@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Module.Hsnr.Timetable.Data;
 using Module.Hsnr.Timetable.Parser;
@@ -20,9 +21,9 @@ namespace Module.Hsnr.Timetable
             this.SiteCache = new SiteCache(this.connector);
         }
 
-        public Data.Timetable GetTimetable(FormData formData)
+        public async Task<Data.Timetable> GetTimetableAsync(FormData formData)
         {
-            var result = this.connector.PostData(formData);
+            var result = await this.connector.PostDataAsync(formData);
             var document = new HtmlDocument();
             document.LoadHtml(result);
             var element = document.GetElementbyId("tempdata0").ParentNode;

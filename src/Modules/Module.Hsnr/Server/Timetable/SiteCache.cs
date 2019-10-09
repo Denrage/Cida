@@ -35,7 +35,7 @@ namespace Module.Hsnr.Timetable
                 Calendar = CalendarType.Room,
             };
 
-            var result = this.connector.PostData(formData);
+            var result = this.connector.PostDataAsync(formData).GetAwaiter().GetResult();
             var document = new HtmlDocument();
             document.LoadHtml(result);
             var element = document.GetElementbyId("select_R");
@@ -53,7 +53,7 @@ namespace Module.Hsnr.Timetable
                 Calendar = CalendarType.BranchOfStudy,
             };
 
-            var result = this.connector.PostData(formData);
+            var result = this.connector.PostDataAsync(formData).GetAwaiter().GetResult();
             var document = new HtmlDocument();
             document.LoadHtml(result);
             var element = document.GetElementbyId("select_S");
@@ -71,7 +71,7 @@ namespace Module.Hsnr.Timetable
                 Calendar = CalendarType.Lecturer,
             };
 
-            var result = this.connector.PostData(formData);
+            var result = this.connector.PostDataAsync(formData).GetAwaiter().GetResult();
             var document = new HtmlDocument();
             document.LoadHtml(result);
             var element = document.GetElementbyId("select_D");
