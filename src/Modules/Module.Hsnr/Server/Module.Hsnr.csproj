@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Module.Hsnr</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +20,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Projects\Cida.Api\Cida.Api.csproj" />
     <Protobuf Include="../../../protos/Modules/hsnr.proto" Link="hsnr.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="PackagesInfo.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

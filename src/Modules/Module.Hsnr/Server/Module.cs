@@ -17,13 +17,19 @@ namespace Module.Hsnr
     {
         public void Load()
         {
+            Console.WriteLine("Loaded");
+
+            var timetableService =
+                new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
+            
+            this.GrpcServices = new[]
+            {
+                HsnrService.BindService(new HsnrServiceImplementation()),
+                HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation(timetableService)),
+            };
         }
 
-        public IEnumerable<ServerServiceDefinition> GrpcServices { get; } = new[]
-        {
-            HsnrService.BindService(new HsnrServiceImplementation()),
-            HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation()),
-        };
+        public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } 
 
     }
 
@@ -39,9 +45,9 @@ namespace Module.Hsnr
     {
         private readonly Timetable.TimetableService timetableService;
 
-        public HsnrTimetableServiceImplementation()
+        public HsnrTimetableServiceImplementation(TimetableService timetableService)
         {
-            this.timetableService = new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
+            this.timetableService = timetableService;
         }
 
         public override async Task<TimetableResponse> Timetable(TimetableRequest request, ServerCallContext context)
