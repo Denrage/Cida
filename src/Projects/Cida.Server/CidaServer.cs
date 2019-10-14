@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Cida.Server.Api;
 using Cida.Server.Interfaces;
@@ -17,8 +18,16 @@ namespace Cida.Server
             this.settingsProvider = settingsProvider;
             this.grpcManager = new GrpcManager(settingsProvider.Get<GrpcConfiguration>());
 
-            this.moduleLoader = new ModuleLoaderManager(Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName), this.grpcManager);
+            this.moduleLoader = new ModuleLoaderManager(
+                Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName), 
+                this.grpcManager, 
+                this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
             Task.Run(async () => await this.moduleLoader.LoadModulesAsync());
         }
+    }
+    
+    public class ServerConfiguration
+    {
+        public string[] UnpackedModuleDirectories { get; set; } = Array.Empty<string>();
     }
 }

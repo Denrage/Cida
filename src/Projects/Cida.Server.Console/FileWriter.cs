@@ -11,6 +11,11 @@ namespace Cida.Server.Console
         {
             this.settingsFile = settingsFile;
 
+            if (!Directory.Exists(Path.GetDirectoryName(this.settingsFile)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(settingsFile));
+            }
+            
             if (!File.Exists(settingsFile))
             {
                 File.WriteAllText(settingsFile, string.Empty);
