@@ -13,6 +13,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <Protobuf Include="../protos/server.proto" Link="server.proto" />
+    <Protobuf Include="../protos/Modules/hsnr.proto" Link="hsnr.proto" />
   </ItemGroup>
 
 </Project>
