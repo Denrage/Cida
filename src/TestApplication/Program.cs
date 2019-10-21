@@ -11,7 +11,7 @@ namespace TestApplication
         {
             Console.WriteLine("Hello World!");
 
-            var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
+            var channel = new Channel("127.0.0.2:31565", ChannelCredentials.Insecure);
 //            var client = new Cida.CidaApiService.CidaApiServiceClient(channel);
 //            Console.WriteLine(client.Version(new Cida.VersionRequest()).Version);
             var client2 = new HsnrTimetableService.HsnrTimetableServiceClient(channel);

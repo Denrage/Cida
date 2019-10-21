@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using Cida.Server.Models;
 
 namespace Cida.Server.Api
 {
@@ -14,12 +15,5 @@ namespace Cida.Server.Api
                 Port = 31564,
             }
         };
-
-        public class Endpoint
-        {
-            public string Host { get; set; }
-
-            public int Port { get; set; }
-        }
     }
 }

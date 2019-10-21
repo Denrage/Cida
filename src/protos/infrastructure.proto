@@ -1,0 +1,27 @@
+syntax  = "proto3";
+
+package infrastructure;
+
+service CidaInfrastructureService {
+	rpc Synchronize (SynchronizeRequest) returns (SynchronizeResponse);
+	rpc Version (VersionRequest) returns (VersionResponse);
+}
+
+message SynchronizeResponse {
+}
+
+message SynchronizeRequest {
+	message Endpoint {
+		string host = 1;
+		int32 port = 2;
+	}
+	
+	Endpoint PublicEndpoint = 1;
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+	int32 Version = 1;
+}
