@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Cida.Server.Api;
+using Cida.Server.Infrastructure;
 using Cida.Server.Interfaces;
 using Cida.Server.Module;
 
@@ -12,12 +13,14 @@ namespace Cida.Server
         private readonly ISettingsProvider settingsProvider;
         private readonly GrpcManager grpcManager;
         private readonly ModuleLoaderManager moduleLoader;
+        private readonly InterNodeConnectionManager interNodeConnectionManager;
 
         public CidaServer(string workingDirectory, ISettingsProvider settingsProvider)
         {
             this.settingsProvider = settingsProvider;
             this.grpcManager = new GrpcManager(settingsProvider.Get<GrpcConfiguration>());
-
+            this.interNodeConnectionManager = new Infrastructure.InterNodeConnectionManager(this.settingsProvider.Get<InfrastructureConfiguration>());
+            
             this.moduleLoader = new ModuleLoaderManager(
                 Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName), 
                 this.grpcManager, 

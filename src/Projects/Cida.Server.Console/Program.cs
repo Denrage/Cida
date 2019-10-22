@@ -1,15 +1,17 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
 using Autofac;
+using Autofac.Extras.NLog;
 using Cida.Server.Interfaces;
 using Grpc.Core;
 using Grpc.Core.Logging;
+using NLog;
+using ILogger = NLog.ILogger;
 
 namespace Cida.Server.Console
 {
-    internal class Program
+    internal partial class Program
     {
         private readonly string currentWorkingDirectory = Path
             .GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase)
@@ -44,9 +46,9 @@ namespace Cida.Server.Console
 
         public void Start()
         {
-            GrpcEnvironment.SetLogger(new ConsoleLogger());
+            GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<NLog.ILogger>()));
             var server =
-                new CidaServer(this.currentWorkingDirectory, container.Resolve<ISettingsProvider>());
+                new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>());
         }
 
         private IContainer InitializeDependencies()
@@ -58,7 +60,7 @@ namespace Cida.Server.Console
                         $"{this.nodeName}.json"))))
                 .As<ISettingsProvider>()
                 .SingleInstance();
-
+            builder.RegisterInstance(NLog.LogManager.GetCurrentClassLogger()).As<NLog.ILogger>().SingleInstance();
             return builder.Build();
         }
     }
