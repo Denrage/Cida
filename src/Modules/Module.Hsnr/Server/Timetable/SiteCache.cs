@@ -4,6 +4,7 @@ using Module.Hsnr.Timetable.Data;
 
 namespace Module.Hsnr.Timetable
 {
+    // TODO: Add API methods to retrieve this information
     public class SiteCache
     {
         private readonly TimetableConnector connector;
