@@ -6,6 +6,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Cida.Server.Models;
+using Cida.Server.Module;
+using Google.Protobuf.Collections;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Infrastructure;
 using NLog;
@@ -18,16 +21,19 @@ namespace Cida.Server.Infrastructure
         private readonly Grpc.Core.Server server;
         private readonly IList<Grpc.Core.Channel> connections;
         private readonly IInfrastructureConfiguration configuration;
+        private readonly GlobalConfigurationService globalConfigurationService;
+        private readonly IModulePublisher modulePublisher;
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
         private CidaInfrastructureService.CidaInfrastructureServiceClient client;
 
-        public InterNodeConnectionManager(IInfrastructureConfiguration configuration)
+        public InterNodeConnectionManager(IInfrastructureConfiguration configuration, GlobalConfigurationService globalConfigurationService)
         {
             this.configuration = configuration;
+            this.globalConfigurationService = globalConfigurationService;
             this.server = new Grpc.Core.Server();
             this.server.Ports.Add(this.configuration.ServerEndpoint.Host, this.configuration.ServerEndpoint.Port,
                 ServerCredentials.Insecure);
-            var implementation = new CidaInfrastructureServiceImplementation(this.logger);
+            var implementation = new CidaInfrastructureServiceImplementation(this.logger, this.globalConfigurationService);
             this.server.Services.Add(
                 CidaInfrastructureService.BindService(implementation));
 
@@ -59,7 +65,7 @@ namespace Cida.Server.Infrastructure
                 this.logger.Info($"Connecting to {endpoint.Host}:{endpoint.Port}");
                 this.connections.Add(new Channel(endpoint.Host, endpoint.Port, ChannelCredentials.Insecure));
                 this.client = new CidaInfrastructureService.CidaInfrastructureServiceClient(this.connections[0]);
-                this.client.Synchronize(new SynchronizeRequest()
+                var response = this.client.Synchronize(new SynchronizeRequest()
                 {
                     PublicEndpoint = new SynchronizeRequest.Types.Endpoint()
                     {
@@ -73,11 +79,13 @@ namespace Cida.Server.Infrastructure
         public class CidaInfrastructureServiceImplementation : CidaInfrastructureService.CidaInfrastructureServiceBase
         {
             private readonly ILogger logger;
+            private readonly GlobalConfigurationService globalConfigurationService;
             public event Action<Endpoint> OnSynchronize;
 
-            public CidaInfrastructureServiceImplementation(ILogger logger)
+            public CidaInfrastructureServiceImplementation(ILogger logger, GlobalConfigurationService globalConfigurationService)
             {
                 this.logger = logger;
+                this.globalConfigurationService = globalConfigurationService;
             }
             
             public override async Task<SynchronizeResponse> Synchronize(SynchronizeRequest request,
@@ -85,7 +93,13 @@ namespace Cida.Server.Infrastructure
             {
                 this.logger.Info("Got Synchronize");
                 this.OnSynchronize?.Invoke(request.PublicEndpoint);
-                return await Task.FromResult(new SynchronizeResponse());
+                var result = new SynchronizeResponse()
+                {
+                    Timestamp = Timestamp.FromDateTime(this.globalConfigurationService.Configuration.Timestamp)
+                };
+                
+                result.Modules.AddRange(this.globalConfigurationService.Configuration.Modules.Select(x => x.ToString()));
+                return await Task.FromResult(result);
             }
         }
     }

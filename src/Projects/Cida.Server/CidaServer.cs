@@ -19,12 +19,17 @@ namespace Cida.Server
         {
             this.settingsProvider = settingsProvider;
             this.grpcManager = new GrpcManager(settingsProvider.Get<GrpcConfiguration>());
-            this.interNodeConnectionManager = new Infrastructure.InterNodeConnectionManager(this.settingsProvider.Get<InfrastructureConfiguration>());
-            
             this.moduleLoader = new ModuleLoaderManager(
                 Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName), 
                 this.grpcManager, 
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
+            var globalConfigurationService = new GlobalConfigurationService(this.moduleLoader, this.settingsProvider.Get<GlobalConfigurationService.GlobalConfiguration>());
+            globalConfigurationService.ConfigurationChanged += () =>
+            {
+                this.settingsProvider.Save(globalConfigurationService.Configuration);
+            };
+            this.interNodeConnectionManager = new Infrastructure.InterNodeConnectionManager(this.settingsProvider.Get<InfrastructureConfiguration>(), globalConfigurationService);
+            
             Task.Run(async () => await this.moduleLoader.LoadModulesAsync());
         }
     }

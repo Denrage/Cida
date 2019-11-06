@@ -2,12 +2,25 @@ syntax  = "proto3";
 
 package infrastructure;
 
+import "google/protobuf/timestamp.proto";
+
 service CidaInfrastructureService {
+	rpc RetrieveModules (RetrieveModulesRequest) returns (RetrieveModulesResponse);
 	rpc Synchronize (SynchronizeRequest) returns (SynchronizeResponse);
 	rpc Version (VersionRequest) returns (VersionResponse);
 }
 
+message RetrieveModulesRequest {
+	repeated string modules = 1;
+}
+
+message RetrieveModulesResponse {
+	repeated bytes modules = 1;
+}
+
 message SynchronizeResponse {
+	google.protobuf.Timestamp timestamp = 1;
+	repeated string modules = 2;
 }
 
 message SynchronizeRequest {
