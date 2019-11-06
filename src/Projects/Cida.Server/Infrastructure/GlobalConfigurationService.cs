@@ -78,6 +78,14 @@ namespace Cida.Server.Infrastructure
                 public string Username { get; }
                 
                 public string Password { get; }
+
+                public ExternalServerConnection(string host = null, int port = 0, string username = null, string password = null)
+                {
+                    this.Host = host ?? string.Empty;
+                    this.Port = port;
+                    this.Username = username ?? string.Empty;
+                    this.Password = password ?? string.Empty;
+                }
             }
         }
     }

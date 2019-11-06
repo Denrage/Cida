@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Cida.Server.Models;
 using Cida.Server.Module;
-using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Infrastructure;
 using NLog;
-using NLog.Fluent;
+using Cida.Server.Extensions;
 
 namespace Cida.Server.Infrastructure
 {
@@ -99,6 +95,8 @@ namespace Cida.Server.Infrastructure
                 };
                 
                 result.Modules.AddRange(this.globalConfigurationService.Configuration.Modules.Select(x => x.ToString()));
+
+                result.Ftp = this.globalConfigurationService.Configuration.Ftp.ToGrpc();
                 return await Task.FromResult(result);
             }
         }

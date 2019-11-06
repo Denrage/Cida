@@ -19,8 +19,15 @@ message RetrieveModulesResponse {
 }
 
 message SynchronizeResponse {
+	message ExternalServerConnection {
+		string host = 1;
+		int32 port = 2;
+		string username = 3;
+		string password = 4;
+	}
 	google.protobuf.Timestamp timestamp = 1;
 	repeated string modules = 2;
+	ExternalServerConnection Ftp = 3;
 }
 
 message SynchronizeRequest {
