@@ -76,20 +76,24 @@ namespace Module.DatabaseConnector
             var dbName = $"ModuleDb_{moduleId}";
             var username = $"ModuleUser_{moduleId}";
 
-            var dbConnection = this.databaseConnectionProvider.GetDatabaseConnection();
-            var transaction = dbConnection.BeginTransaction();
+            using (var dbConnection = this.databaseConnectionProvider.GetDatabaseConnection())
+            {
+                dbConnection.Open();
+                var transaction = dbConnection.BeginTransaction();
 
-            var createDbSql = $@"   CREATE DATABASE {dbName};
+                var createDbSql = $@"   CREATE DATABASE {dbName};
                                 ";
-            var createUserSql = $@" USE [master];
+                var createUserSql = $@" USE [master];
                                     CREATE LOGIN [{username}] WITH PASSWORD=N'{password}', CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF;
                                     USE [{dbName}];
                                     CREATE USER [{username}] FOR LOGIN [{username}];
                                     ALTER ROLE [db_owner] ADD MEMBER [{username}];
                                 ";
-            this.context.Database.ExecuteSqlRaw(createDbSql);
-            this.context.Database.ExecuteSqlRaw(createUserSql);
-            transaction.Commit();
+                this.context.Database.ExecuteSqlRaw(createDbSql);
+                this.context.Database.ExecuteSqlRaw(createUserSql);
+                transaction.Commit();
+                dbConnection.Close();
+            }
         }
     }
 }
