@@ -30,7 +30,7 @@ namespace Module.DatabaseConnector
             var modules = this.context.Modules;
             var moduleInformation = modules.Find(moduleId);
 
-            if(moduleInformation == null)
+            if (moduleInformation == null)
             {
                 this.CreateDatabase(moduleId, password);
                 moduleInformation = new ModuleInformation()
@@ -46,7 +46,7 @@ namespace Module.DatabaseConnector
                 this.context.SaveChanges();
             }
 
-            if (moduleInformation.DatabaseName == null)
+            else if (moduleInformation.DatabaseName == null)
             {
                 this.CreateDatabase(moduleId, password);
                 moduleInformation.Username = $"ModuleUser_{moduleId}";
@@ -55,7 +55,7 @@ namespace Module.DatabaseConnector
                 this.context.SaveChanges();
             }
 
-            if(moduleInformation.Password != password)
+            else if (moduleInformation.DatabaseName == null)
             {
                 throw new Exception("Wrong login");
             }

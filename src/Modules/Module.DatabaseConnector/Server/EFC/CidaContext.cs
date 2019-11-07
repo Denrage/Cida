@@ -9,7 +9,7 @@ namespace Module.DatabaseConnector.EFC
 {
     public class CidaContext : DbContext
     {
-        CidaDbConnectionProvider databaseConnectionProvider;
+        private CidaDbConnectionProvider databaseConnectionProvider;
 
         public CidaContext(CidaDbConnectionProvider databaseConnectionProvider)
         {

@@ -15,7 +15,7 @@ namespace Module.DatabaseConnector.Extensions
                 DataSource = connectionSettings.ServerName,
                 InitialCatalog = connectionSettings.DatabaseName,
                 UserID = connectionSettings.Username,
-                Password =connectionSettings.Password
+                Password = connectionSettings.Password
             };
 
             return connectionStringBuilder.ToString();
