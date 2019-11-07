@@ -20,7 +20,7 @@ namespace Module.DatabaseConnector
             this.context = context;
             this.databaseConnectionProvider = databaseConnectionProvider;
 
-            this.context.Database.Migrate();
+            this.context.Database.EnsureCreated();
         }
 
         public string GetDatabaseConnectionString(string moduleId, string password)
