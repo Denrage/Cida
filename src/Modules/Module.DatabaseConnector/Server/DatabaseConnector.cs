@@ -1,7 +1,7 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Module.DatabaseConnector.EFC;
-using Module.DatabaseConnector.Models;
+using Module.DatabaseConnector.Models.DatabaseModels;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;

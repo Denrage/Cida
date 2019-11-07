@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Module.DatabaseConnector.Models;
+using Module.DatabaseConnector.Models.DatabaseModels;
 using Module.DatabaseConnector.Settings;
 using System;
 using System.Collections.Generic;

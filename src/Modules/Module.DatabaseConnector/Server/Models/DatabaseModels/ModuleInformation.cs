@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Module.DatabaseConnector.Models
+namespace Module.DatabaseConnector.Models.DatabaseModels
 {
     public class ModuleInformation
     {
