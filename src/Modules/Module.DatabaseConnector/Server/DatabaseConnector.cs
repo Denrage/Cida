@@ -37,9 +37,9 @@ namespace Module.DatabaseConnector
                 {
                     ModuleId = moduleId,
                     ModuleName = "temp",
-                    Username = $"ModuleUser{moduleId}",
+                    Username = $"ModuleUser_{moduleId}",
                     Password = password,
-                    DatabaseName = $"ModuleDb{moduleId}"
+                    DatabaseName = $"ModuleDb_{moduleId}"
                 };
 
                 modules.Add(moduleInformation);
@@ -49,9 +49,9 @@ namespace Module.DatabaseConnector
             if (moduleInformation.DatabaseName == null)
             {
                 this.CreateDatabase(moduleId, password);
-                moduleInformation.Username = $"ModuleUser{moduleId}";
+                moduleInformation.Username = $"ModuleUser_{moduleId}";
                 moduleInformation.Password = password;
-                moduleInformation.DatabaseName = $"ModuleDb{moduleId}";
+                moduleInformation.DatabaseName = $"ModuleDb_{moduleId}";
                 this.context.SaveChanges();
             }
 
@@ -73,8 +73,8 @@ namespace Module.DatabaseConnector
 
         private void CreateDatabase(string moduleId, string password)
         {
-            var dbName = $"ModuleDb{moduleId}";
-            var username = $"ModuleUser{moduleId}";
+            var dbName = $"ModuleDb_{moduleId}";
+            var username = $"ModuleUser_{moduleId}";
 
             var dbConnection = this.databaseConnectionProvider.GetDatabaseConnection();
             var transaction = dbConnection.BeginTransaction();
