@@ -32,6 +32,7 @@ namespace Cida.Server.Api
             this.services.Add(Cida.CidaApiService.BindService(new CidaApiService()));
             this.grpcServer = this.CreateServer(this.services);
             this.grpcServer.Start();
+            Console.WriteLine($"gRPC Server started on {configuration.Endpoints[0].Host}:{configuration.Endpoints[0].Port}");
         }
 
         public async Task AddServicesAsync(IEnumerable<ServerServiceDefinition> definitions)

@@ -7,6 +7,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{78A43CE1-AFA1-4A45-B08A-FC817178E7DA}"
 	ProjectSection(SolutionItems) = preProject
 		protos\server.proto = protos\server.proto
+		protos\infrastructure.proto = protos\infrastructure.proto
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Server", "Projects\Cida.Server\Cida.Server.csproj", "{74503A42-B08F-4AD9-BE0D-052B6D269CBB}"

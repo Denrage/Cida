@@ -19,13 +19,13 @@ namespace Module.Hsnr
         {
             Console.WriteLine("Loaded");
 
-            var timetableService =
-                new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
-            
+//            var timetableService =
+//                new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
+//            
             this.GrpcServices = new[]
             {
                 HsnrService.BindService(new HsnrServiceImplementation()),
-                HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation(timetableService)),
+                HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation(null)),
             };
         }
 

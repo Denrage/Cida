@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Cida.Api;
 using Newtonsoft.Json;
 
@@ -19,21 +20,21 @@ namespace Cida.Server.Module
         public Assembly Assembly { get; }
 
         public CidaModuleMetadata Metadata { get; }
-        
+
         public CidaModule(
-            CidaModuleMetadata metadata, 
+            CidaModuleMetadata metadata,
             IDictionary<string, Stream> moduleFiles)
         {
             this.Metadata = metadata;
             this.moduleFiles = moduleFiles;
             this.loadContext = this.InitializeLoadContext();
-            
+
             if (!this.moduleFiles.TryGetValue(this.Metadata.AssemblyFile, out var assembly))
             {
                 // TODO: Replace this with custom exception
                 throw new InvalidOperationException($"Assembly '{this.Metadata.AssemblyFile}' not found!");
             }
-            
+
             this.Assembly = this.loadContext.LoadFromStream(assembly);
 
             this.entryType = this.Assembly.GetType(this.Metadata.EntryType);
@@ -63,7 +64,7 @@ namespace Cida.Server.Module
 
         public IModule Load()
         {
-            var instance = (Cida.Api.IModule)Activator.CreateInstance(this.entryType);
+            var instance = (Cida.Api.IModule) Activator.CreateInstance(this.entryType);
             instance.Load();
             return instance;
         }
@@ -85,10 +86,12 @@ namespace Cida.Server.Module
         public static CidaModule Unpacked(string path)
         {
             var fileStreams = Directory.GetFiles(path)
-                .Select(x => (Path.GetRelativePath(path,x), new FileStream(x, FileMode.Open, FileAccess.Read, FileShare.Read) as Stream)).ToDictionary(x => x.Item1, x => x.Item2);
+                .Select(x => (Path.GetRelativePath(path, x),
+                    new FileStream(x, FileMode.Open, FileAccess.Read, FileShare.Read) as Stream))
+                .ToDictionary(x => x.Item1, x => x.Item2);
 
             var parsedMetadata = ParseMetadata(fileStreams);
-            
+
             return new CidaModule(parsedMetadata, fileStreams);
         }
 
@@ -139,8 +142,29 @@ namespace Cida.Server.Module
             {
                 file.Close();
             }
-            
+
             GC.SuppressFinalize(this);
+        }
+
+        public async Task<IEnumerable<KeyValuePair<string, byte[]>>> Serialize()
+        {
+            var result = new List<KeyValuePair<string, byte[]>>();
+            foreach (var moduleFile in this.moduleFiles)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await moduleFile.Value.CopyToAsync(memoryStream);
+
+                    result.Add(new KeyValuePair<string, byte[]>(moduleFile.Key, memoryStream.ToArray()));
+                }
+
+                if (moduleFile.Value.CanSeek)
+                {
+                    moduleFile.Value.Seek(0, SeekOrigin.Begin);
+                }
+            }
+
+            return result;
         }
     }
 }
