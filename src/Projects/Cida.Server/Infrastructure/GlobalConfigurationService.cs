@@ -26,7 +26,7 @@ namespace Cida.Server.Infrastructure
         public class GlobalConfiguration
         {
             [NonSerialized]
-            private DateTime timestamp;
+            private DateTime timestamp = DateTime.Now;
             
             [NonSerialized]
             private Guid[] modules;
@@ -79,12 +79,18 @@ namespace Cida.Server.Infrastructure
                 
                 public string Password { get; }
 
-                public ExternalServerConnection(string host = null, int port = 0, string username = null, string password = null)
+                public ExternalServerConnection()
+                    : this(string.Empty, 0, string.Empty, string.Empty)
                 {
-                    this.Host = host ?? string.Empty;
+                        
+                }
+
+                public ExternalServerConnection(string host, int port, string username, string password)
+                {
+                    this.Host = host;
                     this.Port = port;
-                    this.Username = username ?? string.Empty;
-                    this.Password = password ?? string.Empty;
+                    this.Username = username;
+                    this.Password = password;
                 }
             }
         }

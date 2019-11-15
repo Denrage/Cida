@@ -34,10 +34,9 @@ namespace Cida.Server.Infrastructure
                 CidaInfrastructureService.BindService(implementation));
 
             implementation.OnSynchronize += ImplementationOnOnSynchronize;
-
             this.server.Start();
             this.logger.Info(
-                $"InfrastructureServer started on {this.configuration.ServerEndpoint.Host}{this.configuration.ServerEndpoint.Port}");
+                $"InfrastructureServer started on {this.configuration.ServerEndpoint.Host}:{this.configuration.ServerEndpoint.Port}");
 
 
             this.connections = new List<Channel>();
@@ -61,6 +60,7 @@ namespace Cida.Server.Infrastructure
                 this.logger.Info($"Connecting to {endpoint.Host}:{endpoint.Port}");
                 this.connections.Add(new Channel(endpoint.Host, endpoint.Port, ChannelCredentials.Insecure));
                 this.client = new CidaInfrastructureService.CidaInfrastructureServiceClient(this.connections[0]);
+                this.logger.Info("Connected. Sending synchronize.");
                 var response = this.client.Synchronize(new SynchronizeRequest()
                 {
                     PublicEndpoint = new SynchronizeRequest.Types.Endpoint()
@@ -69,6 +69,7 @@ namespace Cida.Server.Infrastructure
                         Port = this.configuration.ServerEndpoint.Port,
                     },
                 });
+                this.logger.Info("Synchronize successful");
             }
         }
 
@@ -83,7 +84,7 @@ namespace Cida.Server.Infrastructure
                 this.logger = logger;
                 this.globalConfigurationService = globalConfigurationService;
             }
-            
+
             public override async Task<SynchronizeResponse> Synchronize(SynchronizeRequest request,
                 ServerCallContext context)
             {
@@ -91,10 +92,13 @@ namespace Cida.Server.Infrastructure
                 this.OnSynchronize?.Invoke(request.PublicEndpoint);
                 var result = new SynchronizeResponse()
                 {
-                    Timestamp = Timestamp.FromDateTime(this.globalConfigurationService.Configuration.Timestamp)
+                    Timestamp = Timestamp.FromDateTime(this.globalConfigurationService.Configuration.Timestamp.ToUniversalTime())
                 };
-                
-                result.Modules.AddRange(this.globalConfigurationService.Configuration.Modules.Select(x => x.ToString()));
+
+                if (this.globalConfigurationService.Configuration.Modules?.Any() ?? false)
+                {
+                    result.Modules.AddRange(this.globalConfigurationService.Configuration.Modules.Select(x => x.ToString()));
+                }
 
                 result.Ftp = this.globalConfigurationService.Configuration.Ftp.ToGrpc();
                 return await Task.FromResult(result);
@@ -105,7 +109,7 @@ namespace Cida.Server.Infrastructure
     public class InfrastructureConfiguration : IInfrastructureConfiguration
     {
         public Endpoint ServerEndpoint { get; set; } = new Endpoint();
-     
+
         public Endpoint Node { get; set; } = new Endpoint();
     }
 
