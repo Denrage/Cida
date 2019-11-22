@@ -6,8 +6,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{D403F6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{78A43CE1-AFA1-4A45-B08A-FC817178E7DA}"
 	ProjectSection(SolutionItems) = preProject
-		protos\server.proto = protos\server.proto
 		protos\infrastructure.proto = protos\infrastructure.proto
+		protos\server.proto = protos\server.proto
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Server", "Projects\Cida.Server\Cida.Server.csproj", "{74503A42-B08F-4AD9-BE0D-052B6D269CBB}"
@@ -30,12 +30,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{FC2F
 	ProjectSection(SolutionItems) = preProject
 		protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Module.DatabaseConnector", "Module.DatabaseConnector", "{A019588B-661A-4352-8B22-E5EBC7DFBB05}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{F8F4E879-EBC7-452D-BF73-6BFAF5E24A5A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.DatabaseConnector", "Modules\Module.DatabaseConnector\Server\Module.DatabaseConnector.csproj", "{B6928ABB-B1E8-4B14-A3B2-17DD4DA737F4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B046479E-1AA7-422F-B043-30D41633F3FA}"
 EndProject
@@ -67,10 +61,6 @@ Global
 		{E8673CE0-A56A-4F05-B9BA-67DD1110953E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8673CE0-A56A-4F05-B9BA-67DD1110953E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8673CE0-A56A-4F05-B9BA-67DD1110953E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B6928ABB-B1E8-4B14-A3B2-17DD4DA737F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B6928ABB-B1E8-4B14-A3B2-17DD4DA737F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B6928ABB-B1E8-4B14-A3B2-17DD4DA737F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B6928ABB-B1E8-4B14-A3B2-17DD4DA737F4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -86,9 +76,6 @@ Global
 		{030DF1D2-D51F-43F8-827D-42749ECDB5A0} = {DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}
 		{0BA560C3-E268-4F51-AF46-C5293685AA0E} = {030DF1D2-D51F-43F8-827D-42749ECDB5A0}
 		{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B} = {78A43CE1-AFA1-4A45-B08A-FC817178E7DA}
-		{A019588B-661A-4352-8B22-E5EBC7DFBB05} = {DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}
-		{F8F4E879-EBC7-452D-BF73-6BFAF5E24A5A} = {A019588B-661A-4352-8B22-E5EBC7DFBB05}
-		{B6928ABB-B1E8-4B14-A3B2-17DD4DA737F4} = {F8F4E879-EBC7-452D-BF73-6BFAF5E24A5A}
 		{C4C54462-CA28-459A-BE31-C730949EA749} = {B046479E-1AA7-422F-B043-30D41633F3FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
