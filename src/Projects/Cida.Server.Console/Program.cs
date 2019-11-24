@@ -1,8 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using Autofac;
 using Autofac.Extras.NLog;
+using Cida.Server.Infrastructure;
 using Cida.Server.Interfaces;
 using Grpc.Core;
 using Grpc.Core.Logging;
@@ -33,6 +36,7 @@ namespace Cida.Server.Console
                 nodeName = System.Console.ReadLine();
             }
 
+
             var program = new Program(nodeName);
             program.Start();
             System.Console.ReadKey();
@@ -42,6 +46,9 @@ namespace Cida.Server.Console
         {
             this.nodeName = string.IsNullOrEmpty(nodeName) ? "Node" : nodeName;
             this.container = InitializeDependencies();
+            var files1 = new FtpClient(this.container.Resolve<ISettingsProvider>()).GetFilesAsync().Result;
+            var files = string.Join(Environment.NewLine, files1);
+            System.Console.WriteLine(files);
         }
 
         public void Start()

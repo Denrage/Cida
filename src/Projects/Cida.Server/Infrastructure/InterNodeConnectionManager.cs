@@ -22,7 +22,7 @@ namespace Cida.Server.Infrastructure
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
         private CidaInfrastructureService.CidaInfrastructureServiceClient client;
 
-        public InterNodeConnectionManager(IInfrastructureConfiguration configuration, GlobalConfigurationService globalConfigurationService)
+        public InterNodeConnectionManager(IInfrastructureConfiguration configuration, GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient)
         {
             this.configuration = configuration;
             this.globalConfigurationService = globalConfigurationService;
@@ -69,6 +69,7 @@ namespace Cida.Server.Infrastructure
                         Port = this.configuration.ServerEndpoint.Port,
                     },
                 });
+                
                 this.logger.Info("Synchronize successful");
             }
         }
