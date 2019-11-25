@@ -1,0 +1,1 @@
+dotnet ef dbcontext scaffold "Server=CidaSQL;Database=Cida;User id=Cida;Password=cida" Microsoft.EntityFrameworkCore.SqlServer -o Models

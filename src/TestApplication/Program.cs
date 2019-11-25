@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Text;
+using Cida.Server.Infrastructure.Database;
+using Cida.Server.Infrastructure.Database.EFC;
+using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+using Cida.Server.Infrastructure.Database.Settings;
 using Grpc.Core;
 using Hsnr;
 
@@ -9,35 +13,32 @@ namespace TestApplication
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-
-            var channel = new Channel("127.0.0.2:31565", ChannelCredentials.Insecure);
-//            var client = new Cida.CidaApiService.CidaApiServiceClient(channel);
-//            Console.WriteLine(client.Version(new Cida.VersionRequest()).Version);
-            var client2 = new HsnrTimetableService.HsnrTimetableServiceClient(channel);
-            var response = client2.Timetable(new TimetableRequest()
+            var dbConnector = new DatabaseConnector(new CidaContext(new CidaDbConnectionProvider(new MockSettingsManager())), new CidaDbConnectionProvider(new MockSettingsManager()));
+            using (var cidaContext = new CidaContext(new CidaDbConnectionProvider(new MockSettingsManager())))
             {
-                Calendar = CalendarType.BranchOfStudy,
-                BranchOfStudy = "KBI5",
-                Semester = SemesterType.WinterSemester,
-            });
-
-            foreach (var weekDay in response.Result.WeekDays)
-            {
-                Console.WriteLine(weekDay.Day);
-                    var stringBuilder = new StringBuilder();
-                foreach (var subject in weekDay.Subjects)
+                var ftpInformation = new FtpInformation()
                 {
-                    stringBuilder.Append(subject.Start).Append(" - ").Append(subject.End).Append("\t")
-                        .Append(subject.Name).Append("\t").Append(subject.Room).Append("\t")
-                        .AppendLine(subject.Lecturer);
-                }
-                Console.WriteLine(stringBuilder.ToString() + "\n\n");
+                    FtpPath = @"testpath",
+                };
+
+                var module = new ModuleInformation()
+                {
+                    ModuleId = Guid.NewGuid(),
+                    ModuleName = "testModule",
+                    FtpInfomation = ftpInformation
+                };
+
+                cidaContext.Modules.Add(module);
+
+                cidaContext.SaveChanges();
+
+                dbConnector.GetDatabaseConnectionString(module.ModuleId, "testPassword");
             }
-            
+
+
+            Console.WriteLine("Done");
 
             Console.ReadKey();
-            channel.ShutdownAsync().Wait();
         }
     }
 }
