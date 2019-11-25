@@ -55,6 +55,14 @@ namespace Cida.Server.Module
             this.ModulesUpdated?.Invoke();
         }
 
+        public async Task LoadModule(IEnumerable<byte> module)
+        {
+            var cidaModule = CidaModule.Extract(module.ToArray());
+            this.modules.Add(cidaModule);
+            var loadedModule = cidaModule.Load();
+            await this.grpcRegistrar.AddServicesAsync(loadedModule.GrpcServices);
+        }
+
         // TODO: Maybe better return type
         // TODO: Make interface
         public async Task<IEnumerable<IEnumerable<KeyValuePair<string, byte[]>>>> SerializeModules()

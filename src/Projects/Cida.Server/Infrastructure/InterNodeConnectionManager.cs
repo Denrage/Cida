@@ -9,6 +9,8 @@ using Grpc.Core;
 using Infrastructure;
 using NLog;
 using Cida.Server.Extensions;
+using Cida.Server.Infrastructure.Database;
+using Cida.Server.Infrastructure.Database.EFC;
 
 namespace Cida.Server.Infrastructure
 {
@@ -18,14 +20,20 @@ namespace Cida.Server.Infrastructure
         private readonly IList<Grpc.Core.Channel> connections;
         private readonly IInfrastructureConfiguration configuration;
         private readonly GlobalConfigurationService globalConfigurationService;
+        private readonly IFtpClient ftpClient;
+        private readonly CidaDbConnectionProvider provider;
+        private readonly ModuleLoaderManager manager;
         private readonly IModulePublisher modulePublisher;
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
         private CidaInfrastructureService.CidaInfrastructureServiceClient client;
 
-        public InterNodeConnectionManager(IInfrastructureConfiguration configuration, GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient)
+        public InterNodeConnectionManager(IInfrastructureConfiguration configuration, GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient, CidaDbConnectionProvider provider, ModuleLoaderManager manager)
         {
             this.configuration = configuration;
             this.globalConfigurationService = globalConfigurationService;
+            this.ftpClient = ftpClient;
+            this.provider = provider;
+            this.manager = manager;
             this.server = new Grpc.Core.Server();
             this.server.Ports.Add(this.configuration.ServerEndpoint.Host, this.configuration.ServerEndpoint.Port,
                 ServerCredentials.Insecure);
@@ -69,11 +77,22 @@ namespace Cida.Server.Infrastructure
                         Port = this.configuration.ServerEndpoint.Port,
                     },
                 });
-                
+
+                var databaseContext = new CidaContext(this.provider);
+                this.DownloadMissingModules(databaseContext.FtpPaths.Where(x => response.Modules.Contains(x.ModuleId.ToString())).Select(x => x.FtpPath));
                 this.logger.Info("Synchronize successful");
             }
         }
 
+        private void DownloadMissingModules(IEnumerable<string> paths)
+        {
+            foreach (var path in paths)
+            {
+                var file = this.ftpClient.GetFileAsync(path).GetAwaiter().GetResult();
+                this.manager.LoadModule(file).GetAwaiter().GetResult();
+            }
+        }
+        
         public class CidaInfrastructureServiceImplementation : CidaInfrastructureService.CidaInfrastructureServiceBase
         {
             private readonly ILogger logger;

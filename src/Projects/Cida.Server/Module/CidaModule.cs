@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Cida.Api;
+using Cida.Server.Infrastructure;
 using Newtonsoft.Json;
 
 namespace Cida.Server.Module
@@ -76,8 +77,16 @@ namespace Cida.Server.Module
 
         public static CidaModule Extract(string path)
         {
-            var fileStreams = ExtractFiles(path);
-
+            return Extract(ExtractFiles(path));
+        }
+        
+        public static CidaModule Extract(byte[] module)
+        {
+            return Extract(ExtractFiles(module));
+        }
+        
+        private static CidaModule Extract(IDictionary<string, Stream> fileStreams)
+        {
             var parsedMetadata = ParseMetadata(fileStreams);
 
             return new CidaModule(parsedMetadata, fileStreams);
@@ -93,6 +102,15 @@ namespace Cida.Server.Module
             var parsedMetadata = ParseMetadata(fileStreams);
 
             return new CidaModule(parsedMetadata, fileStreams);
+        }
+
+        public static CidaModule FromByteArray(byte[] module)
+        {
+            var fileStreams = ExtractFiles(module);
+
+            var parsedMetadata = ParseMetadata(fileStreams);
+            
+            return new CidaModule(parsedMetadata, );
         }
 
         private static CidaModuleMetadata ParseMetadata(IDictionary<string, Stream> fileStreams)
@@ -114,22 +132,33 @@ namespace Cida.Server.Module
 
         private static IDictionary<string, Stream> ExtractFiles(string path)
         {
+            using var archive = ZipFile.OpenRead(path);
+            return ExtractFiles(archive);
+        }
+
+        private static IDictionary<string, Stream> ExtractFiles(byte[] module)
+        {
+            using var stream = new MemoryStream(module);
+            using var archive = new ZipArchive(stream);
+            return ExtractFiles(archive);
+        }
+
+        private static IDictionary<string, Stream> ExtractFiles(ZipArchive archive)
+        {
             IDictionary<string, Stream> fileStreams = new Dictionary<string, Stream>();
-            using (var archive = ZipFile.OpenRead(path))
+            
+            foreach (var entry in archive.Entries)
             {
-                foreach (var entry in archive.Entries)
+                var entryFileStream = new MemoryStream();
+
+                using (var entryStream = entry.Open())
                 {
-                    var entryFileStream = new MemoryStream();
-
-                    using (var entryStream = entry.Open())
-                    {
-                        entryStream.CopyTo(entryFileStream);
-                    }
-
-                    entryFileStream.Seek(0, SeekOrigin.Begin);
-
-                    fileStreams.Add(entry.FullName, entryFileStream);
+                    entryStream.CopyTo(entryFileStream);
                 }
+
+                entryFileStream.Seek(0, SeekOrigin.Begin);
+
+                fileStreams.Add(entry.FullName, entryFileStream);
             }
 
             return fileStreams;
