@@ -84,6 +84,7 @@ namespace Cida.Server.Infrastructure
         }
     }
 
+    // TODO: Move out
     public interface IFtpClient
     {
         Task<IEnumerable<string>> GetFilesAsync(params string[] path);

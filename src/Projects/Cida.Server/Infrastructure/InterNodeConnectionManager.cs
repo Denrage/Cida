@@ -27,6 +27,7 @@ namespace Cida.Server.Infrastructure
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
         private CidaInfrastructureService.CidaInfrastructureServiceClient client;
 
+        // TODO: Better dependency injection
         public InterNodeConnectionManager(IInfrastructureConfiguration configuration, GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient, CidaDbConnectionProvider provider, ModuleLoaderManager manager)
         {
             this.configuration = configuration;
@@ -86,6 +87,7 @@ namespace Cida.Server.Infrastructure
 
         private void DownloadMissingModules(IEnumerable<string> paths)
         {
+            // TODO: Move this out to module manager
             foreach (var path in paths)
             {
                 var file = this.ftpClient.GetFileAsync(path).GetAwaiter().GetResult();

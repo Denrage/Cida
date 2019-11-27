@@ -110,7 +110,7 @@ namespace Cida.Server.Module
 
             var parsedMetadata = ParseMetadata(fileStreams);
             
-            return new CidaModule(parsedMetadata, );
+            return new CidaModule(parsedMetadata, fileStreams);
         }
 
         private static CidaModuleMetadata ParseMetadata(IDictionary<string, Stream> fileStreams)
@@ -175,6 +175,22 @@ namespace Cida.Server.Module
             GC.SuppressFinalize(this);
         }
 
+        public async Task<byte[]> ToArchive()
+        {
+            await using var memoryStream = new MemoryStream();
+            using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
+
+            foreach (var (filePath, value) in this.moduleFiles)
+            {
+                var entry = archive.CreateEntry(filePath);
+                await using var entryStream = entry.Open();
+                await value.CopyToAsync(entryStream);
+            }
+
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return memoryStream.ToArray();
+        }
+        
         public async Task<IEnumerable<KeyValuePair<string, byte[]>>> Serialize()
         {
             var result = new List<KeyValuePair<string, byte[]>>();

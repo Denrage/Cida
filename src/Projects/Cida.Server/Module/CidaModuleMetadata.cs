@@ -2,6 +2,7 @@ using System;
 
 namespace Cida.Server.Module
 {
+    // TODO: Add name
     public class CidaModuleMetadata
     {
         public Guid Id { get; set; }
