@@ -80,7 +80,8 @@ namespace Cida.Server.Infrastructure
                 });
 
                 var databaseContext = new CidaContext(this.provider);
-                this.DownloadMissingModules(databaseContext.FtpPaths.Where(x => response.Modules.Contains(x.ModuleId.ToString())).Select(x => x.FtpPath));
+                var modulePaths = databaseContext.FtpPaths.ToArray();
+                this.DownloadMissingModules(modulePaths.Where(x => response.Modules.Contains(x.ModuleId.ToString())).Select(x => x.FtpPath));
                 this.logger.Info("Synchronize successful");
             }
         }

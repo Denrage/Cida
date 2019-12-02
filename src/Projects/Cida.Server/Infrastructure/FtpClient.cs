@@ -62,6 +62,7 @@ namespace Cida.Server.Infrastructure
 
             await using var stream = await request.GetRequestStreamAsync();
             await stream.WriteAsync(file, 0 , file.Length);
+            using var response = await request.GetResponseAsync();
         }
 
         private FtpWebRequest CreateRequest(params string[] path)

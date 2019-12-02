@@ -6,6 +6,9 @@ using System.Runtime.Loader;
 using Autofac;
 using Autofac.Extras.NLog;
 using Cida.Server.Infrastructure;
+using Cida.Server.Infrastructure.Database;
+using Cida.Server.Infrastructure.Database.EFC;
+using Cida.Server.Infrastructure.Database.Settings;
 using Cida.Server.Interfaces;
 using Grpc.Core;
 using Grpc.Core.Logging;
@@ -46,14 +49,13 @@ namespace Cida.Server.Console
         {
             this.nodeName = string.IsNullOrEmpty(nodeName) ? "Node" : nodeName;
             this.container = InitializeDependencies();
-            var files1 = new FtpClient(this.container.Resolve<ISettingsProvider>()).GetFilesAsync().Result;
-            var files = string.Join(Environment.NewLine, files1);
-            System.Console.WriteLine(files);
         }
 
         public void Start()
         {
             GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<NLog.ILogger>()));
+            // TODO: Put this somewhere else
+            var dbConnector = new DatabaseConnector(new CidaContext(new CidaDbConnectionProvider(new MockSettingsManager())), new CidaDbConnectionProvider(new MockSettingsManager()));
             var server =
                 new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>());
         }

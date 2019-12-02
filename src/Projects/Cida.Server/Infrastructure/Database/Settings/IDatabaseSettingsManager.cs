@@ -7,10 +7,10 @@ namespace Cida.Server.Infrastructure.Database.Settings
 {
     public interface IDatabaseSettingsManager
     {
-        public event Action settingsChanged;
+        event Action settingsChanged;
 
-        public ConnectionSettings LoadSettings();
+        ConnectionSettings LoadSettings();
 
-        public void SaveSettings(ConnectionSettings connectionSettings);
+        void SaveSettings(ConnectionSettings connectionSettings);
     }
 }

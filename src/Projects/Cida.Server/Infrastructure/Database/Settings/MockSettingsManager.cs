@@ -13,7 +13,7 @@ namespace Cida.Server.Infrastructure.Database.Settings
         {
             return new ConnectionSettings()
             {
-                ServerName = "CidaSQL",
+                ServerName = "10.13.73.170",
                 DatabaseName = "Cida",
                 Username = "Cida",
                 Password = "cida",

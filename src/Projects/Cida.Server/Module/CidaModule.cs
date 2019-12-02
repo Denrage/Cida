@@ -79,12 +79,12 @@ namespace Cida.Server.Module
         {
             return Extract(ExtractFiles(path));
         }
-        
+
         public static CidaModule Extract(byte[] module)
         {
             return Extract(ExtractFiles(module));
         }
-        
+
         private static CidaModule Extract(IDictionary<string, Stream> fileStreams)
         {
             var parsedMetadata = ParseMetadata(fileStreams);
@@ -109,7 +109,7 @@ namespace Cida.Server.Module
             var fileStreams = ExtractFiles(module);
 
             var parsedMetadata = ParseMetadata(fileStreams);
-            
+
             return new CidaModule(parsedMetadata, fileStreams);
         }
 
@@ -122,7 +122,7 @@ namespace Cida.Server.Module
             }
 
             CidaModuleMetadata? parsedMetadata = null;
-            using (var metadataStream = new StreamReader(metadata))
+            using (var metadataStream = new StreamReader(metadata, leaveOpen: true))
             {
                 parsedMetadata = JsonConvert.DeserializeObject<CidaModuleMetadata>(metadataStream.ReadToEnd());
             }
@@ -146,7 +146,7 @@ namespace Cida.Server.Module
         private static IDictionary<string, Stream> ExtractFiles(ZipArchive archive)
         {
             IDictionary<string, Stream> fileStreams = new Dictionary<string, Stream>();
-            
+
             foreach (var entry in archive.Entries)
             {
                 var entryFileStream = new MemoryStream();
@@ -178,19 +178,21 @@ namespace Cida.Server.Module
         public async Task<byte[]> ToArchive()
         {
             await using var memoryStream = new MemoryStream();
-            using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
-
-            foreach (var (filePath, value) in this.moduleFiles)
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
-                var entry = archive.CreateEntry(filePath);
-                await using var entryStream = entry.Open();
-                await value.CopyToAsync(entryStream);
+                foreach (var (filePath, value) in this.moduleFiles)
+                {
+                    var entry = archive.CreateEntry(filePath);
+                    await using var entryStream = entry.Open();
+                    value.Seek(0, SeekOrigin.Begin);
+                    value.CopyTo(entryStream);
+                    value.Seek(0, SeekOrigin.Begin);
+                }
             }
 
-            memoryStream.Seek(0, SeekOrigin.Begin);
             return memoryStream.ToArray();
         }
-        
+
         public async Task<IEnumerable<KeyValuePair<string, byte[]>>> Serialize()
         {
             var result = new List<KeyValuePair<string, byte[]>>();
