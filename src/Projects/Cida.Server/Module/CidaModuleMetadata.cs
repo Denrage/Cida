@@ -6,6 +6,8 @@ namespace Cida.Server.Module
     public class CidaModuleMetadata
     {
         public Guid Id { get; set; }
+
+        public string Name { get; set; } = string.Empty;
         
         public string AssemblyFile { get; set; } = string.Empty;
 

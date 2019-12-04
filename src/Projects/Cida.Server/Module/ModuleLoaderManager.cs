@@ -91,8 +91,7 @@ namespace Cida.Server.Module
                 this.databaseContext.Modules.Add(new ModuleInformation()
                 {
                     ModuleId = module.Metadata.Id,
-                    // TODO: Add name to metadata
-                    ModuleName = module.Metadata.Id.ToString(),
+                    ModuleName = module.Metadata.Name,
                 });
                 this.databaseContext.FtpPaths.Add(new FtpInformation()
                 {
