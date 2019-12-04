@@ -86,12 +86,12 @@ namespace Cida.Server.Infrastructure
                 if (response.Timestamp.ToDateTime() > this.globalConfigurationService.ConfigurationManager.Timestamp)
                 {
                     this.logger.Info("Overwriting config because timestamp is newer");
-                    this.globalConfigurationService.Synchronize(config =>
+                    this.globalConfigurationService.Update(config =>
                         {
                             config.Timestamp = response.Timestamp.ToDateTime();
                             config.Database = response.Database.FromGrpc();
                             config.Ftp = response.Ftp.FromGrpc();
-                        });
+                        }, false);
                 }
 
                 this.logger.Info("Synchronize successful");

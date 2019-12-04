@@ -28,16 +28,6 @@ namespace Cida.Server.Infrastructure
             this.ConfigurationManager = new GlobalConfigurationManager(this.Configuration);
         }
 
-        public void Synchronize(Action<GlobalConfiguration> configurationChangeHandler)
-        {
-            // TODO: Use copy
-            var copiedConfiguration = this.Configuration;
-            configurationChangeHandler.Invoke(copiedConfiguration);
-            this.logger.Info("Setting new configuration: {@value1}", copiedConfiguration);
-            this.ConfigurationManager = new GlobalConfigurationManager(copiedConfiguration);
-            this.ConfigurationChanged?.Invoke();
-        }
-
         public void Update(Action<GlobalConfiguration> configurationChangeHandler, bool updateTimestamp = true)
         {
             // TODO: Use copy
@@ -51,6 +41,7 @@ namespace Cida.Server.Infrastructure
             }
 
             this.logger.Info("Setting new configuration: {@value1}", copiedConfiguration);
+            // TODO: Use copy
             this.Configuration = copiedConfiguration;
             this.ConfigurationManager = new GlobalConfigurationManager(this.Configuration);
             this.ConfigurationChanged?.Invoke();
