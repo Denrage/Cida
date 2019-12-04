@@ -1,21 +1,25 @@
 ﻿using Cida.Server.Infrastructure.Database.Extensions;
-using Cida.Server.Infrastructure.Database.Settings;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
+using Cida.Server.Infrastructure.Database.Models;
+using Cida.Server.Interfaces;
 
 namespace Cida.Server.Infrastructure.Database
 {
     public class CidaDbConnectionProvider
     {
-        private IDatabaseSettingsManager databaseSettingsManager;
+        private readonly GlobalConfigurationService configurationService;
 
-        public CidaDbConnectionProvider(IDatabaseSettingsManager databaseSettingsManager)
+        public event Action ConnectionStringUpdated;
+        
+        public CidaDbConnectionProvider(GlobalConfigurationService configurationService)
         {
-            this.databaseSettingsManager = databaseSettingsManager;
-            this.databaseSettingsManager.settingsChanged += this.UpdateConnectionString;
+            this.configurationService = configurationService;
+            this.configurationService.ConfigurationChanged += this.UpdateConnectionString;
+            
 
             this.UpdateConnectionString();
         }
@@ -29,9 +33,8 @@ namespace Cida.Server.Infrastructure.Database
 
         private void UpdateConnectionString()
         {
-            var connectionSettings = this.databaseSettingsManager.LoadSettings();
-
-            this.ConnectionString = connectionSettings.ToConnectionString();
+            this.ConnectionString = this.configurationService.ConfigurationManager.Database.ToConnectionString();
+            this.ConnectionStringUpdated?.Invoke();
         }
     }
 }

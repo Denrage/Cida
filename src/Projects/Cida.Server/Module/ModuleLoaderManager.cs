@@ -18,8 +18,8 @@ namespace Cida.Server.Module
         private readonly string moduleDirectory;
         private readonly IEnumerable<string> unpackedModuleDirectories;
         private readonly IGrpcRegistrar grpcRegistrar;
-        private readonly CidaDbConnectionProvider dbProvider;
         private readonly IFtpClient ftpClient;
+        private readonly CidaContext databaseContext;
         private readonly List<CidaModule> modules;
 
         public event Action ModulesUpdated;
@@ -27,20 +27,31 @@ namespace Cida.Server.Module
         public IEnumerable<Guid> Modules
             => this.modules.Select(x => x.Metadata.Id);
 
-        public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar,
-            CidaDbConnectionProvider dbProvider, IFtpClient ftpClient,
+        public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar, IFtpClient ftpClient,
+            CidaContext databaseContext,
             IEnumerable<string> unpackedModuleDirectories = null)
         {
             this.moduleDirectory = moduleDirectory;
             this.unpackedModuleDirectories = unpackedModuleDirectories ?? Array.Empty<string>();
             this.grpcRegistrar = grpcRegistrar;
-            this.dbProvider = dbProvider;
             this.ftpClient = ftpClient;
+            this.databaseContext = databaseContext;
             this.modules = new List<CidaModule>();
 
             if (!Directory.Exists(moduleDirectory))
             {
                 Directory.CreateDirectory(moduleDirectory);
+            }
+        }
+
+        public async Task LoadFromDatabase()
+        {
+            // TODO: Save locally
+            var modulePaths = this.databaseContext.FtpPaths.ToArray();
+            foreach (var path in modulePaths.Select(x => x.FtpPath))
+            {
+                var file = await this.ftpClient.GetFileAsync(path);
+                await this.LoadModule(file);
             }
         }
 
@@ -63,43 +74,33 @@ namespace Cida.Server.Module
             }
 
             // TODO: Move this to somewhere where it gets called everytime a module gets loaded
-            // TODO: Maybe don't create context here
-            var context = new CidaContext(this.dbProvider);
-            var modulesInDatabase = context.FtpPaths.ToArray();
+            var modulesInDatabase = this.databaseContext.FtpPaths.ToArray();
             var notUploaded = this.modules.Where(module =>
                 modulesInDatabase.FirstOrDefault(x =>
-                    Path.GetFileNameWithoutExtension(x.FtpPath) == module.Metadata.Id.ToString()) == null).ToList();
+                    Path.GetFileNameWithoutExtension(x.FtpPath) == module.Metadata.Id.ToString("N")) == null).ToList();
 
             // TODO: Add update mechanism
             foreach (var module in notUploaded)
             {
-                byte[] zippedModule = Array.Empty<byte>();
-                try
-                {
-                     zippedModule = await module.ToArchive();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                var zippedModule = await module.ToArchive();
 
                 // TODO: Get path from somewhere else
                 // TODO: Ensure all directories
-                await this.ftpClient.SaveFileAsync(zippedModule, "Modules", module.Metadata.Id.ToString("N") + "." + ModuleFileExtension);
-                context.Modules.Add(new ModuleInformation()
+                await this.ftpClient.SaveFileAsync(zippedModule, "Modules",
+                    module.Metadata.Id.ToString("N") + "." + ModuleFileExtension);
+                this.databaseContext.Modules.Add(new ModuleInformation()
                 {
                     ModuleId = module.Metadata.Id,
                     // TODO: Add name to metadata
                     ModuleName = module.Metadata.Id.ToString(),
                 });
-                context.FtpPaths.Add(new FtpInformation()
+                this.databaseContext.FtpPaths.Add(new FtpInformation()
                 {
                     // TODO: Get path from somewhere else
                     FtpPath = "Modules/" + module.Metadata.Id + "." + ModuleFileExtension,
                     ModuleId = module.Metadata.Id,
                 });
-                await context.SaveChangesAsync();
+                await this.databaseContext.SaveChangesAsync();
             }
 
             this.ModulesUpdated?.Invoke();

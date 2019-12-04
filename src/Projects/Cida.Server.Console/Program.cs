@@ -1,18 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Reflection;
-using System.Runtime.Loader;
 using Autofac;
-using Autofac.Extras.NLog;
-using Cida.Server.Infrastructure;
-using Cida.Server.Infrastructure.Database;
-using Cida.Server.Infrastructure.Database.EFC;
-using Cida.Server.Infrastructure.Database.Settings;
 using Cida.Server.Interfaces;
 using Grpc.Core;
-using Grpc.Core.Logging;
-using NLog;
 using ILogger = NLog.ILogger;
 
 namespace Cida.Server.Console
@@ -54,10 +44,9 @@ namespace Cida.Server.Console
         public void Start()
         {
             GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<NLog.ILogger>()));
-            // TODO: Put this somewhere else
-            var dbConnector = new DatabaseConnector(new CidaContext(new CidaDbConnectionProvider(new MockSettingsManager())), new CidaDbConnectionProvider(new MockSettingsManager()));
+            
             var server =
-                new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>());
+                new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>(), this.container.Resolve<ILogger>());
         }
 
         private IContainer InitializeDependencies()

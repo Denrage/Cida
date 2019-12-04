@@ -28,7 +28,9 @@ namespace Cida.Server.Infrastructure
         private CidaInfrastructureService.CidaInfrastructureServiceClient client;
 
         // TODO: Better dependency injection
-        public InterNodeConnectionManager(IInfrastructureConfiguration configuration, GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient, CidaDbConnectionProvider provider, ModuleLoaderManager manager)
+        public InterNodeConnectionManager(IInfrastructureConfiguration configuration,
+            GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient,
+            CidaDbConnectionProvider provider, ModuleLoaderManager manager)
         {
             this.configuration = configuration;
             this.globalConfigurationService = globalConfigurationService;
@@ -38,7 +40,8 @@ namespace Cida.Server.Infrastructure
             this.server = new Grpc.Core.Server();
             this.server.Ports.Add(this.configuration.ServerEndpoint.Host, this.configuration.ServerEndpoint.Port,
                 ServerCredentials.Insecure);
-            var implementation = new CidaInfrastructureServiceImplementation(this.logger, this.globalConfigurationService);
+            var implementation =
+                new CidaInfrastructureServiceImplementation(this.logger, this.globalConfigurationService);
             this.server.Services.Add(
                 CidaInfrastructureService.BindService(implementation));
 
@@ -79,30 +82,30 @@ namespace Cida.Server.Infrastructure
                     },
                 });
 
-                var databaseContext = new CidaContext(this.provider);
-                var modulePaths = databaseContext.FtpPaths.ToArray();
-                this.DownloadMissingModules(modulePaths.Where(x => response.Modules.Contains(x.ModuleId.ToString())).Select(x => x.FtpPath));
+                // TODO: Set timestamp to received one
+                if (response.Timestamp.ToDateTime() > this.globalConfigurationService.ConfigurationManager.Timestamp)
+                {
+                    this.logger.Info("Overwriting config because timestamp is newer");
+                    this.globalConfigurationService.Synchronize(config =>
+                        {
+                            config.Timestamp = response.Timestamp.ToDateTime();
+                            config.Database = response.Database.FromGrpc();
+                            config.Ftp = response.Ftp.FromGrpc();
+                        });
+                }
+
                 this.logger.Info("Synchronize successful");
             }
         }
 
-        private void DownloadMissingModules(IEnumerable<string> paths)
-        {
-            // TODO: Move this out to module manager
-            foreach (var path in paths)
-            {
-                var file = this.ftpClient.GetFileAsync(path).GetAwaiter().GetResult();
-                this.manager.LoadModule(file).GetAwaiter().GetResult();
-            }
-        }
-        
         public class CidaInfrastructureServiceImplementation : CidaInfrastructureService.CidaInfrastructureServiceBase
         {
             private readonly ILogger logger;
             private readonly GlobalConfigurationService globalConfigurationService;
             public event Action<Endpoint> OnSynchronize;
 
-            public CidaInfrastructureServiceImplementation(ILogger logger, GlobalConfigurationService globalConfigurationService)
+            public CidaInfrastructureServiceImplementation(ILogger logger,
+                GlobalConfigurationService globalConfigurationService)
             {
                 this.logger = logger;
                 this.globalConfigurationService = globalConfigurationService;
@@ -115,15 +118,12 @@ namespace Cida.Server.Infrastructure
                 this.OnSynchronize?.Invoke(request.PublicEndpoint);
                 var result = new SynchronizeResponse()
                 {
-                    Timestamp = Timestamp.FromDateTime(this.globalConfigurationService.Configuration.Timestamp.ToUniversalTime())
+                    Timestamp = Timestamp.FromDateTime(this.globalConfigurationService.ConfigurationManager.Timestamp
+                        .ToUniversalTime())
                 };
 
-                if (this.globalConfigurationService.Configuration.Modules?.Any() ?? false)
-                {
-                    result.Modules.AddRange(this.globalConfigurationService.Configuration.Modules.Select(x => x.ToString()));
-                }
-
-                result.Ftp = this.globalConfigurationService.Configuration.Ftp.ToGrpc();
+                result.Ftp = this.globalConfigurationService.ConfigurationManager.Ftp.ToGrpc();
+                result.Database = this.globalConfigurationService.ConfigurationManager.Database.ToGrpc();
                 return await Task.FromResult(result);
             }
         }

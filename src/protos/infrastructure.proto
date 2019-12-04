@@ -5,17 +5,8 @@ package infrastructure;
 import "google/protobuf/timestamp.proto";
 
 service CidaInfrastructureService {
-	rpc RetrieveModules (RetrieveModulesRequest) returns (RetrieveModulesResponse);
 	rpc Synchronize (SynchronizeRequest) returns (SynchronizeResponse);
 	rpc Version (VersionRequest) returns (VersionResponse);
-}
-
-message RetrieveModulesRequest {
-	repeated string modules = 1;
-}
-
-message RetrieveModulesResponse {
-	repeated bytes modules = 1;
 }
 
 message SynchronizeResponse {
@@ -25,9 +16,13 @@ message SynchronizeResponse {
 		string username = 3;
 		string password = 4;
 	}
+	message DatabaseConnection {
+		ExternalServerConnection connection = 1;
+		string databaseName = 2;
+	}
 	google.protobuf.Timestamp timestamp = 1;
-	repeated string modules = 2;
 	ExternalServerConnection Ftp = 3;
+	DatabaseConnection Database = 4;
 }
 
 message SynchronizeRequest {
