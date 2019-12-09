@@ -24,27 +24,34 @@ namespace Cida.Server
             this.settingsProvider = settingsProvider;
             this.logger = logger;
             this.grpcManager = new GrpcManager(settingsProvider.Get<GrpcConfiguration>(), this.logger);
-            var globalConfigurationService = new GlobalConfigurationService(this.logger, this.settingsProvider.Get<GlobalConfiguration>());
+            var globalConfigurationService = new GlobalConfigurationService(this.logger);
             var ftpClient = new FtpClient(globalConfigurationService, this.logger);
             var databaseProvider = new CidaDbConnectionProvider(globalConfigurationService);
             var cidaContext = new CidaContext(databaseProvider);
             this.moduleLoader = new ModuleLoaderManager(
-                Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName), 
+                Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName),
                 this.grpcManager,
                 ftpClient,
                 cidaContext,
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
             globalConfigurationService.ConfigurationChanged += async () =>
             {
-                this.logger.Info("Saving configuration");
-                this.settingsProvider.Save(globalConfigurationService.Configuration);
-                this.logger.Info("Done saving configuration");
-                this.logger.Info("Ensure Database");
-                await cidaContext.Database.EnsureCreatedAsync();
-                this.logger.Info("Database ensured");
-                this.logger.Info("Load Modules from database");
-                await this.moduleLoader.LoadFromDatabase();
-                this.logger.Info("Modules loaded");
+                try
+                {
+                    this.logger.Info("Saving configuration");
+                    this.settingsProvider.Save(globalConfigurationService.Configuration);
+                    this.logger.Info("Done saving configuration");
+                    this.logger.Info("Ensure Database");
+                    await cidaContext.Database.EnsureCreatedAsync();
+                    this.logger.Info("Database ensured");
+                    this.logger.Info("Load Modules from database");
+                    await this.moduleLoader.LoadFromDatabase();
+                    this.logger.Info("Modules loaded");
+                }
+                catch (Exception e)
+                {
+                    this.logger.Error(e);
+                }
             };
             this.interNodeConnectionManager = new InterNodeConnectionManager(
                 this.settingsProvider.Get<InfrastructureConfiguration>(),
@@ -52,13 +59,20 @@ namespace Cida.Server
                 ftpClient,
                 databaseProvider,
                 this.moduleLoader);
-            
+
+            globalConfigurationService.Update(configuration =>
+            {
+                var savedConfiguration = this.settingsProvider.Get<GlobalConfiguration>();
+                configuration.Database = savedConfiguration.Database;
+                configuration.Ftp = savedConfiguration.Ftp;
+                configuration.Timestamp = configuration.Timestamp;
+            }, false);
 
 
             Task.Run(async () => await this.moduleLoader.LoadModulesAsync());
         }
     }
-    
+
     public class ServerConfiguration
     {
         public string[] UnpackedModuleDirectories { get; set; } = Array.Empty<string>();

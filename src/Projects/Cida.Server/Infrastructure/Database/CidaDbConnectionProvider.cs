@@ -19,9 +19,6 @@ namespace Cida.Server.Infrastructure.Database
         {
             this.configurationService = configurationService;
             this.configurationService.ConfigurationChanged += this.UpdateConnectionString;
-            
-
-            this.UpdateConnectionString();
         }
 
         public string ConnectionString { get; private set; }
