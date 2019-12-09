@@ -14,11 +14,11 @@ namespace Cida.Server.Infrastructure
     public class FtpClient : IFtpClient
     {
         private readonly ILogger logger;
-        private readonly GlobalConfigurationManager.ExternalServerConnectionManager settings;
+        private GlobalConfigurationManager.ExternalServerConnectionManager settings;
         public FtpClient(GlobalConfigurationService globalConfiguration, ILogger logger)
         {
             this.logger = logger;
-            this.settings = globalConfiguration.ConfigurationManager.Ftp;
+            globalConfiguration.ConfigurationChanged += () => this.settings = globalConfiguration.ConfigurationManager.Ftp;
         }
 
         public async Task<IEnumerable<string>> GetFilesAsync(params string[] path)

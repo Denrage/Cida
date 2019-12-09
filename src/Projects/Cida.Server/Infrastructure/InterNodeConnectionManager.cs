@@ -17,7 +17,7 @@ namespace Cida.Server.Infrastructure
     public class InterNodeConnectionManager
     {
         private readonly Grpc.Core.Server server;
-        private readonly IList<Grpc.Core.Channel> connections;
+        private IList<Grpc.Core.Channel> connections;
         private readonly IInfrastructureConfiguration configuration;
         private readonly GlobalConfigurationService globalConfigurationService;
         private readonly IFtpClient ftpClient;
@@ -46,6 +46,11 @@ namespace Cida.Server.Infrastructure
                 CidaInfrastructureService.BindService(implementation));
 
             implementation.OnSynchronize += ImplementationOnOnSynchronize;
+
+        }
+
+        public void Start()
+        {
             this.server.Start();
             this.logger.Info(
                 $"InfrastructureServer started on {this.configuration.ServerEndpoint.Host}:{this.configuration.ServerEndpoint.Port}");
@@ -53,9 +58,9 @@ namespace Cida.Server.Infrastructure
 
             this.connections = new List<Channel>();
 
-            if (!string.IsNullOrEmpty(configuration.Node.Host) && configuration.Node.Port != default)
+            if (!string.IsNullOrEmpty(this.configuration.Node.Host) && this.configuration.Node.Port != default)
             {
-                this.InitializeClient(configuration.Node);
+                this.InitializeClient(this.configuration.Node);
             }
         }
 

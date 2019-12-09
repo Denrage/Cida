@@ -42,7 +42,7 @@ namespace Cida.Server
                     this.settingsProvider.Save(globalConfigurationService.Configuration);
                     this.logger.Info("Done saving configuration");
                     this.logger.Info("Ensure Database");
-                    await cidaContext.Database.EnsureCreatedAsync();
+                    cidaContext.Database.EnsureCreated();
                     this.logger.Info("Database ensured");
                     this.logger.Info("Load Modules from database");
                     await this.moduleLoader.LoadFromDatabase();
@@ -65,11 +65,13 @@ namespace Cida.Server
                 var savedConfiguration = this.settingsProvider.Get<GlobalConfiguration>();
                 configuration.Database = savedConfiguration.Database;
                 configuration.Ftp = savedConfiguration.Ftp;
-                configuration.Timestamp = configuration.Timestamp;
+                configuration.Timestamp = savedConfiguration.Timestamp;
             }, false);
 
+            this.interNodeConnectionManager.Start();
 
             Task.Run(async () => await this.moduleLoader.LoadModulesAsync());
+
         }
     }
 
