@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package crunchyroll;
+
+service CrunchyrollService {
+    rpc Version (VersionRequest) returns (VersionResponse);
+    rpc Search (SearchRequest) returns (SearchResponse);
+}
+
+enum SearchItemType {
+    General = 0;
+    Manga = 1;
+    Person = 2;
+    Series = 3;
+    Summarized = 4;
+    Unknown = 5;
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+    int32 Version = 1;
+}
+
+message SearchRequest {
+    string searchTerm = 1;
+}
+
+message SearchResponse {
+    message SearchItem {
+        string Id = 1;
+        SearchItemType Type = 2;
+        string Name = 3;
+        string ImageUrl = 4;
+        string Link = 5;
+    }
+
+    repeated SearchItem Items = 1;
+}

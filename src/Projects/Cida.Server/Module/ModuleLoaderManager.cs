@@ -9,6 +9,7 @@ using Cida.Server.Infrastructure;
 using Cida.Server.Infrastructure.Database;
 using Cida.Server.Infrastructure.Database.EFC;
 using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+using Grpc.Core;
 
 namespace Cida.Server.Module
 {
@@ -58,65 +59,77 @@ namespace Cida.Server.Module
 
         public async Task LoadModulesAsync()
         {
-            foreach (var modulePath in Directory.GetFiles(this.moduleDirectory, $"*.{ModuleFileExtension}"))
+            try
             {
-                var module = CidaModule.Extract(modulePath);
-                if (this.modules.TryAdd(module.Metadata.Id, module))
+                var services = new List<ServerServiceDefinition>();
+                foreach (var modulePath in Directory.GetFiles(this.moduleDirectory, $"*.{ModuleFileExtension}"))
                 {
-                    var loadedModule = module.Load();
-                    await this.grpcRegistrar.AddServicesAsync(loadedModule.GrpcServices);
+                    var module = CidaModule.Extract(modulePath);
+                    if (this.modules.TryAdd(module.Metadata.Id, module))
+                    {
+                        var loadedModule = module.Load();
+                        services.AddRange(loadedModule.GrpcServices);
+                    }
                 }
-            }
 
-            foreach (var unpackedModuleDirectory in this.unpackedModuleDirectories)
+                foreach (var unpackedModuleDirectory in this.unpackedModuleDirectories)
+                {
+                    var module = CidaModule.Unpacked(unpackedModuleDirectory);
+                    if (this.modules.TryAdd(module.Metadata.Id, module))
+                    {
+                        var loadedModule = module.Load();
+                        services.AddRange(loadedModule.GrpcServices);
+                    }
+                }
+
+                // TODO: Move this to somewhere where it gets called everytime a module gets loaded
+                // var modulesInDatabase = this.databaseContext.FtpPaths.ToArray();
+                // var notUploaded = this.modules.Where(module =>
+                //         modulesInDatabase.FirstOrDefault(x =>
+                //             Path.GetFileNameWithoutExtension(x.FtpPath) == module.Value.Metadata.Id.ToString("N")) ==
+                //         null)
+                //     .ToList();
+                //
+                // // TODO: Add update mechanism
+                // foreach (var module in notUploaded)
+                // {
+                //     var zippedModule = await module.Value.ToArchive();
+                //
+                //     // TODO: Get path from somewhere else
+                //     // TODO: Ensure all directories
+                //     try
+                //     {
+                //         await this.ftpClient.SaveFileAsync(zippedModule, "Modules",
+                //             module.Value.Metadata.Id.ToString("N") + "." + ModuleFileExtension);
+                //     }
+                //     catch (Exception ex)
+                //     {
+                //         throw;
+                //     }
+                //
+                //     this.databaseContext.Modules.Add(new ModuleInformation()
+                //     {
+                //         ModuleId = module.Value.Metadata.Id,
+                //         ModuleName = module.Value.Metadata.Name,
+                //     });
+                //     this.databaseContext.FtpPaths.Add(new FtpInformation()
+                //     {
+                //         // TODO: Get path from somewhere else
+                //         FtpPath = "Modules/" + module.Value.Metadata.Id.ToString("N") + "." + ModuleFileExtension,
+                //         ModuleId = module.Value.Metadata.Id,
+                //     });
+                //     await this.databaseContext.SaveChangesAsync();
+                // }
+
+                await this.grpcRegistrar.AddServicesAsync(services);
+
+                this.ModulesUpdated?.Invoke();
+            }
+            catch (Exception e)
             {
-                var module = CidaModule.Unpacked(unpackedModuleDirectory);
-                if (this.modules.TryAdd(module.Metadata.Id, module))
-                {
-                    var loadedModule = module.Load();
-                    await this.grpcRegistrar.AddServicesAsync(loadedModule.GrpcServices);
-                }
+                Console.WriteLine(e);
+                throw;
             }
-
-            // TODO: Move this to somewhere where it gets called everytime a module gets loaded
-            var modulesInDatabase = this.databaseContext.FtpPaths.ToArray();
-            var notUploaded = this.modules.Where(module =>
-                modulesInDatabase.FirstOrDefault(x =>
-                    Path.GetFileNameWithoutExtension(x.FtpPath) == module.Value.Metadata.Id.ToString("N")) == null).ToList();
-
-            // TODO: Add update mechanism
-            foreach (var module in notUploaded)
-            {
-                var zippedModule = await module.Value.ToArchive();
-
-                // TODO: Get path from somewhere else
-                // TODO: Ensure all directories
-                try
-                {
-
-                    await this.ftpClient.SaveFileAsync(zippedModule, "Modules",
-                        module.Value.Metadata.Id.ToString("N") + "." + ModuleFileExtension);
-                }
-                catch (Exception ex)
-                {
-
-                    throw;
-                }
-                this.databaseContext.Modules.Add(new ModuleInformation()
-                {
-                    ModuleId = module.Value.Metadata.Id,
-                    ModuleName = module.Value.Metadata.Name,
-                });
-                this.databaseContext.FtpPaths.Add(new FtpInformation()
-                {
-                    // TODO: Get path from somewhere else
-                    FtpPath = "Modules/" + module.Value.Metadata.Id.ToString("N") + "." + ModuleFileExtension,
-                    ModuleId = module.Value.Metadata.Id,
-                });
-                await this.databaseContext.SaveChangesAsync();
-            }
-
-            this.ModulesUpdated?.Invoke();
         }
 
         public async Task LoadModule(IEnumerable<byte> module)

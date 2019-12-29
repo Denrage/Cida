@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Text;
-using Cida.Server.Infrastructure.Database;
-using Cida.Server.Infrastructure.Database.EFC;
-using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
-using Cida.Server.Infrastructure.Database.Settings;
+using Crunchyroll;
 using Grpc.Core;
-using Hsnr;
 
 namespace TestApplication
 {
@@ -13,29 +8,20 @@ namespace TestApplication
     {
         static void Main(string[] args)
         {
-            var dbConnector = new DatabaseConnector(new CidaContext(new CidaDbConnectionProvider(new MockSettingsManager())), new CidaDbConnectionProvider(new MockSettingsManager()));
-            using (var cidaContext = new CidaContext(new CidaDbConnectionProvider(new MockSettingsManager())))
+            var client =
+                new CrunchyrollService.CrunchyrollServiceClient(new Channel("127.0.0.1", 31564,
+                    ChannelCredentials.Insecure));
+
+            var items = client.Search(new SearchRequest()
             {
-                var ftpInformation = new FtpInformation()
-                {
-                    FtpPath = @"testpath",
-                };
+                SearchTerm = "Sward"
+            }).Items;
 
-                var module = new ModuleInformation()
-                {
-                    ModuleId = Guid.NewGuid(),
-                    ModuleName = "testModule",
-                    FtpInfomation = ftpInformation
-                };
-
-                cidaContext.Modules.Add(module);
-
-                cidaContext.SaveChanges();
-
-                dbConnector.GetDatabaseConnectionString(module.ModuleId, "testPassword");
+            foreach (var item in items)
+            {
+                Console.WriteLine(item.Name);
             }
-
-
+            
             Console.WriteLine("Done");
 
             Console.ReadKey();

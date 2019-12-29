@@ -29,11 +29,18 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B}"
 	ProjectSection(SolutionItems) = preProject
 		protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
+		protos\Modules\crunchyroll.proto = protos\Modules\crunchyroll.proto
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B046479E-1AA7-422F-B043-30D41633F3FA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFC Model Updater", "Projects\Cida.Tools\EFC Model Updater\EFC Model Updater.csproj", "{C4C54462-CA28-459A-BE31-C730949EA749}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Module.Crunchyroll", "Module.Crunchyroll", "{9F7FE61B-75CB-477B-8D57-DFFD684C0B13}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{018DFBEF-8020-4521-AAE6-F5806263F4A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.Crunchyroll", "Modules\Module.Crunchyroll\Server\Module.Crunchyroll\Module.Crunchyroll.csproj", "{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,6 +72,10 @@ Global
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -77,6 +88,9 @@ Global
 		{0BA560C3-E268-4F51-AF46-C5293685AA0E} = {030DF1D2-D51F-43F8-827D-42749ECDB5A0}
 		{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B} = {78A43CE1-AFA1-4A45-B08A-FC817178E7DA}
 		{C4C54462-CA28-459A-BE31-C730949EA749} = {B046479E-1AA7-422F-B043-30D41633F3FA}
+		{9F7FE61B-75CB-477B-8D57-DFFD684C0B13} = {DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}
+		{018DFBEF-8020-4521-AAE6-F5806263F4A3} = {9F7FE61B-75CB-477B-8D57-DFFD684C0B13}
+		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD} = {018DFBEF-8020-4521-AAE6-F5806263F4A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD4E48FF-111A-4466-A02E-3AA5EFC36655}
