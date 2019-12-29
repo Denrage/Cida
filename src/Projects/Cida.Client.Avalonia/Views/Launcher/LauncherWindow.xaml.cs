@@ -1,15 +1,14 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Cida.Client.Avalonia.ViewModels;
 
 namespace Cida.Client.Avalonia.Views
 {
-    public class MainWindow : Window
+    public class LauncherWindow : Window
     {
-        public MainWindow()
+        public LauncherWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif

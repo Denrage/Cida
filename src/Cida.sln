@@ -28,8 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{0BA560
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B}"
 	ProjectSection(SolutionItems) = preProject
-		protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
 		protos\Modules\crunchyroll.proto = protos\Modules\crunchyroll.proto
+		protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B046479E-1AA7-422F-B043-30D41633F3FA}"
@@ -40,7 +40,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Module.Crunchyroll", "Modul
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{018DFBEF-8020-4521-AAE6-F5806263F4A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.Crunchyroll", "Modules\Module.Crunchyroll\Server\Module.Crunchyroll\Module.Crunchyroll.csproj", "{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Crunchyroll", "Modules\Module.Crunchyroll\Server\Module.Crunchyroll\Module.Crunchyroll.csproj", "{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{46F9BD61-2E93-4B81-959E-2B278F2135B7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.Avalonia", "Projects\Cida.Client.Avalonia\Cida.Client.Avalonia.csproj", "{E42D9A7C-63EF-4E0B-83BD-15880DF1B158}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +80,10 @@ Global
 		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E42D9A7C-63EF-4E0B-83BD-15880DF1B158}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E42D9A7C-63EF-4E0B-83BD-15880DF1B158}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E42D9A7C-63EF-4E0B-83BD-15880DF1B158}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E42D9A7C-63EF-4E0B-83BD-15880DF1B158}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,6 +99,7 @@ Global
 		{9F7FE61B-75CB-477B-8D57-DFFD684C0B13} = {DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}
 		{018DFBEF-8020-4521-AAE6-F5806263F4A3} = {9F7FE61B-75CB-477B-8D57-DFFD684C0B13}
 		{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD} = {018DFBEF-8020-4521-AAE6-F5806263F4A3}
+		{E42D9A7C-63EF-4E0B-83BD-15880DF1B158} = {46F9BD61-2E93-4B81-959E-2B278F2135B7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD4E48FF-111A-4466-A02E-3AA5EFC36655}

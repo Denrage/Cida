@@ -8,10 +8,14 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="Cida.Client.Avalonia">
 
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+  <Design.DataContext>
+    <vm:MainWindowViewModel/>
+  </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <StackPanel>
+    <ContentControl Content="{Binding Content}" Height="100" />
+    <Button Content="Switch" Command="{Binding Switch}"/>
+  </StackPanel>
+
 
 </Window>

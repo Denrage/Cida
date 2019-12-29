@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Cida.Client.Avalonia.ViewModels;
+using Cida.Client.Avalonia.ViewModels.Launcher;
 using Cida.Client.Avalonia.Views;
 
 namespace Cida.Client.Avalonia
@@ -17,9 +18,9 @@ namespace Cida.Client.Avalonia
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = new MainWindow
+                desktop.MainWindow = new LauncherWindow()
                 {
-                    DataContext = new MainWindowViewModel(),
+                    DataContext = new LauncherWindowViewModel(),
                 };
             }
 
