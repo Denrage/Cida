@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using Cida.Client.Avalonia.Api;
+using ReactiveUI;
 
 namespace Cida.Client.Avalonia.ViewModels.Launcher
 {

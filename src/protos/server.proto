@@ -4,6 +4,7 @@ package cida;
 
 service CidaApiService {
 	rpc Version (VersionRequest) returns (VersionResponse);
+	rpc ClientModule (ClientModuleRequest) returns (ClientModuleResponse);
 }
 
 message VersionRequest {
@@ -11,4 +12,12 @@ message VersionRequest {
 
 message VersionResponse {
 	int32 Version = 1;
+}
+
+message ClientModuleRequest {
+	string Id = 1;
+}
+
+message ClientModuleResponse {
+	repeated bytes Streams = 1;
 }

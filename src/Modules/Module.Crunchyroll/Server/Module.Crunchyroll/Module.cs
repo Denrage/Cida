@@ -6,6 +6,7 @@ using Cida.Api;
 using Crunchyroll;
 using Grpc.Core;
 using Module.Crunchyroll.Extensions;
+using Module.Crunchyroll.Libs;
 
 namespace Module.Crunchyroll
 {

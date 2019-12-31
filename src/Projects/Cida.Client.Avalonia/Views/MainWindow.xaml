@@ -12,10 +12,20 @@
     <vm:MainWindowViewModel/>
   </Design.DataContext>
 
-  <StackPanel>
-    <ContentControl Content="{Binding Content}" Height="100" />
-    <Button Content="Switch" Command="{Binding Switch}"/>
-  </StackPanel>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="0.2*" />
+      <ColumnDefinition />
+    </Grid.ColumnDefinitions>
+    <ListBox Grid.Column="0" Items="{Binding Modules}" SelectedItem="{Binding SelectedModule}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding Name}"/>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <ContentControl Grid.Column="1" Content="{Binding SelectedViewModel}"/>
+  </Grid>
 
 
 </Window>

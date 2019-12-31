@@ -131,6 +131,10 @@ namespace Cida.Server.Module
                 throw;
             }
         }
+        public async Task<IEnumerable<byte[]>> GetClientModulesAsync(Guid id)
+        {
+            return (await Task.WhenAll(this.modules.Select(x => x.Value.GetClientModule(id)))).Where(x => x.Length > 0);
+        }
 
         public async Task LoadModule(IEnumerable<byte> module)
         {

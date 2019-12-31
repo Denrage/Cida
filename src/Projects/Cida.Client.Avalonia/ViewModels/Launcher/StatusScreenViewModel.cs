@@ -1,4 +1,6 @@
-﻿namespace Cida.Client.Avalonia.ViewModels.Launcher
+﻿using Cida.Client.Avalonia.Api;
+
+namespace Cida.Client.Avalonia.ViewModels.Launcher
 {
     public class StatusScreenViewModel : ViewModelBase
     {

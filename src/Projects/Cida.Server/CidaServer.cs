@@ -70,7 +70,12 @@ namespace Cida.Server
 
             this.interNodeConnectionManager.Start();
 
-            Task.Run(async () => await this.moduleLoader.LoadModulesAsync());
+            Task.Run(async () =>
+            {
+                await this.grpcManager.AddServicesAsync(new[]
+                    {Cida.CidaApiService.BindService(new GrpcManager.CidaApiService(this.moduleLoader))});
+                await this.moduleLoader.LoadModulesAsync();
+            });
 
         }
     }

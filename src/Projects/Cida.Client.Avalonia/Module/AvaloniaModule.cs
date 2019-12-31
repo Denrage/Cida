@@ -1,29 +1,29 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
-using Cida.Api;
-using Cida.Server.Infrastructure;
-using Newtonsoft.Json;
+using System.Text;
+using Cida.Client.Avalonia.Api;
 
-namespace Cida.Server.Module
+namespace Cida.Client.Avalonia.Module
 {
-    public class CidaModule : IDisposable
+    public class AvaloniaModule
     {
         private const string PackagesInfo = "PackagesInfo.json";
         private readonly IDictionary<string, Stream> moduleFiles;
-        private readonly CidaModuleLoadContext loadContext;
+        private readonly CidaAvaloniaModuleLoadContext loadContext;
         private readonly Type entryType;
 
         public Assembly Assembly { get; }
 
-        public CidaModuleMetadata Metadata { get; }
+        public AvaloniaModuleMetadata Metadata { get; }
 
-        public CidaModule(
-            CidaModuleMetadata metadata,
+        public IModule Module { get; }
+
+        public AvaloniaModule(
+            AvaloniaModuleMetadata metadata,
             IDictionary<string, Stream> moduleFiles)
         {
             this.Metadata = metadata;
@@ -38,17 +38,22 @@ namespace Cida.Server.Module
 
             this.Assembly = this.loadContext.LoadFromStream(assembly);
 
+            // Hack: Don't use static
+            ViewLocator.Assemblies.Add(this.Assembly);
+
             this.entryType = this.Assembly.GetType(this.Metadata.EntryType);
             if (this.entryType is null)
             {
                 // TODO: Replace this with custom exception
                 throw new InvalidOperationException($"Entry type '{this.Metadata.EntryType}' not found in assembly");
             }
+
+            this.Module = (IModule)Activator.CreateInstance(this.entryType);
         }
 
-        private CidaModuleLoadContext InitializeLoadContext()
+        private CidaAvaloniaModuleLoadContext InitializeLoadContext()
         {
-            var loadContext = new CidaModuleLoadContext();
+            var loadContext = new CidaAvaloniaModuleLoadContext();
             loadContext.Resolving += (context, name) =>
             {
                 if (!this.moduleFiles.TryGetValue($"{name.Name}.dll", out var resolvedDependency))
@@ -63,36 +68,29 @@ namespace Cida.Server.Module
             return loadContext;
         }
 
-        public IModule Load()
-        {
-            var instance = (Cida.Api.IModule)Activator.CreateInstance(this.entryType);
-            instance.Load();
-            return instance;
-        }
-
-        ~CidaModule()
+        ~AvaloniaModule()
         {
             this.Dispose();
         }
 
-        public static CidaModule Extract(string path)
+        public static AvaloniaModule Extract(string path)
         {
             return Extract(ExtractFiles(path));
         }
 
-        public static CidaModule Extract(byte[] module)
+        public static AvaloniaModule Extract(byte[] module)
         {
             return Extract(ExtractFiles(module));
         }
 
-        private static CidaModule Extract(IDictionary<string, Stream> fileStreams)
+        private static AvaloniaModule Extract(IDictionary<string, Stream> fileStreams)
         {
             var parsedMetadata = ParseMetadata(fileStreams);
 
-            return new CidaModule(parsedMetadata, fileStreams);
+            return new AvaloniaModule(parsedMetadata, fileStreams);
         }
 
-        public static CidaModule Unpacked(string path)
+        public static AvaloniaModule Unpacked(string path)
         {
             var fileStreams = Directory.GetFiles(path)
                 .Select(x => (Path.GetRelativePath(path, x),
@@ -101,10 +99,10 @@ namespace Cida.Server.Module
 
             var parsedMetadata = ParseMetadata(fileStreams);
 
-            return new CidaModule(parsedMetadata, fileStreams);
+            return new AvaloniaModule(parsedMetadata, fileStreams);
         }
 
-        private static CidaModuleMetadata ParseMetadata(IDictionary<string, Stream> fileStreams)
+        private static AvaloniaModuleMetadata ParseMetadata(IDictionary<string, Stream> fileStreams)
         {
             if (!fileStreams.TryGetValue(PackagesInfo, out var metadata))
             {
@@ -112,10 +110,11 @@ namespace Cida.Server.Module
                 throw new InvalidOperationException($"No '{PackagesInfo}' found in root dir of module!");
             }
 
-            CidaModuleMetadata? parsedMetadata = null;
+            AvaloniaModuleMetadata? parsedMetadata = null;
             using (var metadataStream = new StreamReader(metadata, leaveOpen: true))
             {
-                parsedMetadata = JsonConvert.DeserializeObject<CidaModuleMetadata>(metadataStream.ReadToEnd());
+                var json = metadataStream.ReadToEnd();
+                parsedMetadata = System.Text.Json.JsonSerializer.Deserialize<AvaloniaModuleMetadata>(json);
             }
 
             return parsedMetadata;
@@ -164,60 +163,6 @@ namespace Cida.Server.Module
             }
 
             GC.SuppressFinalize(this);
-        }
-
-        public async Task<byte[]> ToArchive()
-        {
-            await using var memoryStream = new MemoryStream();
-            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-            {
-                foreach (var (filePath, value) in this.moduleFiles)
-                {
-                    var entry = archive.CreateEntry(filePath);
-                    await using var entryStream = entry.Open();
-                    value.Seek(0, SeekOrigin.Begin);
-                    value.CopyTo(entryStream);
-                    value.Seek(0, SeekOrigin.Begin);
-                }
-            }
-
-            return memoryStream.ToArray();
-        }
-
-        public async Task<IEnumerable<KeyValuePair<string, byte[]>>> Serialize()
-        {
-            var result = new List<KeyValuePair<string, byte[]>>();
-            foreach (var moduleFile in this.moduleFiles)
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await moduleFile.Value.CopyToAsync(memoryStream);
-
-                    result.Add(new KeyValuePair<string, byte[]>(moduleFile.Key, memoryStream.ToArray()));
-                }
-
-                if (moduleFile.Value.CanSeek)
-                {
-                    moduleFile.Value.Seek(0, SeekOrigin.Begin);
-                }
-            }
-
-            return result;
-        }
-
-        public async Task<byte[]> GetClientModule(Guid id)
-        {
-            if (this.Metadata.Clients.TryGetValue(id, out var clientModule))
-            {
-                var stream = this.moduleFiles[clientModule];
-                await using var memoryStream = new MemoryStream();
-                stream.Seek(0, SeekOrigin.Begin);
-                await stream.CopyToAsync(memoryStream);
-                stream.Seek(0, SeekOrigin.Begin);
-                return memoryStream.ToArray();
-            }
-
-            return Array.Empty<byte>();
         }
     }
 }
