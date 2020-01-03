@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{78A43C
 		protos\server.proto = protos\server.proto
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Server", "Projects\Cida.Server\Cida.Server.csproj", "{74503A42-B08F-4AD9-BE0D-052B6D269CBB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Server", "Projects\Server\Cida.Server\Cida.Server.csproj", "{74503A42-B08F-4AD9-BE0D-052B6D269CBB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Server.Console", "Projects\Cida.Server.Console\Cida.Server.Console.csproj", "{7F365962-BC91-450B-991D-78A94B817B81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Server.Console", "Projects\Server\Cida.Server.Console\Cida.Server.Console.csproj", "{7F365962-BC91-450B-991D-78A94B817B81}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Api", "Projects\Cida.Api\Cida.Api.csproj", "{6F0D0283-8677-4621-8644-93B609BC5663}"
 EndProject
@@ -20,9 +20,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApplication", "TestAppl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Hsnr", "Modules\Module.Hsnr\Server\Module.Hsnr.csproj", "{E8673CE0-A56A-4F05-B9BA-67DD1110953E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Hsnr.Server", "Projects\Modules\Hsnr\Server\Module.Hsnr.Server\Module.Hsnr.Server.csproj", "{E8673CE0-A56A-4F05-B9BA-67DD1110953E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Module.Hsnr", "Module.Hsnr", "{030DF1D2-D51F-43F8-827D-42749ECDB5A0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hsnr", "Hsnr", "{030DF1D2-D51F-43F8-827D-42749ECDB5A0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{0BA560C3-E268-4F51-AF46-C5293685AA0E}"
 EndProject
@@ -36,25 +36,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B046479E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFC Model Updater", "Projects\Cida.Tools\EFC Model Updater\EFC Model Updater.csproj", "{C4C54462-CA28-459A-BE31-C730949EA749}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Module.Crunchyroll", "Module.Crunchyroll", "{9F7FE61B-75CB-477B-8D57-DFFD684C0B13}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Crunchyroll", "Crunchyroll", "{9F7FE61B-75CB-477B-8D57-DFFD684C0B13}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{018DFBEF-8020-4521-AAE6-F5806263F4A3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Crunchyroll", "Modules\Module.Crunchyroll\Server\Module.Crunchyroll\Module.Crunchyroll.csproj", "{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Crunchyroll", "Projects\Modules\Crunchyroll\Server\Module.Crunchyroll\Module.Crunchyroll.csproj", "{5DC1C4CD-A8B5-4DCD-9048-4316E26B80FD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{46F9BD61-2E93-4B81-959E-2B278F2135B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.Avalonia", "Projects\Cida.Client.Avalonia\Cida.Client.Avalonia.csproj", "{E42D9A7C-63EF-4E0B-83BD-15880DF1B158}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.Avalonia", "Projects\Clients\Cida.Client.Avalonia\Cida.Client.Avalonia.csproj", "{E42D9A7C-63EF-4E0B-83BD-15880DF1B158}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{958C5A6D-5D4C-4D77-A9BB-E47B394F6197}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{958C5A6D-5D4C-4D77-A9BB-E47B394F6197}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.Crunchyroll.Libs", "Module.Crunchyroll.Libs\Module.Crunchyroll.Libs.csproj", "{8166C136-5767-4F6D-8BE5-0382B226AF86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Crunchyroll.Libs", "Projects\Modules\Crunchyroll\Module.Crunchyroll.Libs\Module.Crunchyroll.Libs.csproj", "{8166C136-5767-4F6D-8BE5-0382B226AF86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.Crunchyroll.Avalonia", "Module.Crunchyroll.Avalonia\Module.Crunchyroll.Avalonia.csproj", "{BC464C2D-20C1-4E78-9543-64253E329F4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Crunchyroll.Avalonia", "Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.Avalonia\Module.Crunchyroll.Avalonia.csproj", "{BC464C2D-20C1-4E78-9543-64253E329F4A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Avalonia", "Avalonia", "{1CABD27E-C969-4ECD-9F8E-AD990CA5CF48}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cida.Client.Avalonia.Api", "Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj", "{9A6E650D-3A0B-41FE-81A9-2211CA3970FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.Avalonia.Api", "Projects\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj", "{9A6E650D-3A0B-41FE-81A9-2211CA3970FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

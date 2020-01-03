@@ -7,15 +7,6 @@ service CrunchyrollService {
     rpc Search (SearchRequest) returns (SearchResponse);
 }
 
-enum SearchItemType {
-    General = 0;
-    Manga = 1;
-    Person = 2;
-    Series = 3;
-    Summarized = 4;
-    Unknown = 5;
-}
-
 message VersionRequest {
 }
 
@@ -29,11 +20,25 @@ message SearchRequest {
 
 message SearchResponse {
     message SearchItem {
-        string Id = 1;
-        SearchItemType Type = 2;
-        string Name = 3;
-        string ImageUrl = 4;
-        string Link = 5;
+	message Image {
+		string Thumbnail = 1;
+		string Small = 2;
+		string Medium = 3;
+		string Large = 4;
+		string Full = 5;
+		string Wide = 6;
+		string WideWithStar = 7;
+		string FullWide = 8;
+		string FullWideWithStar = 9;
+		string Width = 10;
+		string Height = 11;
+	}
+	string Id = 1;
+	string Url = 2;
+	string Name = 3;
+	Image LandscapeImage = 4;
+	Image PortraitImage = 5;
+	string Description = 6;
     }
 
     repeated SearchItem Items = 1;
