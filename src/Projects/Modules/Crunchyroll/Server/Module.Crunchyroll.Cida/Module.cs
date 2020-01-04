@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 using Cida.Api;
 using Crunchyroll;
 using Grpc.Core;
-using Module.Crunchyroll.Extensions;
-using Module.Crunchyroll.Libs;
-using Module.Crunchyroll.Services;
+using Module.Crunchyroll.Cida.Extensions;
+using Module.Crunchyroll.Cida.Services;
 
-namespace Module.Crunchyroll
+namespace Module.Crunchyroll.Cida
 {
     public class Module : IModule
     {

@@ -6,6 +6,7 @@ using Cida.Client.Avalonia.Services;
 using Cida.Client.Avalonia.ViewModels;
 using Cida.Client.Avalonia.ViewModels.Launcher;
 using Cida.Client.Avalonia.Views;
+using Cida.Client.Avalonia.Views.Launcher;
 
 namespace Cida.Client.Avalonia
 {

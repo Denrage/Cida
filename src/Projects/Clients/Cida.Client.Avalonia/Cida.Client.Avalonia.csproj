@@ -34,7 +34,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <Protobuf Include="../../protos/server.proto" Link="server.proto" />
+    <Protobuf Include="../../../protos/server.proto" Link="server.proto" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Views\Launcher\LauncherWindow.xaml">
@@ -52,7 +52,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
+    <ProjectReference Include="..\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Views\Launcher\ConnectionScreenView.xaml.cs">

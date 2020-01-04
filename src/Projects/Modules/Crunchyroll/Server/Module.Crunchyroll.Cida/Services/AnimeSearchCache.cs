@@ -4,14 +4,13 @@ using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Module.Crunchyroll.Libs;
+using Module.Crunchyroll.Cida.Services.Sessions;
 using Module.Crunchyroll.Libs.Models.Details;
 using Module.Crunchyroll.Libs.Models.Search;
-using Module.Crunchyroll.Services.Sessions;
 using RestSharp;
 using Data = Module.Crunchyroll.Libs.Models.Search.Data;
 
-namespace Module.Crunchyroll.Services
+namespace Module.Crunchyroll.Cida.Services
 {
     public class AnimeSearchCache
     {

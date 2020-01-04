@@ -2,7 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Cida.Client.Avalonia.Views
+namespace Cida.Client.Avalonia.Views.Launcher
 {
     public class LauncherWindow : Window
     {

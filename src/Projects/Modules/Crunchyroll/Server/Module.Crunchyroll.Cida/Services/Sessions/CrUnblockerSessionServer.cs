@@ -1,6 +1,6 @@
 using RestSharp;
 
-namespace Module.Crunchyroll.Services.Sessions
+namespace Module.Crunchyroll.Cida.Services.Sessions
 {
     internal class CrUnblockerSessionServer : SessionServer
     {

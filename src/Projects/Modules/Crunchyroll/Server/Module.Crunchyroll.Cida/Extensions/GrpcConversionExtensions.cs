@@ -1,12 +1,8 @@
-using System;
-using System.Runtime.CompilerServices;
-using Module.Crunchyroll.Libs;
 using Module.Crunchyroll.Libs.Models.Details;
-using Module.Crunchyroll.Libs.Models.Search;
 using CR = Crunchyroll;
 using Data = Module.Crunchyroll.Libs.Models.Details.Data;
 
-namespace Module.Crunchyroll.Extensions
+namespace Module.Crunchyroll.Cida.Extensions
 {
     public static class GrpcConversionExtensions
     {

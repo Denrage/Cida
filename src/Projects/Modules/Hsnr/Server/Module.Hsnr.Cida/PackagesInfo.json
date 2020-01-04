@@ -1,6 +1,6 @@
 {
   "id": "5640177C-1D1E-49D4-BA57-4A770F18AA7E",
   "Name": "Hochschule Niederrhein",
-  "assemblyFile": "Module.Hsnr.dll",
-  "entryType": "Module.Hsnr.Module"
+  "assemblyFile": "Module.Hsnr.Cida.dll",
+  "entryType": "Module.Hsnr.Cida.Module"
 }

@@ -7,11 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\..\Module.Crunchyroll.Libs\Module.Crunchyroll.Libs.csproj" />
-        <ProjectReference Include="..\..\..\..\Projects\Cida.Api\Cida.Api.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="Grpc.Core.Api" Version="2.24.0" />
         <PackageReference Include="Google.Protobuf" Version="3.9.1" />
         <PackageReference Include="Grpc" Version="2.23.0" />
@@ -20,7 +15,9 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="System.Text.Json" Version="4.7.0" />
-        <Protobuf Include="../../../../protos/Modules/crunchyroll.proto" Link="crunchyroll.proto" />
+        <ProjectReference Include="..\..\..\..\Cida.Api\Cida.Api.csproj" />
+        <ProjectReference Include="..\..\Module.Crunchyroll.Libs\Module.Crunchyroll.Libs.csproj" />
+        <Protobuf Include="../../../../../protos/Modules/crunchyroll.proto" Link="crunchyroll.proto" />
     </ItemGroup>
 
     <ItemGroup>

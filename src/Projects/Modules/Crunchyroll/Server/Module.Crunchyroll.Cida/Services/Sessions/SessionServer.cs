@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Module.Crunchyroll.Libs.Models.Session;
 using RestSharp;
 
-namespace Module.Crunchyroll.Services.Sessions
+namespace Module.Crunchyroll.Cida.Services.Sessions
 {
     internal abstract class SessionServer
     {

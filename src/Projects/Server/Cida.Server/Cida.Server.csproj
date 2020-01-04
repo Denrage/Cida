@@ -27,12 +27,9 @@
         <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
         <PackageReference Include="NLog" Version="4.6.7" />
         <PackageReference Include="System.Runtime.Loader" Version="4.3" />
-        <Protobuf Include="../../protos/server.proto" Link="server.proto" />
-        <Protobuf Include="../../protos/infrastructure.proto" Link="infrastructure.proto" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Cida.Api\Cida.Api.csproj" />
+        <ProjectReference Include="..\..\Cida.Api\Cida.Api.csproj" />
+        <Protobuf Include="../../../protos/server.proto" Link="server.proto" />
+        <Protobuf Include="../../../protos/infrastructure.proto" Link="infrastructure.proto" />
     </ItemGroup>
 
 </Project>

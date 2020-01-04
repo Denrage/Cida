@@ -68,7 +68,7 @@ namespace Cida.Client.Avalonia.ViewModels
                 //var client = new CidaApiService.CidaApiServiceClient(this.connectionService.Channel);
                 //var modules = (await client.ClientModuleAsync(new ClientModuleRequest() { Id = "F38224C1-7588-4773-A345-A238B8937A8F" })).Streams.Select(x => AvaloniaModule.Extract(x.ToByteArray())).Select(x => x.Module).ToArray();
 
-                var modules = new[] {AvaloniaModule.Unpacked(@"C:\Repos\Cida\src\Module.Crunchyroll.Avalonia\bin\Debug\netstandard2.1").Module};
+                var modules = new[] {AvaloniaModule.Unpacked(@"C:\Repos\Cida\src\Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.Avalonia\bin\Debug\netstandard2.1").Module};
 
                 foreach (var module in modules)
                 {

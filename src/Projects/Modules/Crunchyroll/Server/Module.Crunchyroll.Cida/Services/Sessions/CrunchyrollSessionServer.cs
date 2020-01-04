@@ -1,7 +1,7 @@
 using System;
 using RestSharp;
 
-namespace Module.Crunchyroll.Services.Sessions
+namespace Module.Crunchyroll.Cida.Services.Sessions
 {
     internal class CrunchyrollSessionServer : SessionServer
     {

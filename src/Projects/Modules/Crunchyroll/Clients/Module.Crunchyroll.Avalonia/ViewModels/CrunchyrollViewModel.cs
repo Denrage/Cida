@@ -43,7 +43,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                 this.SearchResults.Add(new SearchResult()
                 {
                     Name = searchResultItem.Name,
-                    Image = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Full ?? searchResultItem.LandscapeImage?.Full ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                    Image = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ?? searchResultItem.LandscapeImage?.Small ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
                 });
             }
         }
