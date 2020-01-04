@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Module.Crunchyroll.Libs.Models.Search
 {
-    public class SearchData
+    public class Result
     {
         [JsonPropertyName("result_code")] public long ResultCode { get; set; }
 
@@ -11,7 +11,7 @@ namespace Module.Crunchyroll.Libs.Models.Search
         [JsonPropertyName("suggested_redirect_url")]
         public object SuggestedRedirectUrl { get; set; }
 
-        [JsonPropertyName("data")] public Data[] Data { get; set; }
+        [JsonPropertyName("data")] public SearchItem[] Data { get; set; }
 
         [JsonPropertyName("exception_class")] public object ExceptionClass { get; set; }
 

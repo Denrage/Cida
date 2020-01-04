@@ -36,6 +36,14 @@ namespace Module.Crunchyroll.Cida
                 {
                     Items = { (await this.cache.SearchAsync(request.SearchTerm)).Select(x => x.ToGrpc()).ToArray() }
                 };
+
+            public override async Task<EpisodeResponse> GetEpisodes(EpisodeRequest request, ServerCallContext context)
+            {
+                return new EpisodeResponse()
+                {
+                    Episodes = { (await this.cache.GetEpisodes(request.Id)).Select(x => x.ToGrpc()).ToArray() }
+                    };
+            }
         }
     }
 }

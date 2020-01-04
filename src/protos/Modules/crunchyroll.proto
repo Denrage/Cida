@@ -5,6 +5,7 @@ package crunchyroll;
 service CrunchyrollService {
     rpc Version (VersionRequest) returns (VersionResponse);
     rpc Search (SearchRequest) returns (SearchResponse);
+	rpc GetEpisodes (EpisodeRequest) returns (EpisodeResponse);
 }
 
 message VersionRequest {
@@ -12,6 +13,19 @@ message VersionRequest {
 
 message VersionResponse {
     int32 Version = 1;
+}
+
+message EpisodeRequest {
+	string Id = 1;
+}
+
+message EpisodeResponse {
+	message EpisodeItem {
+	string Id = 1;
+	string Name = 2;
+	string Description = 3;
+	}
+	repeated EpisodeItem Episodes = 1;
 }
 
 message SearchRequest {

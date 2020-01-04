@@ -10,7 +10,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0.4*"/>
+            <ColumnDefinition Width="0.45*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid>
@@ -52,21 +52,23 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Image Grid.Column="0" Source="{Binding SelectedItem.Image}" Stretch="Uniform" VerticalAlignment="Top" HorizontalAlignment="Center"/>
-                <TextBlock Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="{Binding SelectedItem.Description}"/>
+                <ScrollViewer Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock  TextWrapping="Wrap" Text="{Binding SelectedItem.Description}"/>
+                </ScrollViewer>
             </Grid>
-            <ListBox Grid.Row="1" Items="{Binding SelectedItem.Episodes}">
+            <ListBox Grid.IsSharedSizeScope="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.Row="1" Items="{Binding SelectedItem.Episodes}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding}"/>
-                            <TextBlock Grid.Column="1" Text="{Binding}"/>
-                            <TextBlock Grid.Column="2" Text="{Binding}"/>
-                        </Grid>
+                        <Border BorderBrush="Black" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition SharedSizeGroup="Name" Width="Auto"/>
+                                    <ColumnDefinition SharedSizeGroup="Description"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}" Margin="0,0,5,0"/>
+                                <TextBlock Grid.Column="1" Margin="5,0,0,0" TextWrapping="NoWrap" Text="{Binding Description}"/>
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

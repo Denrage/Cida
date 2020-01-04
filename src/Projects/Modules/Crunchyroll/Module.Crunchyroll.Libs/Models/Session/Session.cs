@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Module.Crunchyroll.Libs.Models.Session
 {
-    public class Data
+    public class Session
     {
         [JsonPropertyName("session_id")] public string SessionId { get; set; }
 

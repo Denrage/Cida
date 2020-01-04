@@ -2,9 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace Module.Crunchyroll.Libs.Models.Session
 {
-    public class SessionData
+    public class Result
     {
-        [JsonPropertyName("data")] public Data Data { get; set; }
+        [JsonPropertyName("data")] public Session Session { get; set; }
 
         [JsonPropertyName("error")] public bool Error { get; set; }
 

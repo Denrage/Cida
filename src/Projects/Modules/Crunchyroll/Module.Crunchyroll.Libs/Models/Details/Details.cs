@@ -1,21 +1,35 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace Module.Crunchyroll.Libs.Models.Details
 {
     public class Details
     {
-        [JsonPropertyName("data")]
-        public Data Data { get; set; }
+        [JsonPropertyName("class")]
+        public string Class { get; set; }
 
-        [JsonPropertyName("debug")]
-        public Debug Debug { get; set; }
+        [JsonPropertyName("series_id")]
+        public string SeriesId { get; set; }
 
-        [JsonPropertyName("error")]
-        public bool Error { get; set; }
+        [JsonPropertyName("etp_guid")]
+        public string EtpGuid { get; set; }
 
-        [JsonPropertyName("code")]
-        public string Code { get; set; }
+        [JsonPropertyName("url")]
+        public Uri Url { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("media_type")]
+        public string MediaType { get; set; }
+
+        [JsonPropertyName("landscape_image")]
+        public Image LandscapeImage { get; set; }
+
+        [JsonPropertyName("portrait_image")]
+        public Image PortraitImage { get; set; }
+
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
     }
 }
-
-

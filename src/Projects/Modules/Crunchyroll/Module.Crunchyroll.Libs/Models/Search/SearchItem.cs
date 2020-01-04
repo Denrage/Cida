@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Module.Crunchyroll.Libs.Models.Search
 {
-    public class Data
+    public class SearchItem
     {
         [JsonPropertyName("type"), JsonConverter(typeof(TypeEnumConverter))]
         public TypeEnum Type { get; set; }

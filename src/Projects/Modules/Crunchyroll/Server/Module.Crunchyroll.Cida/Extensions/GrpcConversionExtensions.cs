@@ -1,20 +1,21 @@
+using System;
 using Module.Crunchyroll.Libs.Models.Details;
+using Module.Crunchyroll.Libs.Models.Episode;
 using CR = Crunchyroll;
-using Data = Module.Crunchyroll.Libs.Models.Details.Data;
 
 namespace Module.Crunchyroll.Cida.Extensions
 {
     public static class GrpcConversionExtensions
     {
-        public static CR.SearchResponse.Types.SearchItem ToGrpc(this Data data) =>
+        public static CR.SearchResponse.Types.SearchItem ToGrpc(this Details details) =>
             new CR.SearchResponse.Types.SearchItem()
             {
-                Name = data.Name,
-                Id = data.SeriesId,
-                PortraitImage = data.PortraitImage?.ToGrpc(),
-                LandscapeImage = data.LandscapeImage?.ToGrpc(),
-                Url = data.Url.OriginalString,
-                Description = data.Description,
+                Name = details.Name,
+                Id = details.SeriesId,
+                PortraitImage = details.PortraitImage?.ToGrpc(),
+                LandscapeImage = details.LandscapeImage?.ToGrpc(),
+                Url = details.Url.OriginalString,
+                Description = details.Description,
             };
 
         public static CR.SearchResponse.Types.SearchItem.Types.Image ToGrpc(this Image image)
@@ -31,6 +32,14 @@ namespace Module.Crunchyroll.Cida.Extensions
                 Wide = image.WideUrl.OriginalString,
                 WideWithStar = image.WidestarUrl.OriginalString,
                 Width = image.Width,
+            };
+
+        public static CR.EpisodeResponse.Types.EpisodeItem ToGrpc(this Episode episode) =>
+            new CR.EpisodeResponse.Types.EpisodeItem()
+            {
+                Name = episode.Name,
+                Id = episode.MediaId,
+                Description = episode.Description,
             };
     }
 }

@@ -11,10 +11,10 @@ namespace Module.Crunchyroll.Cida.Services.Sessions
 
         protected abstract RestRequest GenerateRestRequest();
 
-        public async Task<SessionData> GetSession()
+        public async Task<Result> GetSession()
         {
             var response = await this.RestClient.ExecuteTaskAsync(this.GenerateRestRequest());
-            return response.IsSuccessful ? JsonSerializer.Deserialize<SessionData>(response.Content) : null;
+            return response.IsSuccessful ? JsonSerializer.Deserialize<Result>(response.Content) : null;
         }
     }
 }
