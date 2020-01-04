@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -7,16 +8,24 @@ using Avalonia.Collections;
 using Avalonia.Media.Imaging;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
+using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.ViewModels
 {
     public class CrunchyrollViewModel : ModuleViewModel
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
+        private SearchResult selectedItem;
 
         public string SearchTerm { get; set; } = "Hello World";
 
         public AvaloniaList<SearchResult> SearchResults { get; } = new AvaloniaList<SearchResult>();
+
+        public SearchResult SelectedItem
+        {
+            get => selectedItem;
+            set => this.RaiseAndSetIfChanged(ref this.selectedItem, value);
+        }
 
         public CrunchyrollViewModel(CrunchyrollService.CrunchyrollServiceClient client)
         {
@@ -43,7 +52,9 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                 this.SearchResults.Add(new SearchResult()
                 {
                     Name = searchResultItem.Name,
-                    Image = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ?? searchResultItem.LandscapeImage?.Small ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                    Thumbnail = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ?? searchResultItem.LandscapeImage?.Small ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                    Image = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Full ?? searchResultItem.LandscapeImage?.Large ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                    Description = searchResultItem.Description,
                 });
             }
         }
@@ -52,7 +63,13 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         {
             public IBitmap Image { get; set; }
 
+            public IBitmap Thumbnail { get; set; }
+
             public string Name { get; set; }
+
+            public string Description { get; set; }
+
+            public AvaloniaList<string> Episodes { get; set; } = new AvaloniaList<string>(new string('A', 100).ToCharArray().Select(x => x.ToString()));
         }
 
         private async Task<IBitmap> DownloadImageAsync(string url)

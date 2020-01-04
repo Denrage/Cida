@@ -9,6 +9,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.4*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -17,9 +21,11 @@
             <TextBox Text="{Binding SearchTerm}"/>
             <Button Grid.Column="1" Content="Search" Command="{Binding Search}"/>
         </Grid>
-        <ListBox  ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Grid.Row="1" Items="{Binding SearchResults}">
+        <ListBox SelectedItem="{Binding SelectedItem}" Grid.Column="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Grid.Row="1" Items="{Binding SearchResults}">
             <ListBox.Styles>
-                <Style Selector="ListBoxItem"><Setter Property="Padding" Value="5"/></Style>
+                <Style Selector="ListBoxItem">
+                    <Setter Property="Padding" Value="5"/>
+                </Style>
             </ListBox.Styles>
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -29,11 +35,41 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>
-                        <Image Source="{Binding Image}" Stretch="Uniform"/>
+                        <Image Source="{Binding Thumbnail}" Stretch="Uniform"/>
                         <TextBlock HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding Name}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.6*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Margin="5" Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.3*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Grid.Column="0" Source="{Binding SelectedItem.Image}" Stretch="Uniform" VerticalAlignment="Top" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="{Binding SelectedItem.Description}"/>
+            </Grid>
+            <ListBox Grid.Row="1" Items="{Binding SelectedItem.Episodes}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
     </Grid>
 </UserControl>
