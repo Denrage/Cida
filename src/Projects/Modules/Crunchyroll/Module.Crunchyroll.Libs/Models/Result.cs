@@ -1,11 +1,11 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
-namespace Module.Crunchyroll.Libs.Models.Details
+namespace Module.Crunchyroll.Libs.Models
 {
-    public class Result
+    public class Result<T>
     {
         [JsonPropertyName("data")]
-        public Details Details { get; set; }
+        public T Data { get; set; }
 
         [JsonPropertyName("debug")]
         public Debug Debug { get; set; }
@@ -17,5 +17,3 @@ namespace Module.Crunchyroll.Libs.Models.Details
         public string Code { get; set; }
     }
 }
-
-

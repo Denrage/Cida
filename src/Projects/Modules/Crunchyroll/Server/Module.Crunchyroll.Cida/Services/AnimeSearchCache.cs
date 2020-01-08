@@ -1,44 +1,29 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Module.Crunchyroll.Cida.Services.Sessions;
-using Module.Crunchyroll.Libs.Models.Details;
-using Module.Crunchyroll.Libs.Models.Episode;
+using Module.Crunchyroll.Cida.Extensions;
+using Module.Crunchyroll.Libs.Models.Database;
 using Module.Crunchyroll.Libs.Models.Search;
-using RestSharp;
-using Result = Module.Crunchyroll.Libs.Models.Episode.Result;
 
 namespace Module.Crunchyroll.Cida.Services
 {
     public class AnimeSearchCache
     {
-        private const string BaseApiUrl = "http://api.crunchyroll.com/";
+        private readonly CrunchyrollApiService apiService;
         private const string SearchEndpoint = "https://crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates";
 
-        private readonly RestClient apiClient = new RestClient(BaseApiUrl);
         private readonly List<string> ignoreIds = new List<string>();
-        private readonly SessionServer[] sessionServers = {
-            new CrUnblockerSessionServer(CrUnblockerSessionServer.Version1BaseUrl, CrUnblockerSessionServer.Version1ApiCommand),
-            new CrUnblockerSessionServer(CrUnblockerSessionServer.Version2BaseUrl, CrUnblockerSessionServer.Version2ApiCommand),
-            new CrunchyrollSessionServer(CrunchyrollSessionServer.Devices[2].DeviceType, CrunchyrollSessionServer.Devices[2].AccessToken),
-            new CrunchyrollSessionServer(CrunchyrollSessionServer.Devices[0].DeviceType, CrunchyrollSessionServer.Devices[0].AccessToken),
-            new CrunchyrollSessionServer(CrunchyrollSessionServer.Devices[1].DeviceType, CrunchyrollSessionServer.Devices[1].AccessToken),
-        };
+        private CrunchyrollDbContext context;
 
-        private string session;
+        public List<SearchItem> Items { get; set; }
 
-        public List<SearchItem> Items { get; private set; }
-
-        public List<Libs.Models.Details.Details> SearchCache { get; private set; }
-
-
-        public AnimeSearchCache()
+        public AnimeSearchCache(string connectionString, CrunchyrollApiService apiService)
         {
-            this.SearchCache = new List<Libs.Models.Details.Details>();
+            this.apiService = apiService;
+            this.context = new CrunchyrollDbContext(connectionString);
+            this.context.Database.EnsureCreated();
             this.Refresh();
         }
 
@@ -50,136 +35,80 @@ namespace Module.Crunchyroll.Cida.Services
             var suffixLength = "*/".Length;
             result = result.Substring(prefixLength, result.Length - prefixLength - suffixLength);
 
-
             var searchData = JsonSerializer.Deserialize<Libs.Models.Search.Result>(result);
             this.Items = new List<SearchItem>(searchData.Data);
-            this.SearchCache.Clear();
-
-            this.SearchCache = JsonSerializer.Deserialize<List<Libs.Models.Details.Details>>(File.ReadAllText("F:\\backup.json"));
         }
 
-        public async Task<IEnumerable<Episode>> GetEpisodes(string id)
-        {
-            const string listMediaUrlPart = "list_media.0.json";
 
-            var request = new RestRequest(listMediaUrlPart, Method.GET);
-            request.AddParameter("session_id", this.session);
-            request.AddParameter("series_id", id);
-            request.AddParameter("limit", int.MaxValue);
-
-            var response = await this.apiClient.ExecuteTaskAsync(request);
-
-            if (response.IsSuccessful)
-            {
-                var apiResult = JsonSerializer.Deserialize<Result>(response.Content);
-                if (!apiResult.Error)
-                {
-                    return apiResult.Data;
-                }
-            }
-
-            return Array.Empty<Episode>();
-        }
-
-        public async Task<IEnumerable<Libs.Models.Details.Details>> SearchAsync(string searchTerm)
+        public async Task<IEnumerable<Libs.Models.Database.Anime>> SearchAsync(string searchTerm)
         {
             searchTerm = searchTerm.ToLower();
-
-            if (string.IsNullOrEmpty(this.session))
-            {
-                this.session = await this.GetSessionAsync();
-            }
-
-            var result = new List<Libs.Models.Details.Details>();
+            var result = new List<Libs.Models.Database.Anime>();
 
             (int ratio, SearchItem item)[] ratios = this.Items
                 .Where(x => !this.ignoreIds.Contains(x.Id))
                 .Select(x => (FuzzySharp.Fuzz.PartialRatio(searchTerm, x.Name.ToLower()), x))
                 .ToArray();
+
             const double percentualThreshold = 0.9;
             var threshold = ratios.Max(x => x.ratio) * percentualThreshold;
 
-            foreach (var item in ratios.Where(x => x.ratio >= threshold).OrderByDescending(x => x.ratio).Select(x => x.item))
+            foreach (var item in ratios
+                .Where(x => x.ratio >= threshold)
+                .OrderByDescending(x => x.ratio)
+                .Select(x => x.item))
             {
-                var cacheItem = this.SearchCache.FirstOrDefault(x => x.SeriesId == item.Id);
+                var cacheItem = await this.context.Animes.FindAsync(item.Id);
+                
                 if (cacheItem != null)
                 {
                     result.Add(cacheItem);
                 }
                 else
                 {
-                    var info = await this.GetAnimeDetailsAsync(item.Id);
-
+                    var info = await this.apiService.GetAnimeDetailsAsync(item.Id);
+                    
                     if (info != null)
                     {
-                        result.Add(info);
-                        this.SearchCache.Add(info);
+                        result.Add(info.ToDatabaseModel());
+                        await this.context.Animes.AddAsync(info.ToDatabaseModel());
                     }
                     else
                     {
                         this.ignoreIds.Add(item.Id);
                     }
-
                 }
             }
 
-
+            await this.context.SaveChangesAsync();
             return result;
         }
 
-        public async Task<Libs.Models.Details.Details> GetAnimeDetailsAsync(string seriesId)
+        public async Task<IEnumerable<Episode>> GetEpisodesAsync(string collectionId)
         {
-            const string infoApiCommand = "info.0.json";
-            const int maxTries = 1;
-            Libs.Models.Details.Details result = null;
-            var failed = true;
-            var tryCount = 0;
+            var result = new List<Episode>();
 
-            do
+            var collection = await this.context.Collections.FindAsync(collectionId);
+
+            if (collection is null)
             {
-                var request = new RestRequest(infoApiCommand, Method.GET);
-                request.AddParameter("series_id", seriesId);
-                request.AddParameter("session_id", this.session);
-                var response = await this.apiClient.ExecuteTaskAsync(request);
-                Libs.Models.Details.Result infoResult = null;
-                if (response.IsSuccessful)
-                {
-                    infoResult = JsonSerializer.Deserialize<Libs.Models.Details.Result>(response.Content);
-                    failed = infoResult.Error && infoResult.Code != "forbidden";
-                }
-
-                if (failed)
-                {
-                    tryCount++;
-                    if (tryCount <= maxTries)
-                    {
-                        this.session = await this.GetSessionAsync();
-                    }
-                }
-                else
-                {
-                    result = infoResult.Details;
-                }
-
-
-            } while (failed && tryCount <= maxTries);
-
-            return result;
-
-        }
-
-        public async Task<string> GetSessionAsync()
-        {
-            foreach (var server in this.sessionServers)
-            {
-                var session = await server.GetSession();
-                if (session != null && !session.Error)
-                {
-                    return session.Session.SessionId;
-                }
+                collection = (await this.apiService.GetCollectionAsync(collectionId)).ToDatabaseModel();
+                await this.context.Collections.AddAsync(collection);
             }
-
-            return null;
+            
+            if(collection.Episodes.Count > 0)
+            {
+                result.AddRange(collection.Episodes);
+            }
+            else
+            {
+                var episodes = (await this.apiService.GetEpisodes(collectionId)).Select(x => x.ToDatabaseModel()).ToArray();
+                result.AddRange(episodes);
+                await this.context.Episodes.AddRangeAsync(episodes);
+            }
+            
+            await this.context.SaveChangesAsync();
+            return result;
         }
     }
 }

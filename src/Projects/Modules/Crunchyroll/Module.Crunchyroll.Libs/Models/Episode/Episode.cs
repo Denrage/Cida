@@ -39,7 +39,7 @@ namespace Module.Crunchyroll.Libs.Models.Episode
         public string Description { get; set; }
 
         [JsonPropertyName("screenshot_image")]
-        public Details.Image ScreenshotImage { get; set; }
+        public Image ScreenshotImage { get; set; }
 
         [JsonPropertyName("bif_url")]
         public Uri BifUrl { get; set; }

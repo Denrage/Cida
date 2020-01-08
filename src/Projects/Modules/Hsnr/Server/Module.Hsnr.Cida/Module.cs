@@ -15,7 +15,7 @@ namespace Module.Hsnr.Cida
 {
     public class Module : IModule
     {
-        public void Load()
+        public async Task Load(IDatabaseConnector databaseConnector)
         {
             Console.WriteLine("Loaded");
 
@@ -27,6 +27,8 @@ namespace Module.Hsnr.Cida
                 HsnrService.BindService(new HsnrServiceImplementation()),
                 HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation(null)),
             };
+
+            await Task.CompletedTask;
         }
 
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } 

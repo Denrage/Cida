@@ -12,13 +12,19 @@ namespace Module.Crunchyroll.Cida
 {
     public class Module : IModule
     {
+        // Hack: Remove this asap
+        private const string DatabasePassword = "Crunchyroll";
+        private const string Id = "6640177C-1D1E-49D4-BA57-4A770F18AA7E";
+        private string connectionString;
         private AnimeSearchCache cache;
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
-        public void Load()
+        public async Task Load(IDatabaseConnector databaseConnector)
         {
-            this.cache = new AnimeSearchCache();
-            this.GrpcServices = new[] { CrunchyrollService.BindService(new CrunchyRollImplementation(this.cache)), };
+            this.connectionString =
+                await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
+            this.cache = new AnimeSearchCache(this.connectionString, new CrunchyrollApiService());
+            this.GrpcServices = new[] {CrunchyrollService.BindService(new CrunchyRollImplementation(this.cache)), };
             Console.WriteLine("Loaded CR");
         }
 
@@ -41,7 +47,7 @@ namespace Module.Crunchyroll.Cida
             {
                 return new EpisodeResponse()
                 {
-                    Episodes = { (await this.cache.GetEpisodes(request.Id)).Select(x => x.ToGrpc()).ToArray() }
+                    Episodes = { (await this.cache.GetEpisodesAsync(request.Id)).Select(x => x.ToGrpc()).ToArray() }
                     };
             }
         }

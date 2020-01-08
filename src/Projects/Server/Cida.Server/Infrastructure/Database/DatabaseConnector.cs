@@ -16,15 +16,15 @@ namespace Cida.Server.Infrastructure.Database
     {
         private CidaDbConnectionProvider databaseConnectionProvider;
 
-        public DatabaseConnector(CidaContextBase context, CidaDbConnectionProvider databaseConnectionProvider, GlobalConfigurationManager globalConfigurationManager) : base(context, globalConfigurationManager)
+        public DatabaseConnector(CidaContextBase context, CidaDbConnectionProvider databaseConnectionProvider, GlobalConfigurationService globalConfigurationService) : base(context, globalConfigurationService)
         {
             this.databaseConnectionProvider = databaseConnectionProvider;
         }        
 
         private async Task CreateDatabaseInstanceAsync(Guid moduleId, string password)
         {
-            var dbName = $"ModuleDb_{moduleId}";
-            var username = $"ModuleUser_{moduleId}";
+            var dbName = $"ModuleDb_{moduleId.ToString().Replace("-", "")}";
+            var username = $"ModuleUser_{moduleId.ToString().Replace("-", "")}";
 
             using (var dbConnection = this.databaseConnectionProvider.GetDatabaseConnection())
             {

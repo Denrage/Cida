@@ -1,36 +1,35 @@
-using System;
-using Module.Crunchyroll.Libs.Models.Details;
-using Module.Crunchyroll.Libs.Models.Episode;
+using Module.Crunchyroll.Libs.Models.Database;
 using CR = Crunchyroll;
+using Image = Module.Crunchyroll.Libs.Models.Database.Image;
 
 namespace Module.Crunchyroll.Cida.Extensions
 {
     public static class GrpcConversionExtensions
     {
-        public static CR.SearchResponse.Types.SearchItem ToGrpc(this Details details) =>
+        public static CR.SearchResponse.Types.SearchItem ToGrpc(this Anime data) =>
             new CR.SearchResponse.Types.SearchItem()
             {
-                Name = details.Name,
-                Id = details.SeriesId,
-                PortraitImage = details.PortraitImage?.ToGrpc(),
-                LandscapeImage = details.LandscapeImage?.ToGrpc(),
-                Url = details.Url.OriginalString,
-                Description = details.Description,
+                Name = data.Name,
+                Id = data.Id,
+                PortraitImage = data.Portrait?.ToGrpc(),
+                LandscapeImage = data.Landscape?.ToGrpc(),
+                Url = data.Url,
+                Description = data.Description,
             };
 
-        public static CR.SearchResponse.Types.SearchItem.Types.Image ToGrpc(this Image image)
-            => new CR.SearchResponse.Types.SearchItem.Types.Image()
+        public static CR.Image ToGrpc(this Image image)
+            => new CR.Image()
             {
-                Full = image.FullUrl.OriginalString,
-                FullWide = image.FwideUrl.OriginalString,
-                FullWideWithStar = image.FwidestarUrl.OriginalString,
+                Full = image.Full,
+                FullWide = image.FullWide,
+                FullWideWithStar = image.FullWideWithStar,
                 Height = image.Height,
-                Large = image.LargeUrl.OriginalString,
-                Medium = image.MediumUrl.OriginalString,
-                Small = image.SmallUrl.OriginalString,
-                Thumbnail = image.ThumbUrl.OriginalString,
-                Wide = image.WideUrl.OriginalString,
-                WideWithStar = image.WidestarUrl.OriginalString,
+                Large = image.Large,
+                Medium = image.Medium,
+                Small = image.Small,
+                Thumbnail = image.Thumbnail,
+                Wide = image.Wide,
+                WideWithStar = image.WideWithStar,
                 Width = image.Width,
             };
 
@@ -38,7 +37,7 @@ namespace Module.Crunchyroll.Cida.Extensions
             new CR.EpisodeResponse.Types.EpisodeItem()
             {
                 Name = episode.Name,
-                Id = episode.MediaId,
+                Id = episode.Id,
                 Description = episode.Description,
             };
     }

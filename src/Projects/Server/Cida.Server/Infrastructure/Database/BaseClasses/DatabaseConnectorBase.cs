@@ -6,19 +6,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Cida.Api;
 
 namespace Cida.Server.Infrastructure.Database.BaseClasses
 {
-    public abstract class DatabaseConnectorBase
+    public abstract class DatabaseConnectorBase : IDatabaseConnector
     {
-        protected GlobalConfigurationManager globalConfigurationManager;
+        protected GlobalConfigurationService GlobalConfigurationService;
         protected CidaContextBase context;
 
-        public DatabaseConnectorBase(CidaContextBase context, GlobalConfigurationManager globalConfigurationManager)
+        public DatabaseConnectorBase(CidaContextBase context, GlobalConfigurationService globalConfigurationService)
         {
             this.context = context;
-            this.globalConfigurationManager = globalConfigurationManager;
-            this.context.Database.EnsureCreated();
+            this.GlobalConfigurationService = globalConfigurationService;
         }
 
         public async Task<string> GetDatabaseConnectionStringAsync(Guid moduleId, string password)
@@ -38,7 +38,7 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
                 databaseInformation = await this.CreateDatabaseAsync(moduleId, password, moduleInformation);
             }
 
-            else if (databases.Count() > 0)
+            else if (databases.Count() > 1)
             {
                 throw new Exception($"Multiple databases ({databases.Count()}) found.");
             }
@@ -73,7 +73,7 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
         {
             var connectionStringBuilder = new SqlConnectionStringBuilder
             {
-                DataSource = this.globalConfigurationManager.Database.Connection.Host,
+                DataSource = this.GlobalConfigurationService.ConfigurationManager.Database.Connection.Host,
                 InitialCatalog = databaseInformation.DatabaseName,
                 UserID = databaseInformation.Username,
                 Password = databaseInformation.Password

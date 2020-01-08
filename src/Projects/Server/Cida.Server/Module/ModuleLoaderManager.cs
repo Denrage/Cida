@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Cida.Api;
 using Cida.Server.Api;
 using Cida.Server.Infrastructure;
 using Cida.Server.Infrastructure.Database;
@@ -22,6 +23,7 @@ namespace Cida.Server.Module
         private readonly IGrpcRegistrar grpcRegistrar;
         private readonly IFtpClient ftpClient;
         private readonly CidaContext databaseContext;
+        private readonly IDatabaseConnector databaseConnector;
         private readonly ConcurrentDictionary<Guid, CidaModule> modules;
 
         public event Action ModulesUpdated;
@@ -30,7 +32,7 @@ namespace Cida.Server.Module
             => this.modules.Select(x => x.Key);
 
         public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar, IFtpClient ftpClient,
-            CidaContext databaseContext,
+            CidaContext databaseContext, IDatabaseConnector databaseConnector,
             IEnumerable<string> unpackedModuleDirectories = null)
         {
             this.moduleDirectory = moduleDirectory;
@@ -38,6 +40,7 @@ namespace Cida.Server.Module
             this.grpcRegistrar = grpcRegistrar;
             this.ftpClient = ftpClient;
             this.databaseContext = databaseContext;
+            this.databaseConnector = databaseConnector;
             this.modules = new ConcurrentDictionary<Guid, CidaModule>();
 
             if (!Directory.Exists(moduleDirectory))
@@ -67,7 +70,7 @@ namespace Cida.Server.Module
                     var module = CidaModule.Extract(modulePath);
                     if (this.modules.TryAdd(module.Metadata.Id, module))
                     {
-                        var loadedModule = module.Load();
+                        var loadedModule = await module.Load(this.databaseConnector);
                         services.AddRange(loadedModule.GrpcServices);
                     }
                 }
@@ -77,22 +80,28 @@ namespace Cida.Server.Module
                     var module = CidaModule.Unpacked(unpackedModuleDirectory);
                     if (this.modules.TryAdd(module.Metadata.Id, module))
                     {
-                        var loadedModule = module.Load();
+                        // this.databaseContext.Modules.Add(new ModuleInformation()
+                        // {
+                        //     ModuleId = module.Metadata.Id,
+                        //     ModuleName = module.Metadata.Name,
+                        // });
+                        // await this.databaseContext.SaveChangesAsync();
+                        var loadedModule = await module.Load(this.databaseConnector);
                         services.AddRange(loadedModule.GrpcServices);
                     }
                 }
 
                 // TODO: Move this to somewhere where it gets called everytime a module gets loaded
-                // var modulesInDatabase = this.databaseContext.FtpPaths.ToArray();
-                // var notUploaded = this.modules.Where(module =>
-                //         modulesInDatabase.FirstOrDefault(x =>
-                //             Path.GetFileNameWithoutExtension(x.FtpPath) == module.Value.Metadata.Id.ToString("N")) ==
-                //         null)
-                //     .ToList();
+                 // var modulesInDatabase = this.databaseContext.FtpPaths.ToArray();
+                 // var notUploaded = this.modules.Where(module =>
+                 //         modulesInDatabase.FirstOrDefault(x =>
+                 //             Path.GetFileNameWithoutExtension(x.FtpPath) == module.Value.Metadata.Id.ToString("N")) ==
+                 //         null)
+                 //     .ToList();
                 //
                 // // TODO: Add update mechanism
-                // foreach (var module in notUploaded)
-                // {
+                 // foreach (var module in notUploaded)
+                 // {
                 //     var zippedModule = await module.Value.ToArchive();
                 //
                 //     // TODO: Get path from somewhere else
@@ -107,19 +116,19 @@ namespace Cida.Server.Module
                 //         throw;
                 //     }
                 //
-                //     this.databaseContext.Modules.Add(new ModuleInformation()
-                //     {
-                //         ModuleId = module.Value.Metadata.Id,
-                //         ModuleName = module.Value.Metadata.Name,
-                //     });
+                     // this.databaseContext.Modules.Add(new ModuleInformation()
+                     // {
+                     //     ModuleId = module.Value.Metadata.Id,
+                     //     ModuleName = module.Value.Metadata.Name,
+                     // });
                 //     this.databaseContext.FtpPaths.Add(new FtpInformation()
                 //     {
                 //         // TODO: Get path from somewhere else
                 //         FtpPath = "Modules/" + module.Value.Metadata.Id.ToString("N") + "." + ModuleFileExtension,
                 //         ModuleId = module.Value.Metadata.Id,
                 //     });
-                //     await this.databaseContext.SaveChangesAsync();
-                // }
+                 //     await this.databaseContext.SaveChangesAsync();
+                 // }
 
                 await this.grpcRegistrar.AddServicesAsync(services);
 
@@ -141,7 +150,7 @@ namespace Cida.Server.Module
             var cidaModule = CidaModule.Extract(module.ToArray());
             if (this.modules.TryAdd(cidaModule.Metadata.Id, cidaModule))
             {
-                var loadedModule = cidaModule.Load();
+                var loadedModule = await cidaModule.Load(this.databaseConnector);
                 await this.grpcRegistrar.AddServicesAsync(loadedModule.GrpcServices);
             }
         }

@@ -63,10 +63,10 @@ namespace Cida.Server.Module
             return loadContext;
         }
 
-        public IModule Load()
+        public async Task<IModule> Load(IDatabaseConnector databaseConnector)
         {
             var instance = (Cida.Api.IModule)Activator.CreateInstance(this.entryType);
-            instance.Load();
+            await instance.Load(databaseConnector);
             return instance;
         }
 

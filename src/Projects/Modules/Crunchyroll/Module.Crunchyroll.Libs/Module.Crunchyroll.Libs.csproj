@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="FuzzySharp" Version="1.0.4" />
     <PackageReference Include="RestSharp" Version="106.6.10" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
     <PackageReference Include="System.Text.Json" Version="4.7.0" />
   </ItemGroup>
 

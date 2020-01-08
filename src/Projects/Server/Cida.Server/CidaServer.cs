@@ -33,6 +33,7 @@ namespace Cida.Server
                 this.grpcManager,
                 ftpClient,
                 cidaContext,
+                new DatabaseConnector(cidaContext, databaseProvider, globalConfigurationService),
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
             globalConfigurationService.ConfigurationChanged += async () =>
             {

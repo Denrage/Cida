@@ -5,7 +5,22 @@ package crunchyroll;
 service CrunchyrollService {
     rpc Version (VersionRequest) returns (VersionResponse);
     rpc Search (SearchRequest) returns (SearchResponse);
-	rpc GetEpisodes (EpisodeRequest) returns (EpisodeResponse);
+    rpc GetEpisodes (EpisodeRequest) returns (EpisodeResponse);
+	rpc GetCollections (CollectionsRequest) returns (CollectionsResponse);
+}
+
+message Image {
+    string Thumbnail = 1;
+    string Small = 2;
+    string Medium = 3;
+    string Large = 4;
+    string Full = 5;
+    string Wide = 6;
+    string WideWithStar = 7;
+    string FullWide = 8;
+    string FullWideWithStar = 9;
+    string Width = 10;
+    string Height = 11;
 }
 
 message VersionRequest {
@@ -15,17 +30,43 @@ message VersionResponse {
     int32 Version = 1;
 }
 
+message CollectionsRequest {
+    string Id = 1;
+}
+
+message CollectionsResponse {
+    message CollectionItem {
+        string Id = 1;
+        string Name = 2;
+        string Description = 3;
+        string Season = 4;
+        bool Complete = 5;
+        Image Landscape = 6;
+        Image Portrait = 7;
+        string AvailabilityNotes = 8;
+        string Created = 9;
+    }
+    repeated CollectionItem Collections = 1;
+}
+
 message EpisodeRequest {
-	string Id = 1;
+    string Id = 1;
 }
 
 message EpisodeResponse {
-	message EpisodeItem {
-	string Id = 1;
-	string Name = 2;
-	string Description = 3;
-	}
-	repeated EpisodeItem Episodes = 1;
+    message EpisodeItem {
+        string Id = 1;
+        Image Image = 2;
+        string EpisodeNumber = 3;
+        string Name = 4;
+        string Description = 5;
+        string Url = 6;
+        bool Available = 7;
+        bool PremiumAvailable = 8;
+        bool FreeAvailable = 9;
+        string AvailabilityNotes = 10;
+    }
+    repeated EpisodeItem Episodes = 1;
 }
 
 message SearchRequest {
@@ -34,26 +75,12 @@ message SearchRequest {
 
 message SearchResponse {
     message SearchItem {
-	message Image {
-		string Thumbnail = 1;
-		string Small = 2;
-		string Medium = 3;
-		string Large = 4;
-		string Full = 5;
-		string Wide = 6;
-		string WideWithStar = 7;
-		string FullWide = 8;
-		string FullWideWithStar = 9;
-		string Width = 10;
-		string Height = 11;
-	}
-	string Id = 1;
-	string Url = 2;
-	string Name = 3;
-	Image LandscapeImage = 4;
-	Image PortraitImage = 5;
-	string Description = 6;
+        string Id = 1;
+        string Url = 2;
+        string Name = 3;
+        Image LandscapeImage = 4;
+        Image PortraitImage = 5;
+        string Description = 6;
     }
-
     repeated SearchItem Items = 1;
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace Module.Crunchyroll.Libs.Models.Details
+namespace Module.Crunchyroll.Libs.Models
 {
     public class Image
     {
