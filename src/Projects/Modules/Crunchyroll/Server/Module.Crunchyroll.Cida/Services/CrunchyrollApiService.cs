@@ -54,7 +54,7 @@ namespace Module.Crunchyroll.Cida.Services
             return await this.ExecuteRequestAsync<Collection>(request);
         }
 
-        public async Task<IEnumerable<Libs.Models.Collection.Collection>> GetAnimeCollectionsAsync(int seriesId)
+        public async Task<IEnumerable<Libs.Models.Collection.Collection>> GetAnimeCollectionsAsync(string seriesId)
         {
             const string listCollectionsUrlPart = "list_collections.0.json";
 
@@ -137,6 +137,16 @@ namespace Module.Crunchyroll.Cida.Services
                 request.AddParameter("limit", int.MaxValue);
 
                 return (IEnumerable<Episode>)await this.ExecuteRequestAsync<List<Episode>>(request) ?? Array.Empty<Episode>();
+        }
+
+        public async Task<Stream> GetStreamUrl(string mediaId, string language)
+        {
+            const string infoApiCommand = "info.0.json";
+            var request = new RestRequest(infoApiCommand, Method.GET);
+            request.AddParameter("media_id", mediaId);
+            request.AddParameter("fields", "media.stream_data");
+            request.AddParameter("locale", language);
+            return (await this.ExecuteRequestAsync<StreamData>(request)).Stream;
         }
     }
 }

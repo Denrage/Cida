@@ -18,12 +18,18 @@
 
 
   <ItemGroup>
+    <AvaloniaResource Remove="Views\CollectionDetailView.xaml" />
     <AvaloniaResource Remove="Views\CrunchyrollView.xaml" />
+    <AvaloniaResource Remove="Views\EpisodeDetailView.xaml" />
+    <AvaloniaResource Remove="Views\SeriesDetailView.xaml" />
   </ItemGroup>
 
 
   <ItemGroup>
+    <None Remove="Views\CollectionDetailView.xaml" />
     <None Remove="Views\CrunchyrollView.xaml" />
+    <None Remove="Views\EpisodeDetailView.xaml" />
+    <None Remove="Views\SeriesDetailView.xaml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.9.0" />
@@ -43,7 +49,27 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Views\SeriesDetailView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\CollectionDetailView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\EpisodeDetailView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Views\SeriesDetailView.xaml.cs">
+      <DependentUpon>SeriesDetailView.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Update="PackagesInfo.json">

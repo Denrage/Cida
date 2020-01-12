@@ -1,11 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Module.Crunchyroll.Cida.Extensions;
 using Module.Crunchyroll.Libs.Models.Database;
+using Module.Crunchyroll.Libs.Models.Episode;
 using Module.Crunchyroll.Libs.Models.Search;
+using Episode = Module.Crunchyroll.Libs.Models.Database.Episode;
 
 namespace Module.Crunchyroll.Cida.Services
 {
@@ -58,8 +62,11 @@ namespace Module.Crunchyroll.Cida.Services
                 .OrderByDescending(x => x.ratio)
                 .Select(x => x.item))
             {
-                var cacheItem = await this.context.Animes.FindAsync(item.Id);
-                
+                var cacheItem = await this.context.Animes
+                    .Include(x => x.Landscape)
+                    .Include(x => x.Portrait)
+                    .FirstOrDefaultAsync(x => x.Id == item.Id);
+
                 if (cacheItem != null)
                 {
                     result.Add(cacheItem);
@@ -67,11 +74,12 @@ namespace Module.Crunchyroll.Cida.Services
                 else
                 {
                     var info = await this.apiService.GetAnimeDetailsAsync(item.Id);
-                    
+
                     if (info != null)
                     {
                         result.Add(info.ToDatabaseModel());
                         await this.context.Animes.AddAsync(info.ToDatabaseModel());
+                        await this.context.SaveChangesAsync();
                     }
                     else
                     {
@@ -79,8 +87,6 @@ namespace Module.Crunchyroll.Cida.Services
                     }
                 }
             }
-
-            await this.context.SaveChangesAsync();
             return result;
         }
 
@@ -88,15 +94,18 @@ namespace Module.Crunchyroll.Cida.Services
         {
             var result = new List<Episode>();
 
-            var collection = await this.context.Collections.FindAsync(collectionId);
+            var collection = await this.context.Collections
+                .Include(x => x.Episodes)
+                .FirstOrDefaultAsync(x => x.Id == collectionId);
 
             if (collection is null)
             {
                 collection = (await this.apiService.GetCollectionAsync(collectionId)).ToDatabaseModel();
                 await this.context.Collections.AddAsync(collection);
+                await this.context.SaveChangesAsync();
             }
-            
-            if(collection.Episodes.Count > 0)
+
+            if (collection.Episodes != null && collection.Episodes.Count > 0)
             {
                 result.AddRange(collection.Episodes);
             }
@@ -105,10 +114,46 @@ namespace Module.Crunchyroll.Cida.Services
                 var episodes = (await this.apiService.GetEpisodes(collectionId)).Select(x => x.ToDatabaseModel()).ToArray();
                 result.AddRange(episodes);
                 await this.context.Episodes.AddRangeAsync(episodes);
+                await this.context.SaveChangesAsync();
             }
-            
-            await this.context.SaveChangesAsync();
+
             return result;
+        }
+
+        public async Task<IEnumerable<Collection>> GetCollectionsAsync(string seriesId)
+        {
+            var result = new List<Collection>();
+
+            var series = await this.context.Animes
+                .Include(x => x.Collections)
+                .FirstOrDefaultAsync(x => x.Id == seriesId);
+
+            if (series is null)
+            {
+                series = (await this.apiService.GetAnimeDetailsAsync(seriesId)).ToDatabaseModel();
+                await this.context.Animes.AddAsync(series);
+                await this.context.SaveChangesAsync();
+            }
+
+            if (series.Collections != null && series.Collections.Count > 0)
+            {
+                result.AddRange(series.Collections);
+            }
+            else
+            {
+                var collections = (await this.apiService.GetAnimeCollectionsAsync(seriesId)).Select(x => x.ToDatabaseModel()).ToArray();
+                result.AddRange(collections);
+                await this.context.Collections.AddRangeAsync(collections);
+                await this.context.SaveChangesAsync();
+            }
+
+            return result;
+        }
+
+        public async Task<IEnumerable<StreamInformation>> GetStream(string mediaId, string language)
+        {
+            var result = (await this.apiService.GetStreamUrl(mediaId, language));
+            return result.Streams;
         }
     }
 }

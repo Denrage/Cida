@@ -7,6 +7,7 @@ using Crunchyroll;
 using Grpc.Core;
 using Module.Crunchyroll.Cida.Extensions;
 using Module.Crunchyroll.Cida.Services;
+using Module.Crunchyroll.Libs.Models.Episode;
 
 namespace Module.Crunchyroll.Cida
 {
@@ -49,6 +50,21 @@ namespace Module.Crunchyroll.Cida
                 {
                     Episodes = { (await this.cache.GetEpisodesAsync(request.Id)).Select(x => x.ToGrpc()).ToArray() }
                     };
+            }
+
+            public override async Task<CollectionsResponse> GetCollections(CollectionsRequest request, ServerCallContext context)
+            {
+                return new CollectionsResponse() {
+                Collections    = { (await this.cache.GetCollectionsAsync(request.Id)).Select(x => x.ToGrpc()).ToArray()}
+                };
+            }
+
+            public override async Task<EpisodeStreamResponse> GetEpisodeStream(EpisodeStreamRequest request, ServerCallContext context)
+            {
+                return new EpisodeStreamResponse()
+                {
+                    StreamUrl = (await this.cache.GetStream(request.Id, "enUS")).FirstOrDefault(x => x.Quality == Quality.Adaptive).Url,
+                };
             }
         }
     }

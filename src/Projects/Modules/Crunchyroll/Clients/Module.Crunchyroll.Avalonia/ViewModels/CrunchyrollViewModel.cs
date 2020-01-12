@@ -16,16 +16,17 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     public class CrunchyrollViewModel : ModuleViewModel
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
-        private SearchResult selectedItem;
+        private SeriesDetailViewModel selectedItem;
 
         public string SearchTerm { get; set; } = "Hello World";
 
-        public AvaloniaList<SearchResult> SearchResults { get; } = new AvaloniaList<SearchResult>();
+        public AvaloniaList<SeriesDetailViewModel> SearchResults { get; } = new AvaloniaList<SeriesDetailViewModel>();
 
-        public SearchResult SelectedItem
+        public SeriesDetailViewModel SelectedItem
         {
             get => selectedItem;
-            set {
+            set
+            {
                 this.RaiseAndSetIfChanged(ref this.selectedItem, value);
                 this.OnSelectedItemChanged();
             }
@@ -35,12 +36,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         {
             Task.Run(async () =>
             {
-                var episodes = await this.client.GetEpisodesAsync(new EpisodeRequest(){ Id = this.SelectedItem.Id});
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    this.SelectedItem.Episodes.Clear();
-                    this.SelectedItem.Episodes.AddRange(episodes.Episodes);
-                });
+                await this.SelectedItem.LoadAsync();
             });
         }
 
@@ -66,7 +62,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             this.SearchResults.Clear();
             foreach (var searchResultItem in searchResult.Items)
             {
-                this.SearchResults.Add(new SearchResult()
+                this.SearchResults.Add(new SeriesDetailViewModel(this.client)
                 {
                     Name = searchResultItem.Name,
                     Thumbnail = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ?? searchResultItem.LandscapeImage?.Small ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
@@ -75,21 +71,6 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                     Id = searchResultItem.Id,
                 });
             }
-        }
-
-        public class SearchResult
-        {
-            public string Id { get; set; }
-
-            public IBitmap Image { get; set; }
-
-            public IBitmap Thumbnail { get; set; }
-
-            public string Name { get; set; }
-
-            public string Description { get; set; }
-
-            public AvaloniaList<EpisodeResponse.Types.EpisodeItem> Episodes { get; set; } = new AvaloniaList<EpisodeResponse.Types.EpisodeItem>();
         }
 
         private async Task<IBitmap> DownloadImageAsync(string url)
