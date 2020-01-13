@@ -126,9 +126,15 @@ namespace Cida.Server.Infrastructure
                     Timestamp = Timestamp.FromDateTime(this.globalConfigurationService.ConfigurationManager.Timestamp
                         .ToUniversalTime())
                 };
+                if (this.globalConfigurationService.ConfigurationManager.Ftp.Host != null)
+                {
+                    result.Ftp = this.globalConfigurationService.ConfigurationManager.Ftp.ToGrpc();
+                }
 
-                result.Ftp = this.globalConfigurationService.ConfigurationManager.Ftp.ToGrpc();
-                result.Database = this.globalConfigurationService.ConfigurationManager.Database.ToGrpc();
+                if (this.globalConfigurationService.ConfigurationManager.Database.Connection.Host != null)
+                {
+                    result.Database = this.globalConfigurationService.ConfigurationManager.Database.ToGrpc();
+                }
                 return await Task.FromResult(result);
             }
         }

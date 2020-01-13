@@ -7,11 +7,11 @@ namespace Module.Hsnr.Timetable
     public class SiteCache
     {
         private readonly TimetableConnector connector;
-        
+
         public Dictionary<string, string> Lecturer { get; } = new Dictionary<string, string>();
-        
+
         public Dictionary<string, string> BranchesOfStudy { get; } = new Dictionary<string, string>();
-        
+
         public Dictionary<string, string> Rooms { get; } = new Dictionary<string, string>();
 
         public SiteCache(TimetableConnector connector)
@@ -59,7 +59,10 @@ namespace Module.Hsnr.Timetable
             var element = document.GetElementbyId("select_S");
             foreach (var child in element.ChildNodes)
             {
-                this.BranchesOfStudy.Add(child.GetAttributeValue("value", string.Empty), child.InnerHtml);
+                if (!this.BranchesOfStudy.ContainsKey(child.GetAttributeValue("value", string.Empty)))
+                {
+                    this.BranchesOfStudy.Add(child.GetAttributeValue("value", string.Empty), child.InnerHtml);
+                }
             }
         }
 
