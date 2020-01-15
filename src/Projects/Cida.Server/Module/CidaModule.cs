@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using Cida.Api;
 using Newtonsoft.Json;
@@ -78,6 +79,16 @@ namespace Cida.Server.Module
 
             var parsedMetadata = ParseMetadata(fileStreams);
 
+            return new CidaModule(parsedMetadata, fileStreams);
+        }
+
+        public static CidaModule Unpacked(string path)
+        {
+            var fileStreams = Directory.GetFiles(path)
+                .Select(x => (Path.GetRelativePath(path,x), new FileStream(x, FileMode.Open, FileAccess.Read, FileShare.Read) as Stream)).ToDictionary(x => x.Item1, x => x.Item2);
+
+            var parsedMetadata = ParseMetadata(fileStreams);
+            
             return new CidaModule(parsedMetadata, fileStreams);
         }
 

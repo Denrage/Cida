@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package hsnr;
+
+service HsnrService {
+    rpc Version (VersionRequest) returns (VersionResponse);
+}
+
+service HsnrTimetableService {
+    rpc Timetable (TimetableRequest) returns (TimetableResponse);
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+    int32 Version = 1;
+}
+
+
+enum CalendarType {
+    BranchOfStudy = 0;
+    Room = 1;
+    Lecturer = 2;
+}
+
+enum SemesterType {
+    SummerSemester = 0;
+    WinterSemester = 1;
+}
+
+message TimetableRequest {
+    SemesterType Semester = 1;
+
+    CalendarType Calendar = 2;
+
+    string Lecturer = 3;
+
+    string Room = 4;
+    
+    string BranchOfStudy = 5;
+}
+
+message TimetableResponse {
+    message Timetable {
+
+        message WeekDay {
+            enum Days {
+                Monday = 0;
+                Tuesday = 1;
+                Wednesday = 2;
+                Thursday = 3;
+                Friday = 4;
+                Saturday = 5;
+            }
+
+            message Subject {
+                int32 Start = 1;
+                int32 End = 2;
+                string Lecturer = 3;
+                string Room = 4;
+                string Name = 5;
+            }
+
+            Days Day = 1;
+            repeated Subject Subjects = 2;
+        }
+
+        CalendarType Type = 1;
+        SemesterType Semester = 2;
+        repeated WeekDay WeekDays = 3;
+    }
+
+    Timetable Result = 1;
+}

@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Runtime.Loader;
 using Autofac;
 using Cida.Server.Interfaces;
+using Grpc.Core;
+using Grpc.Core.Logging;
 
 namespace Cida.Server.Console
 {
@@ -29,6 +31,7 @@ namespace Cida.Server.Console
 
         public void Start()
         {
+            GrpcEnvironment.SetLogger(new ConsoleLogger());
             var server =
                 new CidaServer(this.currentWorkingDirectory, container.Resolve<ISettingsProvider>());
         }

@@ -6,6 +6,6 @@
             where T : class;
 
         T Get<T>()
-            where T : class;
+            where T : class, new();
     }
 }
