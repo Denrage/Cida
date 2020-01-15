@@ -1,4 +1,3 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29215.179
@@ -7,6 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{D403F6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{78A43CE1-AFA1-4A45-B08A-FC817178E7DA}"
 	ProjectSection(SolutionItems) = preProject
+		protos\infrastructure.proto = protos\infrastructure.proto
 		protos\server.proto = protos\server.proto
 	EndProjectSection
 EndProject
@@ -16,20 +16,24 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Server.Console", "Proj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Api", "Projects\Cida.Api\Cida.Api.csproj", "{6F0D0283-8677-4621-8644-93B609BC5663}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApplication", "TestApplication\TestApplication.csproj", "{EFFA5593-1359-4C54-993B-2F334FB82296}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApplication", "TestApplication\TestApplication.csproj", "{EFFA5593-1359-4C54-993B-2F334FB82296}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.Hsnr", "Modules\Module.Hsnr\Server\Module.Hsnr.csproj", "{E8673CE0-A56A-4F05-B9BA-67DD1110953E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Hsnr", "Modules\Module.Hsnr\Server\Module.Hsnr.csproj", "{E8673CE0-A56A-4F05-B9BA-67DD1110953E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Module.Hsnr", "Module.Hsnr", "{030DF1D2-D51F-43F8-827D-42749ECDB5A0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{0BA560C3-E268-4F51-AF46-C5293685AA0E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B}"
-ProjectSection(SolutionItems) = preProject
-	protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B046479E-1AA7-422F-B043-30D41633F3FA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFC Model Updater", "Projects\Cida.Tools\EFC Model Updater\EFC Model Updater.csproj", "{C4C54462-CA28-459A-BE31-C730949EA749}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +61,10 @@ Global
 		{E8673CE0-A56A-4F05-B9BA-67DD1110953E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8673CE0-A56A-4F05-B9BA-67DD1110953E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8673CE0-A56A-4F05-B9BA-67DD1110953E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4C54462-CA28-459A-BE31-C730949EA749}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4C54462-CA28-459A-BE31-C730949EA749}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4C54462-CA28-459A-BE31-C730949EA749}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4C54462-CA28-459A-BE31-C730949EA749}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,10 +72,11 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{74503A42-B08F-4AD9-BE0D-052B6D269CBB} = {D403F605-71B3-4F36-B2D9-D30387F61F54}
 		{7F365962-BC91-450B-991D-78A94B817B81} = {D403F605-71B3-4F36-B2D9-D30387F61F54}
+		{E8673CE0-A56A-4F05-B9BA-67DD1110953E} = {0BA560C3-E268-4F51-AF46-C5293685AA0E}
 		{030DF1D2-D51F-43F8-827D-42749ECDB5A0} = {DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}
 		{0BA560C3-E268-4F51-AF46-C5293685AA0E} = {030DF1D2-D51F-43F8-827D-42749ECDB5A0}
-		{E8673CE0-A56A-4F05-B9BA-67DD1110953E} = {0BA560C3-E268-4F51-AF46-C5293685AA0E}
 		{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B} = {78A43CE1-AFA1-4A45-B08A-FC817178E7DA}
+		{C4C54462-CA28-459A-BE31-C730949EA749} = {B046479E-1AA7-422F-B043-30D41633F3FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD4E48FF-111A-4466-A02E-3AA5EFC36655}

@@ -5,11 +5,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Grpc.Core;
+using NLog;
 
 namespace Cida.Server.Api
 {
     public class GrpcManager : IGrpcRegistrar
     {
+        private readonly ILogger logger;
+
         public class CidaApiService : Cida.CidaApiService.CidaApiServiceBase
         {
             public override Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
@@ -26,12 +29,14 @@ namespace Cida.Server.Api
 
         private Grpc.Core.Server grpcServer;
 
-        public GrpcManager(IGrpcConfiguration configuration)
+        public GrpcManager(IGrpcConfiguration configuration, ILogger logger)
         {
+            this.logger = logger;
             this.ports = configuration.Endpoints.Select(x => new ServerPort(x.Host, x.Port, ServerCredentials.Insecure)).ToArray();
             this.services.Add(Cida.CidaApiService.BindService(new CidaApiService()));
             this.grpcServer = this.CreateServer(this.services);
             this.grpcServer.Start();
+            logger.Info($"gRPC Server started on {configuration.Endpoints[0].Host}:{configuration.Endpoints[0].Port}");
         }
 
         public async Task AddServicesAsync(IEnumerable<ServerServiceDefinition> definitions)

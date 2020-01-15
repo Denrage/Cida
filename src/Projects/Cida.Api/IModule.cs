@@ -4,11 +4,10 @@ using Grpc.Core;
 
 namespace Cida.Api
 {
-    
     public interface IModule
     {
-        void Load();
-
         IEnumerable<ServerServiceDefinition> GrpcServices { get; }
+
+        void Load();
     }
 }

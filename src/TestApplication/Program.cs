@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text;
+using System.Net;
 using Grpc.Core;
 using Hsnr;
 
@@ -9,35 +9,38 @@ namespace TestApplication
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-
-            var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
-//            var client = new Cida.CidaApiService.CidaApiServiceClient(channel);
-//            Console.WriteLine(client.Version(new Cida.VersionRequest()).Version);
-            var client2 = new HsnrTimetableService.HsnrTimetableServiceClient(channel);
-            var response = client2.Timetable(new TimetableRequest()
+            var channel = new Channel("ipv4:127.0.0.1:31564,127.0.0.2:31564", ChannelCredentials.Insecure, new[] { new ChannelOption("grpc.lb_policy_name", "round_robin") });
+            var client = new HsnrTimetableService.HsnrTimetableServiceClient(channel);
+            Console.WriteLine("Ready");
+            while (true)
             {
-                Calendar = CalendarType.BranchOfStudy,
-                BranchOfStudy = "KBI5",
-                Semester = SemesterType.WinterSemester,
-            });
-
-            foreach (var weekDay in response.Result.WeekDays)
-            {
-                Console.WriteLine(weekDay.Day);
-                    var stringBuilder = new StringBuilder();
-                foreach (var subject in weekDay.Subjects)
+                var key = Console.ReadKey();
+                switch (key.Key)
                 {
-                    stringBuilder.Append(subject.Start).Append(" - ").Append(subject.End).Append("\t")
-                        .Append(subject.Name).Append("\t").Append(subject.Room).Append("\t")
-                        .AppendLine(subject.Lecturer);
+                    case ConsoleKey.Q:
+                        return;
+                    case ConsoleKey.T:
+                        Console.WriteLine("Getting timetable");
+                        var timetable = client.Timetable(new TimetableRequest()
+                        {
+                            Calendar = CalendarType.BranchOfStudy,
+                            BranchOfStudy = "KBI5",
+                            Semester = SemesterType.WinterSemester,
+                        });
+                        foreach (var day in timetable.Result.WeekDays)
+                        {
+                            Console.WriteLine(Enum.GetName(typeof(TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days), day.Day));
+                            foreach (var subject in day.Subjects)
+                            {
+                                Console.WriteLine($"{subject.Start}-{subject.End}: {subject.Name} - {subject.Room} - {subject.Lecturer}");
+                            }
+                        }
+                        break;
+                    default:
+                        break;
                 }
-                Console.WriteLine(stringBuilder.ToString() + "\n\n");
             }
-            
-
-            Console.ReadKey();
-            channel.ShutdownAsync().Wait();
+            Console.WriteLine("Done");
         }
     }
 }

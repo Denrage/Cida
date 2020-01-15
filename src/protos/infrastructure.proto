@@ -1,0 +1,42 @@
+syntax  = "proto3";
+
+package infrastructure;
+
+import "google/protobuf/timestamp.proto";
+
+service CidaInfrastructureService {
+	rpc Synchronize (SynchronizeRequest) returns (SynchronizeResponse);
+	rpc Version (VersionRequest) returns (VersionResponse);
+}
+
+message SynchronizeResponse {
+	message ExternalServerConnection {
+		string host = 1;
+		int32 port = 2;
+		string username = 3;
+		string password = 4;
+	}
+	message DatabaseConnection {
+		ExternalServerConnection connection = 1;
+		string databaseName = 2;
+	}
+	google.protobuf.Timestamp timestamp = 1;
+	ExternalServerConnection Ftp = 3;
+	DatabaseConnection Database = 4;
+}
+
+message SynchronizeRequest {
+	message Endpoint {
+		string host = 1;
+		int32 port = 2;
+	}
+	
+	Endpoint PublicEndpoint = 1;
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+	int32 Version = 1;
+}

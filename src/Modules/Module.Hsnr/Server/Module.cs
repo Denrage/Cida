@@ -21,7 +21,7 @@ namespace Module.Hsnr
 
             var timetableService =
                 new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
-            
+
             this.GrpcServices = new[]
             {
                 HsnrService.BindService(new HsnrServiceImplementation()),
