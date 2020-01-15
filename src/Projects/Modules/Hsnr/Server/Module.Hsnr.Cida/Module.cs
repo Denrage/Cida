@@ -11,24 +11,22 @@ using Module.Hsnr.Timetable.Parser;
 using CalendarType = Hsnr.CalendarType;
 using SemesterType = Module.Hsnr.Timetable.Data.SemesterType;
 
-namespace Module.Hsnr.Cida
+namespace Module.Hsnr
 {
     public class Module : IModule
     {
-        public async Task Load(IDatabaseConnector databaseConnector)
+        public void Load()
         {
             Console.WriteLine("Loaded");
 
-//            var timetableService =
-//                new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
-//            
+            var timetableService =
+                new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
+
             this.GrpcServices = new[]
             {
                 HsnrService.BindService(new HsnrServiceImplementation()),
-                HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation(null)),
+                HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation(timetableService)),
             };
-
-            await Task.CompletedTask;
         }
 
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } 

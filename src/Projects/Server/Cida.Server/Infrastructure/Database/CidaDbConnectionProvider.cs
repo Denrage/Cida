@@ -14,7 +14,7 @@ namespace Cida.Server.Infrastructure.Database
         private readonly GlobalConfigurationService configurationService;
 
         public event Action ConnectionStringUpdated;
-        
+
         public CidaDbConnectionProvider(GlobalConfigurationService configurationService)
         {
             this.configurationService = configurationService;
@@ -30,8 +30,11 @@ namespace Cida.Server.Infrastructure.Database
 
         private void UpdateConnectionString()
         {
-            this.ConnectionString = this.configurationService.ConfigurationManager.Database.ToConnectionString();
-            this.ConnectionStringUpdated?.Invoke();
+            if (this.configurationService.ConfigurationManager?.Database?.Connection?.Host != null)
+            {
+                this.ConnectionString = this.configurationService.ConfigurationManager.Database.ToConnectionString();
+                this.ConnectionStringUpdated?.Invoke();
+            }
         }
     }
 }

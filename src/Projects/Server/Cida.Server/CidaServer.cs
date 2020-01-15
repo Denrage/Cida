@@ -42,12 +42,15 @@ namespace Cida.Server
                     this.logger.Info("Saving configuration");
                     this.settingsProvider.Save(globalConfigurationService.Configuration);
                     this.logger.Info("Done saving configuration");
-                    this.logger.Info("Ensure Database");
-                    cidaContext.Database.EnsureCreated();
-                    this.logger.Info("Database ensured");
-                    this.logger.Info("Load Modules from database");
-                    await this.moduleLoader.LoadFromDatabase();
-                    this.logger.Info("Modules loaded");
+                    if (globalConfigurationService.ConfigurationManager?.Database?.Connection?.Host != null)
+                    {
+                        this.logger.Info("Ensure Database");
+                        cidaContext.Database.EnsureCreated();
+                        this.logger.Info("Database ensured");
+                        this.logger.Info("Load Modules from database");
+                        await this.moduleLoader.LoadFromDatabase();
+                        this.logger.Info("Modules loaded");
+                    }
                 }
                 catch (Exception e)
                 {
