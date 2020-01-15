@@ -1,0 +1,32 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Module.Crunchyroll.Avalonia.Views.CollectionDetailView">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="0.3*"/>
+        </Grid.RowDefinitions>
+        <TextBlock TextWrapping="Wrap" Text="{Binding Description}"/>
+        <ListBox SelectedItem="{Binding SelectedItem}" Grid.IsSharedSizeScope="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.Row="1" Items="{Binding Episodes}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="Black" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="Name" Width="Auto"/>
+                                <ColumnDefinition SharedSizeGroup="Description"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Name}" Margin="0,0,5,0"/>
+                            <TextBlock Grid.Column="1" Margin="5,0,0,0" TextWrapping="NoWrap" Text="{Binding Description}"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ContentControl Grid.Row="2" Content="{Binding SelectedItem}"/>
+    </Grid>
+</UserControl>

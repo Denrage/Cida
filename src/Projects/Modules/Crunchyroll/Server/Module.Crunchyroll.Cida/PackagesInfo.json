@@ -1,0 +1,9 @@
+{
+  "id": "6640177C-1D1E-49D4-BA57-4A770F18AA7E",
+  "name": "Crunchyroll",
+  "assemblyFile": "Module.Crunchyroll.Cida.dll",
+  "entryType": "Module.Crunchyroll.Cida.Module",
+  "clients": {
+    "F38224C1-7588-4773-A345-A238B8937A8F": "avalonia.acm"
+  }
+}

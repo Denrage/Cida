@@ -12,9 +12,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <ProjectReference Include="..\Projects\Cida.Server\Cida.Server.csproj" />
     <Protobuf Include="../protos/server.proto" Link="server.proto" />
     <Protobuf Include="../protos/Modules/hsnr.proto" Link="hsnr.proto" />
+    <Protobuf Include="../protos/Modules/crunchyroll.proto" Link="crunchyroll.proto" />
   </ItemGroup>
 
 </Project>

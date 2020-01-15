@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Grpc.Core;
 
 namespace Cida.Api
@@ -8,6 +9,6 @@ namespace Cida.Api
     {
         IEnumerable<ServerServiceDefinition> GrpcServices { get; }
 
-        void Load();
+        Task Load(IDatabaseConnector connector);
     }
 }
