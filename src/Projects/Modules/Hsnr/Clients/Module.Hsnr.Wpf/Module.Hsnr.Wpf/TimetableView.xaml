@@ -1,0 +1,44 @@
+﻿<Window x:Class="Module.Hsnr.Wpf.TimetableView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Module.Hsnr.Wpf"
+        mc:Ignorable="d"
+        Title="Hsnr.Timetable"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
+
+    <Window.Resources>
+        <local:EnumBoolConverter x:Key="EnumBoolConverter"/>
+        <local:EnumVisConverter x:Key="EnumVisConverter"/>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <RadioButton Name="rbtnSummer" GroupName="Semester" Grid.Row="0" Grid.Column="0" IsChecked="{Binding Semester, Converter={StaticResource EnumBoolConverter}, ConverterParameter=SummerSemester}" Content="Sommer"/>
+        <RadioButton Name="rbtnWinter" GroupName="Semester" Grid.Row="0" Grid.Column="2" IsChecked="{Binding Semester, Converter={StaticResource EnumBoolConverter}, ConverterParameter=WinterSemester}" Content="Winter"/>
+
+        <RadioButton Name="rbtnBranchOfStudy" GroupName="Calendar" Grid.Row="1" Grid.Column="0" IsChecked="{Binding Calendar, Converter={StaticResource EnumBoolConverter}, ConverterParameter=BranchOfStudy}" Content="Studienrichtung"/>
+        <RadioButton Name="rbtnRoom" GroupName="Calendar" Grid.Row="1" Grid.Column="1" IsChecked="{Binding Calendar, Converter={StaticResource EnumBoolConverter}, ConverterParameter=Room}" Content="Raum"/>
+        <RadioButton Name="rbtnLecturer" GroupName="Calendar" Grid.Row="1" Grid.Column="2" IsChecked="{Binding Calendar, Converter={StaticResource EnumBoolConverter}, ConverterParameter=Lecturer}" Content="Dozent"/>
+
+        <ComboBox Name="cboBranchOfStudy" Grid.Row="1" Grid.Column="3" ItemsSource="{Binding BranchesOfStudy}" SelectedItem="{Binding BranchOfStudy, Mode=TwoWay}" Visibility="{Binding Calendar, Converter={StaticResource EnumVisConverter}, ConverterParameter=BranchOfStudy}"/>
+        <ComboBox Name="cboRoom" Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Rooms}" SelectedItem="{Binding Room, Mode=TwoWay}" Visibility="{Binding Calendar, Converter={StaticResource EnumVisConverter}, ConverterParameter=Room}"/>
+        <ComboBox Name="cboLecturer" Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Lecturers}" SelectedItem="{Binding Lecturer, Mode=TwoWay}" Visibility="{Binding Calendar, Converter={StaticResource EnumVisConverter}, ConverterParameter=Lecturer}"/>
+
+        <Button Grid.Row="0" Grid.Column="3" Click="Refresh">Refresh</Button>
+
+        <Grid Name="TimetableGrid" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="2"/>
+    </Grid>
+</Window>

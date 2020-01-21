@@ -35,6 +35,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B046479E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFC Model Updater", "Projects\Cida.Tools\EFC Model Updater\EFC Model Updater.csproj", "{C4C54462-CA28-459A-BE31-C730949EA749}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{962FE034-C971-4497-9E2D-9199DAAE305B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.Hsnr.Wpf", "Projects\Modules\Hsnr\Clients\Module.Hsnr.Wpf\Module.Hsnr.Wpf\Module.Hsnr.Wpf.csproj", "{08A7401E-2BA8-4583-B771-222F1E134F92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,6 +69,10 @@ Global
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4C54462-CA28-459A-BE31-C730949EA749}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08A7401E-2BA8-4583-B771-222F1E134F92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08A7401E-2BA8-4583-B771-222F1E134F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08A7401E-2BA8-4583-B771-222F1E134F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08A7401E-2BA8-4583-B771-222F1E134F92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -77,6 +85,8 @@ Global
 		{0BA560C3-E268-4F51-AF46-C5293685AA0E} = {030DF1D2-D51F-43F8-827D-42749ECDB5A0}
 		{FC2FCDCD-BF5D-4F1A-9344-278D87F6313B} = {78A43CE1-AFA1-4A45-B08A-FC817178E7DA}
 		{C4C54462-CA28-459A-BE31-C730949EA749} = {B046479E-1AA7-422F-B043-30D41633F3FA}
+		{962FE034-C971-4497-9E2D-9199DAAE305B} = {030DF1D2-D51F-43F8-827D-42749ECDB5A0}
+		{08A7401E-2BA8-4583-B771-222F1E134F92} = {962FE034-C971-4497-9E2D-9199DAAE305B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD4E48FF-111A-4466-A02E-3AA5EFC36655}
