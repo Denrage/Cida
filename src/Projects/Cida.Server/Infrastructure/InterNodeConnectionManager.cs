@@ -124,12 +124,9 @@ namespace Cida.Server.Infrastructure
                 var result = new SynchronizeResponse()
                 {
                     Timestamp = Timestamp.FromDateTime(this.globalConfigurationService.ConfigurationManager.Timestamp
-                        .ToUniversalTime())
+                        .ToUniversalTime()),
+                    Ftp = { this.globalConfigurationService.ConfigurationManager.Ftp.ToGrpc() }
                 };
-                if (this.globalConfigurationService.ConfigurationManager.Ftp.Host != null)
-                {
-                    result.Ftp = this.globalConfigurationService.ConfigurationManager.Ftp.ToGrpc();
-                }
 
                 if (this.globalConfigurationService.ConfigurationManager.Database.Connection.Host != null)
                 {

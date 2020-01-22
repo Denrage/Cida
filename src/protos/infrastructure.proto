@@ -21,7 +21,7 @@ message SynchronizeResponse {
 		string databaseName = 2;
 	}
 	google.protobuf.Timestamp timestamp = 1;
-	ExternalServerConnection Ftp = 3;
+	repeated ExternalServerConnection Ftp = 3;
 	DatabaseConnection Database = 4;
 }
 
