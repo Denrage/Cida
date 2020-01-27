@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
+using System.Threading.Tasks;
 using Cida.Server.Infrastructure.Database.Models;
 using Cida.Server.Interfaces;
 
@@ -35,6 +36,46 @@ namespace Cida.Server.Infrastructure.Database
                 this.ConnectionString = this.configurationService.ConfigurationManager.Database.ToConnectionString();
                 this.ConnectionStringUpdated?.Invoke();
             }
+        }
+
+        public bool TryConnect(DatabaseConnection connectionSettings, out Exception occuredException)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(connectionSettings.ToConnectionString()))
+                {
+                    connection.Open();
+                    connection.Close();
+                }
+                occuredException = null;
+                return true;
+            }
+            catch (Exception e)
+            {
+                occuredException = e;
+                return false;
+            }
+        }
+
+        public bool ValidateConfiguration(DatabaseConnection connectionSettings)
+        {
+            if (string.IsNullOrEmpty(connectionSettings.DatabaseName))
+            {
+                return false;
+            }
+
+            if (connectionSettings.Connection == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(connectionSettings.Connection.Host) ||
+                string.IsNullOrEmpty(connectionSettings.Connection.Username))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

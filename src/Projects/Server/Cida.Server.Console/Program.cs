@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using Autofac;
 using Cida.Server.Interfaces;
 using Grpc.Core;
@@ -44,9 +46,28 @@ namespace Cida.Server.Console
         public void Start()
         {
             GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<NLog.ILogger>()));
-            
+
             var server =
-                new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>(), this.container.Resolve<ILogger>());
+                new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>(),
+                    this.container.Resolve<ILogger>());
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await server.Start();
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine(e.Message);
+                    
+                    if (e.InnerException != null)
+                    {
+                        System.Console.WriteLine(e.InnerException.Message);
+                    }
+                    System.Console.ReadKey();
+                    Environment.Exit(1);
+                }
+            });
         }
 
         private IContainer InitializeDependencies()
