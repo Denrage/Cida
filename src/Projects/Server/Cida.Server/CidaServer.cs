@@ -56,6 +56,8 @@ namespace Cida.Server
             {
                 try
                 {
+                    this.ValidateDatabase(this.globalConfigurationService.Configuration.Database);
+                    this.ValidateFtp(this.globalConfigurationService.Configuration.Ftp);
                     this.logger.Info("Saving configuration");
                     this.settingsProvider.Save(globalConfigurationService.Configuration);
                     this.logger.Info("Done saving configuration");
