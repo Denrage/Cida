@@ -73,6 +73,9 @@ namespace Cida.Server
                 }
             };
     
+            await this.grpcManager.Start();
+            await this.interNodeConnectionManager.Start();
+
             globalConfigurationService.Update(configuration =>
             {
                 var savedConfiguration = this.settingsProvider.Get<GlobalConfiguration>();
@@ -86,8 +89,6 @@ namespace Cida.Server
             }, false);
 
 
-            await this.grpcManager.Start();
-            await this.interNodeConnectionManager.Start();
             await this.grpcManager.AddServicesAsync(new[]
                 {Cida.CidaApiService.BindService(new GrpcManager.CidaApiService(this.moduleLoader))});
             await this.moduleLoader.Start();
