@@ -6,10 +6,10 @@ namespace Module.Crunchyroll.Cida.Services
     public class CrunchyrollDbContext : DbContext
     {
         private readonly string connectionString;
-        public DbSet<Libs.Models.Database.Anime> Animes { get; set; }
-        public DbSet<Libs.Models.Database.Image> Images { get; set; }
-        public DbSet<Libs.Models.Database.Episode> Episodes { get; set; }
-        public DbSet<Libs.Models.Database.Collection> Collections { get; set; }
+        public DbSet<Anime> Animes { get; set; }
+        public DbSet<Image> Images { get; set; }
+        public DbSet<Episode> Episodes { get; set; }
+        public DbSet<Collection> Collections { get; set; }
 
         public CrunchyrollDbContext(string connectionString)
         {
@@ -18,21 +18,21 @@ namespace Module.Crunchyroll.Cida.Services
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Libs.Models.Database.Image>().HasKey(x => x.Id);
+            modelBuilder.Entity<Image>().HasKey(x => x.Id);
             modelBuilder.Entity<Anime>(anime =>
             {
                 anime.HasKey(x => x.Id);
                 anime.HasOne(x => x.Portrait).WithOne().HasForeignKey<Anime>(x => x.PortraitId);
                 anime.HasOne(x => x.Landscape).WithOne().HasForeignKey<Anime>(x => x.LandscapeId);
             });
-            modelBuilder.Entity<Libs.Models.Database.Episode>(episode =>
+            modelBuilder.Entity<Episode>(episode =>
             {
                 episode.HasKey(x => x.Id);
                 episode.HasOne(x => x.Collection);
                 episode.HasOne(x => x.Image).WithOne().HasForeignKey<Episode>(x => x.ImageId);
             });
 
-            modelBuilder.Entity<Libs.Models.Database.Collection>(collection =>
+            modelBuilder.Entity<Collection>(collection =>
             {
                 collection.HasKey(x => x.Id);
                 collection.HasOne(x => x.Anime);

@@ -1,9 +1,4 @@
 using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Grpc.Core.Logging;
-using NLog;
 using ILogger = Grpc.Core.Logging.ILogger;
 using LogLevel = NLog.LogLevel;
 
@@ -13,8 +8,6 @@ namespace Cida.Server.Console
     {
         private readonly NLog.ILogger logger;
         private readonly Type forType;
-        private readonly string typePrefix;
-
         public GrpcLogger(NLog.ILogger logger)
             : this(logger, null)
         {
@@ -24,14 +17,6 @@ namespace Cida.Server.Console
         {
             this.forType = forType;
             this.logger = logger;
-            if (this.forType != null)
-            {
-                this.typePrefix = $"[{this.forType.FullName}]";
-            }
-            else
-            {
-                this.typePrefix = string.Empty;
-            }
         }
 
         public ILogger ForType<T>()
@@ -83,7 +68,7 @@ namespace Cida.Server.Console
         /// <summary>Logs a message and an associated exception with severity Warning.</summary>
         public void Warning(Exception exception, string message)
         {
-            this.logger.Warn(message, exception);
+            this.logger.Warn(exception, message);
         }
 
         /// <summary>Logs a message with severity Error.</summary>
@@ -101,7 +86,7 @@ namespace Cida.Server.Console
         /// <summary>Logs a message and an associated exception with severity Error.</summary>
         public void Error(Exception exception, string message)
         {
-            this.logger.Error(message, exception);
+            this.logger.Error(exception, message);
         }
     }
 }

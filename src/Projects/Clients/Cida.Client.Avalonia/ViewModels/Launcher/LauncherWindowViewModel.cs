@@ -1,7 +1,6 @@
 ﻿using System;
 using Cida.Client.Avalonia.Api;
 using Cida.Client.Avalonia.Services;
-using Grpc.Core;
 using ReactiveUI;
 
 namespace Cida.Client.Avalonia.ViewModels.Launcher
@@ -17,8 +16,8 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
 
         public ViewModelBase Content
         {
-            get => content;
-            set => this.RaiseAndSetIfChanged(ref content, value);
+            get => this.content;
+            set => this.RaiseAndSetIfChanged(ref this.content, value);
         }
 
         public LauncherWindowViewModel(CidaConnectionService connectionService)
@@ -26,7 +25,7 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
             this.connectionService = connectionService;
             this.connection = new ConnectionScreenViewModel();
             this.status = new StatusScreenViewModel();
-            this.Content = connection;
+            this.Content = this.connection;
         }
 
         public async void Connect()

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Module.Crunchyroll.Cida.Services.Sessions;
@@ -54,7 +53,7 @@ namespace Module.Crunchyroll.Cida.Services
             return await this.ExecuteRequestAsync<Collection>(request);
         }
 
-        public async Task<IEnumerable<Libs.Models.Collection.Collection>> GetAnimeCollectionsAsync(string seriesId)
+        public async Task<IEnumerable<Collection>> GetAnimeCollectionsAsync(string seriesId)
         {
             const string listCollectionsUrlPart = "list_collections.0.json";
 
@@ -62,9 +61,9 @@ namespace Module.Crunchyroll.Cida.Services
             request.AddParameter("series_id", seriesId);
             request.AddParameter("limit", int.MaxValue);
 
-            return ((IEnumerable<Libs.Models.Collection.Collection>) await this
-                       .ExecuteRequestAsync<List<Libs.Models.Collection.Collection>>(request)) ??
-                   await Task.FromResult(Array.Empty<Libs.Models.Collection.Collection>());
+            return ((IEnumerable<Collection>) await this
+                       .ExecuteRequestAsync<List<Collection>>(request)) ??
+                   await Task.FromResult(Array.Empty<Collection>());
         }
 
         private async Task<T> ExecuteRequestAsync<T>(RestRequest request)
@@ -117,10 +116,10 @@ namespace Module.Crunchyroll.Cida.Services
         {
             foreach (var server in this.sessionServers)
             {
-                var session = await server.GetSession();
-                if (session != null && !session.Error)
+                var newSession = await server.GetSession();
+                if (newSession != null && !newSession.Error)
                 {
-                    return session.Data.SessionId;
+                    return newSession.Data.SessionId;
                 }
             }
 

@@ -7,11 +7,8 @@ using Hsnr;
 using Module.Hsnr.Extensions;
 using Module.Hsnr.Timetable;
 using Module.Hsnr.Timetable.Data;
-using Module.Hsnr.Timetable.Parser;
-using CalendarType = Hsnr.CalendarType;
-using SemesterType = Module.Hsnr.Timetable.Data.SemesterType;
 
-namespace Module.Hsnr.Cida
+namespace Module.Hsnr
 {
     public class Module : IModule
     {
@@ -45,7 +42,7 @@ namespace Module.Hsnr.Cida
 
     public class HsnrTimetableServiceImplementation : HsnrTimetableService.HsnrTimetableServiceBase
     {
-        private readonly Timetable.TimetableService timetableService;
+        private readonly TimetableService timetableService;
 
         public HsnrTimetableServiceImplementation(TimetableService timetableService)
         {

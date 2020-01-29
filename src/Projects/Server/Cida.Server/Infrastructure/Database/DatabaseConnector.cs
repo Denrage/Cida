@@ -1,13 +1,8 @@
 ﻿using Cida.Server.Infrastructure.Database.BaseClasses;
 using Cida.Server.Infrastructure.Database.BaseClasses.EFC;
 using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Cida.Server.Infrastructure.Database
@@ -39,8 +34,8 @@ namespace Cida.Server.Infrastructure.Database
                                     CREATE USER [{username}] FOR LOGIN [{username}];
                                     ALTER ROLE [db_owner] ADD MEMBER [{username}];
                                 ";
-                await this.context.Database.ExecuteSqlRawAsync(createDbSql);
-                await this.context.Database.ExecuteSqlRawAsync(createUserSql);
+                await this.Context.Database.ExecuteSqlRawAsync(createDbSql);
+                await this.Context.Database.ExecuteSqlRawAsync(createUserSql);
                 await transaction.CommitAsync();
                 await dbConnection.CloseAsync();
             }

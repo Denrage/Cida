@@ -2,9 +2,7 @@
 using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
 using Microsoft.Data.SqlClient;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Cida.Api;
 
@@ -12,25 +10,25 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
 {
     public abstract class DatabaseConnectorBase : IDatabaseConnector
     {
+        protected CidaContextBase Context;
         protected GlobalConfigurationService GlobalConfigurationService;
-        protected CidaContextBase context;
 
         public DatabaseConnectorBase(CidaContextBase context, GlobalConfigurationService globalConfigurationService)
         {
-            this.context = context;
+            this.Context = context;
             this.GlobalConfigurationService = globalConfigurationService;
         }
 
         public async Task<string> GetDatabaseConnectionStringAsync(Guid moduleId, string password)
         {
-            var moduleInformation = await this.context.Modules.FindAsync(moduleId);
+            var moduleInformation = await this.Context.Modules.FindAsync(moduleId);
 
             if (moduleInformation == null)
             {
                 throw new Exception("Module not found");
             }
 
-            var databases = this.context.Databases.Where(db => db.Module.ModuleId == moduleId);
+            var databases = this.Context.Databases.Where(db => db.Module.ModuleId == moduleId);
             DatabaseInformation databaseInformation;
 
             if (databases.Count() == 0)
@@ -64,8 +62,8 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
                 Password = password,
                 DatabaseName = $"ModuleDb_{moduleId:N}",
             };
-            await this.context.Databases.AddAsync(databaseInformation);
-            await this.context.SaveChangesAsync();
+            await this.Context.Databases.AddAsync(databaseInformation);
+            await this.Context.SaveChangesAsync();
             return databaseInformation;
         }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Cida.Server.Models;
 using Cida.Server.Module;
@@ -10,33 +9,24 @@ using Infrastructure;
 using NLog;
 using Cida.Server.Extensions;
 using Cida.Server.Infrastructure.Database;
-using Cida.Server.Infrastructure.Database.EFC;
 
 namespace Cida.Server.Infrastructure
 {
     public class InterNodeConnectionManager
     {
         private readonly Grpc.Core.Server server;
-        private IList<Grpc.Core.Channel> connections;
+        private IList<Channel> connections;
         private readonly IInfrastructureConfiguration configuration;
         private readonly GlobalConfigurationService globalConfigurationService;
-        private readonly IFtpClient ftpClient;
-        private readonly CidaDbConnectionProvider provider;
-        private readonly ModuleLoaderManager manager;
-        private readonly IModulePublisher modulePublisher;
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
         private CidaInfrastructureService.CidaInfrastructureServiceClient client;
 
         // TODO: Better dependency injection
         public InterNodeConnectionManager(IInfrastructureConfiguration configuration,
-            GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient,
-            CidaDbConnectionProvider provider, ModuleLoaderManager manager)
+            GlobalConfigurationService globalConfigurationService)
         {
             this.configuration = configuration;
             this.globalConfigurationService = globalConfigurationService;
-            this.ftpClient = ftpClient;
-            this.provider = provider;
-            this.manager = manager;
             this.server = new Grpc.Core.Server();
             
             var implementation =
@@ -44,7 +34,7 @@ namespace Cida.Server.Infrastructure
             this.server.Services.Add(
                 CidaInfrastructureService.BindService(implementation));
 
-            implementation.OnSynchronize += ImplementationOnOnSynchronize;
+            implementation.OnSynchronize += this.ImplementationOnOnSynchronize;
 
         }
 

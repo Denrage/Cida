@@ -1,7 +1,5 @@
 using System;
-using System.Data.Common;
 using System.Linq;
-using Google.Protobuf;
 using GrpcData = Hsnr;
 using Module.Hsnr.Timetable.Data;
 
@@ -20,7 +18,7 @@ namespace Module.Hsnr.Extensions
         }
 
         public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay ToGrpc(
-            this Timetable.Data.WeekDay weekDay)
+            this WeekDay weekDay)
         {
             return new GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay()
             {
@@ -30,7 +28,7 @@ namespace Module.Hsnr.Extensions
         }
 
         public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Subject ToGrpc(
-            this Timetable.Data.Subject subject)
+            this Subject subject)
         {
             return new GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Subject()
             {
@@ -43,7 +41,7 @@ namespace Module.Hsnr.Extensions
         }
 
         public static GrpcData.CalendarType ToGrpc(
-            this Timetable.Data.CalendarType calendarType)
+            this CalendarType calendarType)
         {
             switch (calendarType)
             {
@@ -59,7 +57,7 @@ namespace Module.Hsnr.Extensions
         }
 
         public static GrpcData.SemesterType ToGrpc(
-            this Timetable.Data.SemesterType semesterType)
+            this SemesterType semesterType)
         {
             switch (semesterType)
             {
@@ -73,7 +71,7 @@ namespace Module.Hsnr.Extensions
         }
 
         public static GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days ToGrpc(
-            this Timetable.Data.Days day)
+            this Days day)
         {
             switch (day)
             {
@@ -94,7 +92,7 @@ namespace Module.Hsnr.Extensions
             }
         }
         
-        public static Timetable.Data.SemesterType ToModel(
+        public static SemesterType ToModel(
             this GrpcData.SemesterType  semesterType)
         {
             switch (semesterType)
@@ -108,7 +106,7 @@ namespace Module.Hsnr.Extensions
             }
         }
 
-        public static Timetable.Data.Days ToModel(
+        public static Days ToModel(
             this GrpcData.TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days  day)
         {
             switch (day)
@@ -130,7 +128,7 @@ namespace Module.Hsnr.Extensions
             }
         }
         
-        public static Timetable.Data.CalendarType ToModel(
+        public static CalendarType ToModel(
             this  GrpcData.CalendarType calendarType)
         {
             switch (calendarType)

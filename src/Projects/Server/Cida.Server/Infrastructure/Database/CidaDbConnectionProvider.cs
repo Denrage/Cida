@@ -1,12 +1,7 @@
 ﻿using Cida.Server.Infrastructure.Database.Extensions;
 using Microsoft.Data.SqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
-using System.Text;
-using System.Threading.Tasks;
-using Cida.Server.Infrastructure.Database.Models;
-using Cida.Server.Interfaces;
 
 namespace Cida.Server.Infrastructure.Database
 {

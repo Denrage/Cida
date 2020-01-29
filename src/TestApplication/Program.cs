@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Net;
-using Grpc.Core;
-using Hsnr;
 
 namespace TestApplication
 {

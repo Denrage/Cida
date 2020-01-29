@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using Cida.Server.Interfaces;
 using NLog;
 
 namespace Cida.Server.Infrastructure
@@ -37,7 +33,7 @@ namespace Cida.Server.Infrastructure
                 using var streamReader = new StreamReader(responseStream);
 
                 return (await streamReader.ReadToEndAsync().ConfigureAwait(false))
-                    .Split(new string[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+                    .Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
             }
 
             return Array.Empty<string>();

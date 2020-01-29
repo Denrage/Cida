@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using HtmlAgilityPack;
 using Module.Hsnr.Timetable.Data;
 

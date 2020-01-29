@@ -1,8 +1,5 @@
 ﻿using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Cida.Server.Infrastructure.Database.BaseClasses.EFC
 {

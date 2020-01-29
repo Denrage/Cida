@@ -11,13 +11,13 @@ namespace Module.Hsnr.Timetable.Data
         public SemesterType Semester { get; }
         
         private readonly IEnumerable<WeekDay> weekDays;
+        
         public IReadOnlyList<WeekDay> WeekDays { get; }
 
         public Timetable(CalendarType type, SemesterType semester, IEnumerable<WeekDay> weekDays)
         {
             this.Type = type;
             this.Semester = semester;
-            this.weekDays = weekDays;
             this.WeekDays = new ReadOnlyCollection<WeekDay>(this.weekDays.ToList());
         }
     }

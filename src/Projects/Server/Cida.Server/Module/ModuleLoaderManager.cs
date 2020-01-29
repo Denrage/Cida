@@ -8,7 +8,6 @@ using Cida.Api;
 using Cida.Server.Api;
 using Cida.Server.Extensions;
 using Cida.Server.Infrastructure;
-using Cida.Server.Infrastructure.Database;
 using Cida.Server.Infrastructure.Database.EFC;
 using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
 using Grpc.Core;
@@ -17,7 +16,7 @@ using NLog;
 
 namespace Cida.Server.Module
 {
-    public class ModuleLoaderManager : IModulePublisher
+    public class ModuleLoaderManager
     {
         public const string ModuleFolderName = "Modules";
         public const string ModuleFileExtension = "cidam";
@@ -31,8 +30,6 @@ namespace Cida.Server.Module
         private readonly GlobalConfigurationService globalConfigurationService;
         private readonly ConcurrentDictionary<Guid, CidaModule> modules;
         private readonly ConcurrentBag<Guid> unpackedModules;
-
-        public event Action ModulesUpdated;
 
         public IEnumerable<Guid> Modules
             => this.modules.Select(x => x.Key);
@@ -290,12 +287,5 @@ namespace Cida.Server.Module
         {
             return (await Task.WhenAll(this.modules.Select(x => x.Value.GetClientModule(id)))).Where(x => x.Length > 0);
         }
-    }
-
-    public interface IModulePublisher
-    {
-        event Action ModulesUpdated;
-
-        IEnumerable<Guid> Modules { get; }
     }
 }

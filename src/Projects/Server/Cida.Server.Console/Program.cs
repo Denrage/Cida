@@ -9,7 +9,7 @@ using ILogger = NLog.ILogger;
 
 namespace Cida.Server.Console
 {
-    internal partial class Program
+    internal class Program
     {
         private readonly string currentWorkingDirectory = Path
             .GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase)
@@ -40,12 +40,12 @@ namespace Cida.Server.Console
         public Program(string nodeName = "")
         {
             this.nodeName = string.IsNullOrEmpty(nodeName) ? "Node" : nodeName;
-            this.container = InitializeDependencies();
+            this.container = this.InitializeDependencies();
         }
 
         public void Start()
         {
-            GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<NLog.ILogger>()));
+            GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<ILogger>()));
 
             var server =
                 new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>(),
@@ -79,7 +79,7 @@ namespace Cida.Server.Console
                         $"{this.nodeName}.json"))))
                 .As<ISettingsProvider>()
                 .SingleInstance();
-            builder.RegisterInstance(NLog.LogManager.GetCurrentClassLogger()).As<NLog.ILogger>().SingleInstance();
+            builder.RegisterInstance(NLog.LogManager.GetCurrentClassLogger()).As<ILogger>().SingleInstance();
             return builder.Build();
         }
     }

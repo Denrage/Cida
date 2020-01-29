@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -39,15 +38,15 @@ namespace Module.Crunchyroll.Cida.Services
             var suffixLength = "*/".Length;
             result = result.Substring(prefixLength, result.Length - prefixLength - suffixLength);
 
-            var searchData = JsonSerializer.Deserialize<Libs.Models.Search.Result>(result);
+            var searchData = JsonSerializer.Deserialize<Result>(result);
             this.Items = new List<SearchItem>(searchData.Data);
         }
 
 
-        public async Task<IEnumerable<Libs.Models.Database.Anime>> SearchAsync(string searchTerm)
+        public async Task<IEnumerable<Anime>> SearchAsync(string searchTerm)
         {
             searchTerm = searchTerm.ToLower();
-            var result = new List<Libs.Models.Database.Anime>();
+            var result = new List<Anime>();
 
             (int ratio, SearchItem item)[] ratios = this.Items
                 .Where(x => !this.ignoreIds.Contains(x.Id))

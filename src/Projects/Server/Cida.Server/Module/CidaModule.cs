@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Cida.Api;
-using Cida.Server.Infrastructure;
 using Newtonsoft.Json;
 
 namespace Cida.Server.Module
@@ -48,8 +47,8 @@ namespace Cida.Server.Module
 
         private CidaModuleLoadContext InitializeLoadContext()
         {
-            var loadContext = new CidaModuleLoadContext();
-            loadContext.Resolving += (context, name) =>
+            var context = new CidaModuleLoadContext();
+            context.Resolving += (resolveContext, name) =>
             {
                 if (!this.moduleFiles.TryGetValue($"{name.Name}.dll", out var resolvedDependency))
                 {
@@ -57,15 +56,15 @@ namespace Cida.Server.Module
                     throw new InvalidOperationException($"Assembly '{name.Name}.dll' not found.");
                 }
 
-                return context.LoadFromStream(resolvedDependency);
+                return resolveContext.LoadFromStream(resolvedDependency);
             };
 
-            return loadContext;
+            return context;
         }
 
         public async Task<IModule> Load(IDatabaseConnector databaseConnector)
         {
-            var instance = (Cida.Api.IModule)Activator.CreateInstance(this.entryType);
+            var instance = (IModule)Activator.CreateInstance(this.entryType);
             await instance.Load(databaseConnector);
             return instance;
         }

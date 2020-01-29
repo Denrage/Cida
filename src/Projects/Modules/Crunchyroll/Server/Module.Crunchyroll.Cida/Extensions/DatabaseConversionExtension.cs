@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Module.Crunchyroll.Libs.Models.Database;
 using Module.Crunchyroll.Libs.Models.Details;
 using Image = Module.Crunchyroll.Libs.Models.Database.Image;

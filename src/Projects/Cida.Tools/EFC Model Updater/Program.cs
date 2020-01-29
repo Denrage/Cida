@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace efc_model
+﻿namespace efc_model
 {
     class Program
     {

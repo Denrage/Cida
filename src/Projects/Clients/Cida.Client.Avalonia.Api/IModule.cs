@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Grpc.Core;
 
 namespace Cida.Client.Avalonia.Api

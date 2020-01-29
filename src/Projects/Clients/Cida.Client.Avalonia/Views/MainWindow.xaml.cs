@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Cida.Client.Avalonia.ViewModels;
 
 namespace Cida.Client.Avalonia.Views
 {
@@ -9,7 +8,7 @@ namespace Cida.Client.Avalonia.Views
     {
         public MainWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif

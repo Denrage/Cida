@@ -1,12 +1,5 @@
 using System;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Cida.Server.Infrastructure.Database;
-using Cida.Server.Module;
-using Infrastructure;
 using NLog;
-using NLog.Fluent;
 
 namespace Cida.Server.Infrastructure
 {
