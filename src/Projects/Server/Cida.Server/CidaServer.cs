@@ -38,6 +38,7 @@ namespace Cida.Server
                 ftpClient,
                 cidaContext,
                 new DatabaseConnector(cidaContext, databaseProvider, globalConfigurationService),
+                this.logger,
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
 
             this.interNodeConnectionManager = new InterNodeConnectionManager(
@@ -62,9 +63,9 @@ namespace Cida.Server
                         this.logger.Info("Ensure Database");
                         cidaContext.Database.EnsureCreated();
                         this.logger.Info("Database ensured");
-                        this.logger.Info("Load Modules from database");
-                        await this.moduleLoader.LoadFromDatabase();
-                        this.logger.Info("Modules loaded");
+                        // this.logger.Info("Load Modules from database");
+                        // await this.moduleLoader.LoadFromDatabase();
+                        // this.logger.Info("Modules loaded");
                     }
                 }
                 catch (Exception e)
@@ -90,7 +91,7 @@ namespace Cida.Server
             await this.interNodeConnectionManager.Start();
             await this.grpcManager.AddServicesAsync(new[]
                 {Cida.CidaApiService.BindService(new GrpcManager.CidaApiService(this.moduleLoader))});
-            await this.moduleLoader.LoadModulesAsync();
+            await this.moduleLoader.Start();
         }
 
         private void ValidateFtp(ExternalServerConnection ftpConnection)

@@ -11,7 +11,7 @@ using Module.Hsnr.Timetable.Parser;
 using CalendarType = Hsnr.CalendarType;
 using SemesterType = Module.Hsnr.Timetable.Data.SemesterType;
 
-namespace Module.Hsnr
+namespace Module.Hsnr.Cida
 {
     public class Module : IModule
     {
