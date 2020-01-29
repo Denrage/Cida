@@ -23,8 +23,8 @@ namespace Cida.Server.Infrastructure.Database
 
         private async Task CreateDatabaseInstanceAsync(Guid moduleId, string password)
         {
-            var dbName = $"ModuleDb_{moduleId.ToString().Replace("-", "")}";
-            var username = $"ModuleUser_{moduleId.ToString().Replace("-", "")}";
+            var dbName = $"ModuleDb_{moduleId:N}";
+            var username = $"ModuleUser_{moduleId:N}";
 
             using (var dbConnection = this.databaseConnectionProvider.GetDatabaseConnection())
             {

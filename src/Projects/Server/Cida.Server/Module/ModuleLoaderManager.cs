@@ -63,7 +63,7 @@ namespace Cida.Server.Module
             try
             {
                 module = CidaModule.Unpacked(unpackedModule);
-                if (await this.databaseContext.Modules
+                if (!await this.databaseContext.Modules
                     .AnyAsync(x => x.ModuleId == module.Metadata.Id))
                 {
                     await this.databaseContext.Modules.AddAsync(new ModuleInformation()
@@ -80,7 +80,7 @@ namespace Cida.Server.Module
                 this.logger.Error(ex, "Error parsing module '{unpackedModule}'");
             }
 
-            if (module != null && this.modules.TryAdd(module.Metadata.Id, module))
+            if (module != null)
             {
                 this.unpackedModules.Add(module.Metadata.Id);
                 var loadedModule = await this.LoadModule(module);
@@ -98,7 +98,7 @@ namespace Cida.Server.Module
             try
             {
                 module = CidaModule.Extract(bytes.ToArray());
-                if (await this.databaseContext.Modules
+                if (!await this.databaseContext.Modules
                     .AnyAsync(x => x.ModuleId == module.Metadata.Id))
                 {
                     await this.databaseContext.Modules.AddAsync(new ModuleInformation()
@@ -115,7 +115,7 @@ namespace Cida.Server.Module
                 this.logger.Error(ex, $"Error parsing module");
             }
 
-            if (module != null && this.modules.TryAdd(module.Metadata.Id, module))
+            if (module != null)
             {
                 var loadedModule = await this.LoadModule(module);
                 this.logger.Info("Done loading packed module");
@@ -132,7 +132,7 @@ namespace Cida.Server.Module
             try
             {
                 module = CidaModule.Extract(file);
-                if (await this.databaseContext.Modules
+                if (!await this.databaseContext.Modules
                     .AnyAsync(x => x.ModuleId == module.Metadata.Id))
                 {
                     await this.databaseContext.Modules.AddAsync(new ModuleInformation()
@@ -149,7 +149,7 @@ namespace Cida.Server.Module
                 this.logger.Error(ex, $"Error parsing module '{file}'");
             }
 
-            if (module != null && this.modules.TryAdd(module.Metadata.Id, module))
+            if (module != null)
             {
                 var loadedModule = await this.LoadModule(module);
                 this.logger.Info("Done loading packed module");

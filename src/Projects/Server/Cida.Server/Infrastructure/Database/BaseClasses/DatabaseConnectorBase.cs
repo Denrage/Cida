@@ -60,9 +60,9 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
             var databaseInformation = new DatabaseInformation()
             {
                 Module = moduleInformation,
-                Username = $"ModuleUser_{moduleId}",
+                Username = $"ModuleUser_{moduleId:N}",
                 Password = password,
-                DatabaseName = $"ModuleDb_{moduleId}",
+                DatabaseName = $"ModuleDb_{moduleId:N}",
             };
             await this.context.Databases.AddAsync(databaseInformation);
             await this.context.SaveChangesAsync();
