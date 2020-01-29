@@ -39,6 +39,7 @@ namespace Cida.Server
                 cidaContext,
                 new DatabaseConnector(cidaContext, databaseProvider, globalConfigurationService),
                 this.logger,
+                this.globalConfigurationService,
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
 
             this.interNodeConnectionManager = new InterNodeConnectionManager(
@@ -60,12 +61,10 @@ namespace Cida.Server
                     this.logger.Info("Done saving configuration");
                     if (globalConfigurationService.ConfigurationManager?.Database?.Connection?.Host != null)
                     {
+                        //TODO: Move this somewhere else
                         this.logger.Info("Ensure Database");
                         cidaContext.Database.EnsureCreated();
                         this.logger.Info("Database ensured");
-                        // this.logger.Info("Load Modules from database");
-                        // await this.moduleLoader.LoadFromDatabase();
-                        // this.logger.Info("Modules loaded");
                     }
                 }
                 catch (Exception e)

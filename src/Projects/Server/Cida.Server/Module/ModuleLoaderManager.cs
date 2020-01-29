@@ -28,6 +28,7 @@ namespace Cida.Server.Module
         private readonly CidaContext databaseContext;
         private readonly IDatabaseConnector databaseConnector;
         private readonly ILogger logger;
+        private readonly GlobalConfigurationService globalConfigurationService;
         private readonly ConcurrentDictionary<Guid, CidaModule> modules;
         private readonly ConcurrentBag<Guid> unpackedModules;
 
@@ -37,7 +38,7 @@ namespace Cida.Server.Module
             => this.modules.Select(x => x.Key);
 
         public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar, IFtpClient ftpClient,
-            CidaContext databaseContext, IDatabaseConnector databaseConnector, ILogger logger,
+            CidaContext databaseContext, IDatabaseConnector databaseConnector, ILogger logger, GlobalConfigurationService globalConfigurationService,
             IEnumerable<string> unpackedModuleDirectories = null)
         {
             this.moduleDirectory = moduleDirectory;
@@ -47,6 +48,7 @@ namespace Cida.Server.Module
             this.databaseContext = databaseContext;
             this.databaseConnector = databaseConnector;
             this.logger = logger;
+            this.globalConfigurationService = globalConfigurationService;
             this.modules = new ConcurrentDictionary<Guid, CidaModule>();
             this.unpackedModules = new ConcurrentBag<Guid>();
 
@@ -195,6 +197,14 @@ namespace Cida.Server.Module
             await this.LoadFromDatabase();
 
             this.logger.Info("Done loading modules");
+
+            this.globalConfigurationService.ConfigurationChanged += async () =>
+            {
+                this.logger.Info("Loading modules from new database configuration");
+                await this.UploadToDatabase();
+                await this.LoadFromDatabase();
+                this.logger.Info("Done loading modules from new database configuration");
+            };
         }
 
         private async Task LoadFromDatabase()
