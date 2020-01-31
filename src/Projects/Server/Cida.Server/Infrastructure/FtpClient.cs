@@ -101,7 +101,8 @@ namespace Cida.Server.Infrastructure
                 result.Method = WebRequestMethods.Ftp.ListDirectory;
                 using var response = (FtpWebResponse) result.GetResponse();
 
-                if (response.StatusCode != FtpStatusCode.OpeningData)
+                // Maybe response will not be disposed correctly?
+                if (response.StatusCode != FtpStatusCode.OpeningData && response.StatusCode != FtpStatusCode.DataAlreadyOpen)
                 {
                     occuredException =
                         new InvalidOperationException($"Unexpected StatusCode '{response.StatusCode}'");
