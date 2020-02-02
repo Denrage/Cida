@@ -40,7 +40,7 @@ namespace Cida.Client.Avalonia.Module
             // Hack: Don't use static
             ViewLocator.Assemblies.Add(this.Assembly);
 
-            this.Assembly.GetType(this.Metadata.EntryType);
+            entryType = this.Assembly.GetType(this.Metadata.EntryType);
             if (entryType is null)
             {
                 // TODO: Replace this with custom exception
