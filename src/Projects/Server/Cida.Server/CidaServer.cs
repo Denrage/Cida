@@ -108,14 +108,6 @@ namespace Cida.Server
             }
 
             this.logger.Info("Done validating database configuration");
-            this.logger.Info("Validating database connection");
-            if (!this.databaseProvider.TryConnect(databaseConnection, out var ex))
-            {
-                throw new InvalidOperationException(
-                    "Couldn't connect to database. See inner exception for more details.", ex);
-            }
-
-            this.logger.Info("Done validating database connection");
         }
     }
 

@@ -33,25 +33,6 @@ namespace Cida.Server.Infrastructure.Database
             }
         }
 
-        public bool TryConnect(DatabaseConnection connectionSettings, out Exception occuredException)
-        {
-            try
-            {
-                using (var connection = new SqlConnection(connectionSettings.ToConnectionString()))
-                {
-                    connection.Open();
-                    connection.Close();
-                }
-                occuredException = null;
-                return true;
-            }
-            catch (Exception e)
-            {
-                occuredException = e;
-                return false;
-            }
-        }
-
         public bool ValidateConfiguration(DatabaseConnection connectionSettings)
         {
             if (string.IsNullOrEmpty(connectionSettings.DatabaseName))
