@@ -38,6 +38,7 @@ namespace Module.Crunchyroll.Cida.Extensions
             {
                 Name = episode.Name,
                 Id = episode.Id,
+                EpisodeNumber = episode.EpisodeNumber,
                 Description = episode.Description,
             };
 

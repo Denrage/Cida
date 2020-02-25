@@ -39,7 +39,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 this.Episodes.Clear();
-                this.Episodes.AddRange(episodes.Episodes.Select(x => new EpisodeDetailViewModel(this.client) { Name = x.Name, Description = x.Description, Id = x.Id}));
+                this.Episodes.AddRange(episodes.Episodes.Select(x => new EpisodeDetailViewModel(this.client) { EpisodeNumber = x.EpisodeNumber, Name = x.Name, Description = x.Description, Id = x.Id}));
             });
         }
     }

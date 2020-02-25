@@ -17,11 +17,13 @@
                     <Border BorderBrush="Black" BorderThickness="1">
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="Number" Width="Auto"/>
                                 <ColumnDefinition SharedSizeGroup="Name" Width="Auto"/>
                                 <ColumnDefinition SharedSizeGroup="Description"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" Margin="0,0,5,0"/>
-                            <TextBlock Grid.Column="1" Margin="5,0,0,0" TextWrapping="NoWrap" Text="{Binding Description}"/>
+                            <TextBlock Grid.Column="0" Text="{Binding EpisodeNumber}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="0,0,5,0"/>
+                            <TextBlock Grid.Column="2" Margin="5,0,0,0" TextWrapping="NoWrap" Text="{Binding Description}"/>
                         </Grid>
                     </Border>
                 </DataTemplate>

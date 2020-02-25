@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Reactive.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Media.Imaging;
@@ -14,10 +19,27 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
         private SeriesDetailViewModel selectedItem;
+        private readonly ObservableAsPropertyHelper<IEnumerable<SeriesDetailViewModel>> searchResults;
+        private readonly ObservableAsPropertyHelper<bool> showResults;
 
-        public string SearchTerm { get; set; } = "Hello World";
+        private string searchTerm;
+        public string SearchTerm
+        {
+            get => this.searchTerm;
+            set => this.RaiseAndSetIfChanged(ref this.searchTerm, value);
+        }
 
-        public AvaloniaList<SeriesDetailViewModel> SearchResults { get; } = new AvaloniaList<SeriesDetailViewModel>();
+        private bool isSearchFocused;
+        public bool IsSearchFocused
+        {
+            get => this.isSearchFocused;
+            set => this.RaiseAndSetIfChanged(ref this.isSearchFocused, value);
+        }
+
+
+        public bool ShowResults => this.showResults.Value;
+
+        public IEnumerable<SeriesDetailViewModel> SearchResults => this.searchResults.Value;
 
         public SeriesDetailViewModel SelectedItem
         {
@@ -40,6 +62,21 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         public CrunchyrollViewModel(CrunchyrollService.CrunchyrollServiceClient client)
         {
             this.client = client;
+            this.searchResults = this.WhenAnyValue(x => x.SearchTerm)
+                .Throttle(TimeSpan.FromMilliseconds(500))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .SelectMany(this.Search)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.SearchResults);
+
+            this.showResults = this.WhenAnyValue(x => x.SearchResults, x => x.IsSearchFocused)
+                .Where(x => x.Item1 != null)
+                .Select(x => x.Item1.Any() && x.Item2)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.ShowResults);
+
+            this.searchResults.ThrownExceptions.Subscribe(x => Debugger.Log(0, "", ""));
+            this.showResults.ThrownExceptions.Subscribe(x => Debugger.Log(0, "", ""));
         }
 
         public override async Task LoadAsync()
@@ -49,25 +86,29 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         public override string Name => "Crunchyroll";
 
-        public async void Search()
+
+        public async Task<IEnumerable<SeriesDetailViewModel>> Search(string searchTerm)
         {
             var searchResult = await this.client.SearchAsync(new SearchRequest()
             {
-                SearchTerm = this.SearchTerm,
+                SearchTerm = searchTerm,
             });
 
-            this.SearchResults.Clear();
+            var results = new List<SeriesDetailViewModel>();
+
             foreach (var searchResultItem in searchResult.Items)
             {
-                this.SearchResults.Add(new SeriesDetailViewModel(this.client)
+                results.Add(new SeriesDetailViewModel(this.client)
                 {
                     Name = searchResultItem.Name,
-                    Thumbnail = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ?? searchResultItem.LandscapeImage?.Small ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                    Thumbnail = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ?? searchResultItem.LandscapeImage?.Thumbnail ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
                     Image = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Full ?? searchResultItem.LandscapeImage?.Large ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
                     Description = searchResultItem.Description,
                     Id = searchResultItem.Id,
                 });
             }
+
+            return results;
         }
 
         private async Task<IBitmap> DownloadImageAsync(string url)

@@ -10,6 +10,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
         public string Id { get; set; }
+        public string EpisodeNumber { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string Duration { get; set; }
@@ -38,8 +39,8 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                 Id = this.Id,
             });
 
-            var processStartInfo = new ProcessStartInfo(@"F:\Program Files\MPC-HC\mpc-hc64.exe");
-            processStartInfo.Arguments = "\"" +  episodeUrl.StreamUrl + "\"" + " /play"; 
+            var processStartInfo = new ProcessStartInfo(@"F:\MPV\Baka MPlayer.exe");
+            processStartInfo.Arguments = "\"" +  episodeUrl.StreamUrl + "\""; 
             Process.Start(processStartInfo);
         }
     }

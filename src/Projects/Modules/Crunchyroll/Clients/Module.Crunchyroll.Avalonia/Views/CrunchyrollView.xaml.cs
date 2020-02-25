@@ -1,10 +1,22 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using System.Linq;
+using System.Reactive.Disposables;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
+using Module.Crunchyroll.Avalonia.ViewModels;
+using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.Views
 {
-    public class CrunchyrollView : UserControl
+    public class CrunchyrollView : ReactiveUserControl<CrunchyrollViewModel>
     {
+        private TextBox searchTerm => this.FindControl<TextBox>("Search");
+        private ListBox searchResults => this.FindControl<ListBox>("SearchResults");
+        private Popup searchResultPopup => this.FindControl<Popup>("SearchResultPopup");
+
         public CrunchyrollView()
         {
             this.InitializeComponent();
@@ -12,6 +24,27 @@ namespace Module.Crunchyroll.Avalonia.Views
 
         private void InitializeComponent()
         {
+            this.WhenActivated(disposableRegistration =>
+            {
+
+                this.OneWayBind(this.ViewModel,
+                        viewModel => viewModel.SearchResults,
+                        view => view.searchResults.Items)
+                    .DisposeWith(disposableRegistration);
+
+                this.Bind(ViewModel,
+                        viewModel => viewModel.SearchTerm,
+                        view => view.searchTerm.Text)
+                    .DisposeWith(disposableRegistration);
+
+                this.Bind(this.ViewModel,
+                    viewModel => viewModel.IsSearchFocused,
+                    view => view.searchTerm.IsFocused);
+
+                this.OneWayBind(this.ViewModel,
+                    viewModel => viewModel.ShowResults,
+                    view => view.searchResultPopup.IsOpen);
+            });
             AvaloniaXamlLoader.Load(this);
         }
     }
