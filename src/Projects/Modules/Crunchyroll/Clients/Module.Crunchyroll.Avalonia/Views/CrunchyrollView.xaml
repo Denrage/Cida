@@ -10,31 +10,27 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBox x:Name="Search" />
-            <Popup x:Name="SearchResultPopup" PlacementTarget="{Binding ElementName=Search}" PlacementMode="Bottom" MaxHeight="250" Width="{Binding #Search.Bounds.Width}">
-                <Popup.Child>
-                    <ContentControl>
-                        <ListBox  x:Name="SearchResults" SelectedItem="{Binding SelectedItem}" Grid.Column="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            <ListBox.Styles>
-                                <Style Selector="ListBoxItem">
-                                    <Setter Property="Padding" Value="5"/>
-                                </Style>
-                            </ListBox.Styles>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Image Source="{Binding Thumbnail}" Stretch="Uniform" Width="64" Height="64"/>
-                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextAlignment="Center" Text="{Binding Name}" TextWrapping="Wrap"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </ContentControl>
-                </Popup.Child>
-            </Popup>
-            <ContentControl Content="{Binding SelectedItem}" Grid.Row="1"/>
+        <Grid Grid.Row="1">
+            <ListBox MaxHeight="250"  Width="{Binding #Search.Bounds.Width}" VerticalAlignment="Top" ZIndex="1" x:Name="SearchResults" SelectedItem="{Binding SelectedItem}" Grid.Column="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="5"/>
+                    </Style>
+                </ListBox.Styles>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Source="{Binding Thumbnail}" Stretch="Uniform" Width="64" Height="64"/>
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" TextAlignment="Center" Text="{Binding Name}" TextWrapping="Wrap"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <ContentControl Content="{Binding SelectedItem}"/>
+        </Grid>
     </Grid>
 </UserControl>

@@ -15,7 +15,6 @@ namespace Module.Crunchyroll.Avalonia.Views
     {
         private TextBox searchTerm => this.FindControl<TextBox>("Search");
         private ListBox searchResults => this.FindControl<ListBox>("SearchResults");
-        private Popup searchResultPopup => this.FindControl<Popup>("SearchResultPopup");
 
         public CrunchyrollView()
         {
@@ -31,6 +30,10 @@ namespace Module.Crunchyroll.Avalonia.Views
                         viewModel => viewModel.SearchResults,
                         view => view.searchResults.Items)
                     .DisposeWith(disposableRegistration);
+                
+                this.OneWayBind(this.ViewModel,
+                    viewModel => viewModel.ShowResults,
+                    view => view.searchResults.IsVisible);
 
                 this.Bind(ViewModel,
                         viewModel => viewModel.SearchTerm,
@@ -40,10 +43,6 @@ namespace Module.Crunchyroll.Avalonia.Views
                 this.Bind(this.ViewModel,
                     viewModel => viewModel.IsSearchFocused,
                     view => view.searchTerm.IsFocused);
-
-                this.OneWayBind(this.ViewModel,
-                    viewModel => viewModel.ShowResults,
-                    view => view.searchResultPopup.IsOpen);
             });
             AvaloniaXamlLoader.Load(this);
         }
