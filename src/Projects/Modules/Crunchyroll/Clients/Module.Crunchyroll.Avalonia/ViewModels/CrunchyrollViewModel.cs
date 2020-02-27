@@ -6,9 +6,11 @@ using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
 using ReactiveUI;
@@ -19,27 +21,41 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
         private SeriesDetailViewModel selectedItem;
-        private readonly ObservableAsPropertyHelper<IEnumerable<SeriesDetailViewModel>> searchResults;
-        private readonly ObservableAsPropertyHelper<bool> showResults;
-
         private string searchTerm;
+        private DispatcherTimer searchTermChangeTimer;
+        private bool isSearching;
+        private SemaphoreSlim searchSemaphore;
+
         public string SearchTerm
         {
             get => this.searchTerm;
-            set => this.RaiseAndSetIfChanged(ref this.searchTerm, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref this.searchTerm, value);
+                this.DelaySearchTermChange();
+            }
         }
 
-        private bool isSearchFocused;
-        public bool IsSearchFocused
+        public string SearchStatus =>
+            this.IsSearching ? "Searching ..." : !this.SearchResults.Any() ? "No results" : null;
+
+        public AvaloniaList<SeriesDetailViewModel> SearchResults { get; } = new AvaloniaList<SeriesDetailViewModel>();
+
+        public bool IsSearching
         {
-            get => this.isSearchFocused;
-            set => this.RaiseAndSetIfChanged(ref this.isSearchFocused, value);
+            get => this.isSearching;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref this.isSearching, value);
+                this.RaisePropertyChanged(nameof(this.SearchStatus));
+            }
         }
 
-
-        public bool ShowResults => this.showResults.Value;
-
-        public IEnumerable<SeriesDetailViewModel> SearchResults => this.searchResults.Value;
+        public void DelaySearchTermChange()
+        {
+            this.searchTermChangeTimer.Stop();
+            this.searchTermChangeTimer.Start();
+        }
 
         public SeriesDetailViewModel SelectedItem
         {
@@ -53,30 +69,33 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         private void OnSelectedItemChanged()
         {
-            Task.Run(async () =>
-            {
-                await this.SelectedItem.LoadAsync();
-            });
+            Task.Run(async () => { await this.SelectedItem.LoadAsync(); });
         }
 
         public CrunchyrollViewModel(CrunchyrollService.CrunchyrollServiceClient client)
         {
             this.client = client;
-            this.searchResults = this.WhenAnyValue(x => x.SearchTerm)
-                .Throttle(TimeSpan.FromMilliseconds(500))
-                .Where(x => !string.IsNullOrEmpty(x))
-                .SelectMany(this.Search)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .ToProperty(this, x => x.SearchResults);
 
-            this.showResults = this.WhenAnyValue(x => x.SearchResults, x => x.IsSearchFocused)
-                .Where(x => x.Item1 != null)
-                .Select(x => x.Item1.Any() && x.Item2)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .ToProperty(this, x => x.ShowResults);
+            this.searchTermChangeTimer = new DispatcherTimer(
+                TimeSpan.FromMilliseconds(500),
+                DispatcherPriority.Normal,
+                async (obj, args) =>
+                {
+                    this.searchTermChangeTimer.Stop();
+                    try
+                    {
+                        await this.searchSemaphore.WaitAsync();
+                        this.IsSearching = true;
+                        await this.Search(this.SearchTerm);
+                        this.IsSearching = false;
+                    }
+                    finally
+                    {
+                        this.searchSemaphore.Release();
+                    }
+                });
 
-            this.searchResults.ThrownExceptions.Subscribe(x => Debugger.Log(0, "", ""));
-            this.showResults.ThrownExceptions.Subscribe(x => Debugger.Log(0, "", ""));
+            this.searchSemaphore = new SemaphoreSlim(1, 1);
         }
 
         public override async Task LoadAsync()
@@ -87,8 +106,13 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         public override string Name => "Crunchyroll";
 
 
-        public async Task<IEnumerable<SeriesDetailViewModel>> Search(string searchTerm)
+        public async Task Search(string searchTerm)
         {
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                return;
+            }
+            
             var searchResult = await this.client.SearchAsync(new SearchRequest()
             {
                 SearchTerm = searchTerm,
@@ -101,14 +125,20 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                 results.Add(new SeriesDetailViewModel(this.client)
                 {
                     Name = searchResultItem.Name,
-                    Thumbnail = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ?? searchResultItem.LandscapeImage?.Thumbnail ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
-                    Image = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Full ?? searchResultItem.LandscapeImage?.Large ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                    Thumbnail = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Medium ??
+                                                              searchResultItem.LandscapeImage?.Thumbnail ??
+                                                              "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                    Image = await this.DownloadImageAsync(searchResultItem.PortraitImage?.Full ??
+                                                          searchResultItem.LandscapeImage?.Large ??
+                                                          "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
                     Description = searchResultItem.Description,
                     Id = searchResultItem.Id,
                 });
             }
 
-            return results;
+            this.SearchResults.Clear();
+            this.SearchResults.AddRange(results);
+            this.RaisePropertyChanged(nameof(this.SearchStatus));
         }
 
         private async Task<IBitmap> DownloadImageAsync(string url)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -45,48 +46,59 @@ namespace Module.Crunchyroll.Cida.Services
 
         public async Task<IEnumerable<Anime>> SearchAsync(string searchTerm)
         {
-            searchTerm = searchTerm.ToLower();
-            var result = new List<Anime>();
-
-            (int ratio, SearchItem item)[] ratios = this.Items
-                .Where(x => !this.ignoreIds.Contains(x.Id))
-                .Select(x => (FuzzySharp.Fuzz.PartialRatio(searchTerm, x.Name.ToLower()), x))
-                .ToArray();
-
-            const double percentualThreshold = 0.9;
-            var threshold = ratios.Max(x => x.ratio) * percentualThreshold;
-
-            foreach (var item in ratios
-                .Where(x => x.ratio >= threshold)
-                .OrderByDescending(x => x.ratio)
-                .Select(x => x.item))
+            try
             {
-                var cacheItem = await this.context.Animes
-                    .Include(x => x.Landscape)
-                    .Include(x => x.Portrait)
-                    .FirstOrDefaultAsync(x => x.Id == item.Id);
+                Console.WriteLine("Start search with " + searchTerm);
+                searchTerm = searchTerm.ToLower();
+                var result = new List<Anime>();
 
-                if (cacheItem != null)
-                {
-                    result.Add(cacheItem);
-                }
-                else
-                {
-                    var info = await this.apiService.GetAnimeDetailsAsync(item.Id);
+                (int ratio, SearchItem item)[] ratios = this.Items
+                    .Where(x => !this.ignoreIds.Contains(x.Id))
+                    .Select(x => (FuzzySharp.Fuzz.PartialRatio(searchTerm, x.Name.ToLower()), x))
+                    .ToArray();
 
-                    if (info != null)
+                const double percentualThreshold = 0.9;
+                var threshold = ratios.Max(x => x.ratio) * percentualThreshold;
+
+                foreach (var item in ratios
+                    .Where(x => x.ratio >= threshold)
+                    .OrderByDescending(x => x.ratio)
+                    .Select(x => x.item))
+                {
+                    var cacheItem = await this.context.Animes
+                        .Include(x => x.Landscape)
+                        .Include(x => x.Portrait)
+                        .FirstOrDefaultAsync(x => x.Id == item.Id);
+
+                    if (cacheItem != null)
                     {
-                        result.Add(info.ToDatabaseModel());
-                        await this.context.Animes.AddAsync(info.ToDatabaseModel());
-                        await this.context.SaveChangesAsync();
+                        result.Add(cacheItem);
                     }
                     else
                     {
-                        this.ignoreIds.Add(item.Id);
+                        Console.WriteLine("Getting info of " + item.Name);
+                        var info = await this.apiService.GetAnimeDetailsAsync(item.Id);
+                        Console.WriteLine("Got info of " + item.Name);
+
+                        if (info != null)
+                        {
+                            result.Add(info.ToDatabaseModel());
+                            await this.context.Animes.AddAsync(info.ToDatabaseModel());
+                            await this.context.SaveChangesAsync();
+                        }
+                        else
+                        {
+                            this.ignoreIds.Add(item.Id);
+                        }
                     }
                 }
+                Console.WriteLine("End search with " + searchTerm);
+                return result;
             }
-            return result;
+            catch (Exception e)
+            {
+                throw;
+            }
         }
 
         public async Task<IEnumerable<Episode>> GetEpisodesAsync(string collectionId)
