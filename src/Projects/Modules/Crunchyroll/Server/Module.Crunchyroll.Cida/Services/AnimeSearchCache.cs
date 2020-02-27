@@ -46,59 +46,52 @@ namespace Module.Crunchyroll.Cida.Services
 
         public async Task<IEnumerable<Anime>> SearchAsync(string searchTerm)
         {
-            try
+            searchTerm = searchTerm.ToLower();
+            var result = new List<Anime>();
+
+            (int ratio, SearchItem item)[] ratios = this.Items
+                .Where(x => !this.ignoreIds.Contains(x.Id))
+                .Select(x => (FuzzySharp.Fuzz.PartialRatio(searchTerm, x.Name.ToLower()), x))
+                .ToArray();
+
+            const double percentualThreshold = 0.9;
+            var threshold = ratios.Max(x => x.ratio) * percentualThreshold;
+
+            const int maxSearchResults = 50;
+            
+            foreach (var item in ratios
+                .Where(x => x.ratio >= threshold)
+                .OrderByDescending(x => x.ratio)
+                .Select(x => x.item)
+                .Take(maxSearchResults))
             {
-                Console.WriteLine("Start search with " + searchTerm);
-                searchTerm = searchTerm.ToLower();
-                var result = new List<Anime>();
+                var cacheItem = await this.context.Animes
+                    .Include(x => x.Landscape)
+                    .Include(x => x.Portrait)
+                    .FirstOrDefaultAsync(x => x.Id == item.Id);
 
-                (int ratio, SearchItem item)[] ratios = this.Items
-                    .Where(x => !this.ignoreIds.Contains(x.Id))
-                    .Select(x => (FuzzySharp.Fuzz.PartialRatio(searchTerm, x.Name.ToLower()), x))
-                    .ToArray();
-
-                const double percentualThreshold = 0.9;
-                var threshold = ratios.Max(x => x.ratio) * percentualThreshold;
-
-                foreach (var item in ratios
-                    .Where(x => x.ratio >= threshold)
-                    .OrderByDescending(x => x.ratio)
-                    .Select(x => x.item))
+                if (cacheItem != null)
                 {
-                    var cacheItem = await this.context.Animes
-                        .Include(x => x.Landscape)
-                        .Include(x => x.Portrait)
-                        .FirstOrDefaultAsync(x => x.Id == item.Id);
+                    result.Add(cacheItem);
+                }
+                else
+                {
+                    var info = await this.apiService.GetAnimeDetailsAsync(item.Id);
 
-                    if (cacheItem != null)
+                    if (info != null)
                     {
-                        result.Add(cacheItem);
+                        result.Add(info.ToDatabaseModel());
+                        await this.context.Animes.AddAsync(info.ToDatabaseModel());
+                        await this.context.SaveChangesAsync();
                     }
                     else
                     {
-                        Console.WriteLine("Getting info of " + item.Name);
-                        var info = await this.apiService.GetAnimeDetailsAsync(item.Id);
-                        Console.WriteLine("Got info of " + item.Name);
-
-                        if (info != null)
-                        {
-                            result.Add(info.ToDatabaseModel());
-                            await this.context.Animes.AddAsync(info.ToDatabaseModel());
-                            await this.context.SaveChangesAsync();
-                        }
-                        else
-                        {
-                            this.ignoreIds.Add(item.Id);
-                        }
+                        this.ignoreIds.Add(item.Id);
                     }
                 }
-                Console.WriteLine("End search with " + searchTerm);
-                return result;
             }
-            catch (Exception e)
-            {
-                throw;
-            }
+
+            return result;
         }
 
         public async Task<IEnumerable<Episode>> GetEpisodesAsync(string collectionId)
@@ -122,7 +115,8 @@ namespace Module.Crunchyroll.Cida.Services
             }
             else
             {
-                var episodes = (await this.apiService.GetEpisodes(collectionId)).Select(x => x.ToDatabaseModel()).ToArray();
+                var episodes = (await this.apiService.GetEpisodes(collectionId)).Select(x => x.ToDatabaseModel())
+                    .ToArray();
                 result.AddRange(episodes);
                 await this.context.Episodes.AddRangeAsync(episodes);
                 await this.context.SaveChangesAsync();
@@ -152,7 +146,8 @@ namespace Module.Crunchyroll.Cida.Services
             }
             else
             {
-                var collections = (await this.apiService.GetAnimeCollectionsAsync(seriesId)).Select(x => x.ToDatabaseModel()).ToArray();
+                var collections = (await this.apiService.GetAnimeCollectionsAsync(seriesId))
+                    .Select(x => x.ToDatabaseModel()).ToArray();
                 result.AddRange(collections);
                 await this.context.Collections.AddRangeAsync(collections);
                 await this.context.SaveChangesAsync();
