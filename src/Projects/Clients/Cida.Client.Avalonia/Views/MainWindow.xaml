@@ -14,7 +14,7 @@
 
   <Grid>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="0.2*" />
+      <ColumnDefinition Width="Auto" />
       <ColumnDefinition />
     </Grid.ColumnDefinitions>
     <ListBox Grid.Column="0" Items="{Binding Modules}" SelectedItem="{Binding SelectedModule}">
