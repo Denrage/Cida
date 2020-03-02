@@ -19,6 +19,26 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         public IBitmap Thumbnail { get; set; }
 
+        // TODO: Find solution without double properties
+        public string ImageUrl
+        {
+            set => Task.Run(async () =>
+            {
+                this.Image = await CrunchyrollViewModel.DownloadImageAsync(value);
+                this.RaisePropertyChanged(nameof(this.Image));
+            });
+        }
+        
+        // TODO: Find solution without double properties
+        public string ThumbnailUrl
+        {
+            set => Task.Run(async () =>
+            {
+                this.Thumbnail = await CrunchyrollViewModel.DownloadImageAsync(value);
+                this.RaisePropertyChanged(nameof(this.Thumbnail));
+            });
+        }
+
         public string Name { get; set; }
 
         public string Description { get; set; }
@@ -33,7 +53,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref this.selectedItem, value);
                 this.OnSelectedItemChanged();
-                this.selectedItem = value; 
+                this.selectedItem = value;
             }
         }
 
@@ -50,11 +70,12 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         public async Task LoadAsync()
         {
-            var collections = await this.client.GetCollectionsAsync(new CollectionsRequest() { Id = this.Id });
+            var collections = await this.client.GetCollectionsAsync(new CollectionsRequest() {Id = this.Id});
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 this.Collections.Clear();
-                this.Collections.AddRange(collections.Collections.Select(x => new CollectionDetailViewModel(this.client) { Id = x.Id, Name = x.Name, Description = x.Description}));
+                this.Collections.AddRange(collections.Collections.Select(x => new CollectionDetailViewModel(this.client)
+                    {Id = x.Id, Name = x.Name, Description = x.Description}));
             });
         }
     }

@@ -18,12 +18,13 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         public IBitmap Image { get; set; }
 
+        // TODO: Find solution without double properties
         public string ImageUrl
         {
             set => Task.Run(async () =>
             {
                 this.Image = await CrunchyrollViewModel.DownloadImageAsync(value);
-                this.RaisePropertyChanged(nameof(Image));
+                this.RaisePropertyChanged(nameof(this.Image));
             });
         }
         

@@ -125,12 +125,12 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                 results.Add(new SeriesDetailViewModel(this.client)
                 {
                     Name = searchResultItem.Name,
-                    Thumbnail = await DownloadImageAsync(searchResultItem.PortraitImage?.Medium ??
+                    ThumbnailUrl = searchResultItem.PortraitImage?.Medium ??
                                                               searchResultItem.LandscapeImage?.Thumbnail ??
-                                                              "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
-                    Image = await DownloadImageAsync(searchResultItem.PortraitImage?.Full ??
+                                                              "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
+                    ImageUrl = searchResultItem.PortraitImage?.Full ??
                                                           searchResultItem.LandscapeImage?.Large ??
-                                                          "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"),
+                                                          "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
                     Description = searchResultItem.Description,
                     Id = searchResultItem.Id,
                 });
@@ -141,6 +141,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             this.RaisePropertyChanged(nameof(this.SearchStatus));
         }
 
+        // TODO: Move this somewhere else
         public static async Task<IBitmap> DownloadImageAsync(string url)
         {
             var request = WebRequest.Create(new Uri(url, UriKind.Absolute));
