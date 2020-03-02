@@ -59,11 +59,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Views\EpisodeDetailView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
