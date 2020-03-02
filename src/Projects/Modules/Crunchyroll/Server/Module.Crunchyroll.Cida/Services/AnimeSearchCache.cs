@@ -100,6 +100,7 @@ namespace Module.Crunchyroll.Cida.Services
 
             var collection = await this.context.Collections
                 .Include(x => x.Episodes)
+                .ThenInclude(x => x.Image)
                 .FirstOrDefaultAsync(x => x.Id == collectionId);
 
             if (collection is null)

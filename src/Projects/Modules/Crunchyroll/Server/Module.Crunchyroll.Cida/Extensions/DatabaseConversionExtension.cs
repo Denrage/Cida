@@ -25,6 +25,7 @@ namespace Module.Crunchyroll.Cida.Extensions
                 Description = episode.Description,
                 Id = episode.MediaId,
                 Name = episode.Name,
+                Duration = episode.
                 Url = episode.Url.OriginalString,
                 AvailabilityNotes = episode.AvailabilityNotes,
                 EpisodeNumber = episode.EpisodeNumber,

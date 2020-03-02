@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
+using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.ViewModels
 {
@@ -13,7 +15,18 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         public string EpisodeNumber { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string Duration { get; set; }
+
+        public IBitmap Image { get; set; }
+
+        public string ImageUrl
+        {
+            set => Task.Run(async () =>
+            {
+                this.Image = await CrunchyrollViewModel.DownloadImageAsync(value);
+                this.RaisePropertyChanged(nameof(Image));
+            });
+        }
+        
         public Dictionary<string, string> Languages { get; } = new Dictionary<string, string>()
         {
             { "enUS", "Englisch" },

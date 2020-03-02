@@ -66,6 +66,7 @@ message EpisodeResponse {
         bool PremiumAvailable = 8;
         bool FreeAvailable = 9;
         string AvailabilityNotes = 10;
+        int32 Duration = 11;
     }
     repeated EpisodeItem Episodes = 1;
 }

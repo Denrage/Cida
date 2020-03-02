@@ -36,10 +36,21 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         {
             var episodes = await this.client.GetEpisodesAsync(new EpisodeRequest() { Id = this.Id });
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.UIThread.InvokeAsync( () =>
             {
                 this.Episodes.Clear();
-                this.Episodes.AddRange(episodes.Episodes.Select(x => new EpisodeDetailViewModel(this.client) { EpisodeNumber = x.EpisodeNumber, Name = x.Name, Description = x.Description, Id = x.Id}));
+
+                foreach (var episode in episodes.Episodes)
+                {
+                    this.Episodes.Add(new EpisodeDetailViewModel(this.client)
+                    {
+                        EpisodeNumber = episode.EpisodeNumber,
+                        Name = episode.Name,
+                        Description = episode.Description,
+                        Id = episode.Id,
+                        ImageUrl = episode.Image?.Thumbnail ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"
+                    });
+                }
             });
         }
     }

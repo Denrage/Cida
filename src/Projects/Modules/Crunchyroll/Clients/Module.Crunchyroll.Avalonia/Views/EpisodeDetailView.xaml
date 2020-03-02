@@ -13,15 +13,6 @@
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <TextBlock Grid.Column="0" Text="{Binding Name}"/>
-        <TextBlock Grid.Column="1" Text="{Binding Description}"/>
-        <TextBlock Grid.Column="2" Text="{Binding Duration}"/>
-        <ComboBox Items="{Binding Languages}" Grid.Column="3">
-            <ComboBox.ItemTemplate><DataTemplate>
-                <TextBlock Text="{Binding Value}"/>
-            </DataTemplate></ComboBox.ItemTemplate>
-        </ComboBox>
-        <Button Grid.Column="4" Content="Open in Player" Command="{Binding OpenPlayer}"/>
         <Button Grid.Column="5" Content="Download" />
     </Grid>
 </UserControl>
