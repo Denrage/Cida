@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Module.Crunchyroll.Libs.Models;
 using Module.Crunchyroll.Libs.Models.Session;
@@ -12,9 +13,9 @@ namespace Module.Crunchyroll.Cida.Services.Sessions
 
         protected abstract RestRequest GenerateRestRequest();
 
-        public async Task<Result<Session>> GetSession()
+        public async Task<Result<Session>> GetSession(CancellationToken cancellationToken)
         {
-            var response = await this.RestClient.ExecuteTaskAsync(this.GenerateRestRequest());
+            var response = await this.RestClient.ExecuteTaskAsync(this.GenerateRestRequest(), cancellationToken);
             return response.IsSuccessful ? JsonSerializer.Deserialize<Result<Session>>(response.Content) : null;
         }
     }

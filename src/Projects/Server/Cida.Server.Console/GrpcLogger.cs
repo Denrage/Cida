@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using ILogger = Grpc.Core.Logging.ILogger;
 using LogLevel = NLog.LogLevel;
 
@@ -68,6 +69,12 @@ namespace Cida.Server.Console
         /// <summary>Logs a message and an associated exception with severity Warning.</summary>
         public void Warning(Exception exception, string message)
         {
+            // Ignore canceled Task exceptions
+            if (exception is TaskCanceledException)
+            {
+                return;
+            }
+            
             this.logger.Warn(exception, message);
         }
 
@@ -86,6 +93,12 @@ namespace Cida.Server.Console
         /// <summary>Logs a message and an associated exception with severity Error.</summary>
         public void Error(Exception exception, string message)
         {
+            // Ignore canceled Task exceptions
+            if (exception is TaskCanceledException)
+            {
+                return;
+            }
+            
             this.logger.Error(exception, message);
         }
     }

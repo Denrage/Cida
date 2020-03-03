@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Module.Crunchyroll.Cida.Services.Sessions;
 using Module.Crunchyroll.Libs.Models.Collection;
@@ -28,21 +29,21 @@ namespace Module.Crunchyroll.Cida.Services
             new CrunchyrollSessionServer(CrunchyrollSessionServer.Devices[1].DeviceType,
                 CrunchyrollSessionServer.Devices[1].AccessToken),
         };
-        
+
         public CrunchyrollApiService()
         {
             Task.Run(async () => await this.InitializeAsync());
         }
 
-        private async Task InitializeAsync()
+        private async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(this.session))
             {
-                this.session = await this.GetSessionAsync();
+                this.session = await this.GetSessionAsync(cancellationToken);
             }
         }
 
-        public async Task<Collection> GetCollectionAsync(string collectionId)
+        public async Task<Collection> GetCollectionAsync(string collectionId, CancellationToken cancellationToken = default)
         {
             const string detailCollectionsUrlPart = "info.0.json";
 
@@ -50,10 +51,10 @@ namespace Module.Crunchyroll.Cida.Services
             request.AddParameter("collection_id", collectionId);
             request.AddParameter("limit", int.MaxValue);
 
-            return await this.ExecuteRequestAsync<Collection>(request);
+            return await this.ExecuteRequestAsync<Collection>(request, cancellationToken);
         }
 
-        public async Task<IEnumerable<Collection>> GetAnimeCollectionsAsync(string seriesId)
+        public async Task<IEnumerable<Collection>> GetAnimeCollectionsAsync(string seriesId, CancellationToken cancellationToken = default)
         {
             const string listCollectionsUrlPart = "list_collections.0.json";
 
@@ -62,11 +63,11 @@ namespace Module.Crunchyroll.Cida.Services
             request.AddParameter("limit", int.MaxValue);
 
             return ((IEnumerable<Collection>) await this
-                       .ExecuteRequestAsync<List<Collection>>(request)) ??
+                       .ExecuteRequestAsync<List<Collection>>(request, cancellationToken)) ??
                    await Task.FromResult(Array.Empty<Collection>());
         }
 
-        private async Task<T> ExecuteRequestAsync<T>(RestRequest request)
+        private async Task<T> ExecuteRequestAsync<T>(RestRequest request, CancellationToken cancellationToken = default)
             where T : class
         {
             const int maxTries = 1;
@@ -77,7 +78,7 @@ namespace Module.Crunchyroll.Cida.Services
             do
             {
                 request.AddOrUpdateParameter("session_id", this.session);
-                var response = await this.apiClient.ExecuteTaskAsync(request);
+                var response = await this.apiClient.ExecuteTaskAsync(request, cancellationToken);
                 Libs.Models.Result<T> infoResult = null;
 
                 if (response.IsSuccessful)
@@ -91,7 +92,8 @@ namespace Module.Crunchyroll.Cida.Services
                     tryCount++;
                     if (tryCount <= maxTries)
                     {
-                        this.session = await this.GetSessionAsync();
+                        cancellationToken.ThrowIfCancellationRequested();
+                        this.session = await this.GetSessionAsync(cancellationToken);
                     }
                 }
                 else
@@ -103,20 +105,21 @@ namespace Module.Crunchyroll.Cida.Services
             return null;
         }
 
-        public async Task<Libs.Models.Details.Details> GetAnimeDetailsAsync(string seriesId)
+        public async Task<Libs.Models.Details.Details> GetAnimeDetailsAsync(string seriesId,
+            CancellationToken cancellationToken = default)
         {
             const string infoApiCommand = "info.0.json";
 
             var request = new RestRequest(infoApiCommand, Method.GET);
             request.AddParameter("series_id", seriesId);
-            return await this.ExecuteRequestAsync<Libs.Models.Details.Details>(request);
+            return await this.ExecuteRequestAsync<Libs.Models.Details.Details>(request, cancellationToken);
         }
 
-        private async Task<string> GetSessionAsync()
+        private async Task<string> GetSessionAsync(CancellationToken cancellationToken = default)
         {
             foreach (var server in this.sessionServers)
             {
-                var newSession = await server.GetSession();
+                var newSession = await server.GetSession(cancellationToken);
                 if (newSession != null && !newSession.Error)
                 {
                     return newSession.Data.SessionId;
@@ -125,27 +128,28 @@ namespace Module.Crunchyroll.Cida.Services
 
             return null;
         }
-        
-        
-        public async Task<IEnumerable<Episode>> GetEpisodes(string collectionId)
+
+
+        public async Task<IEnumerable<Episode>> GetEpisodes(string collectionId, CancellationToken cancellationToken = default)
         {
             const string listMediaUrlPart = "list_media.0.json";
 
-                var request = new RestRequest(listMediaUrlPart, Method.GET);
-                request.AddParameter("collection_id", collectionId);
-                request.AddParameter("limit", int.MaxValue);
+            var request = new RestRequest(listMediaUrlPart, Method.GET);
+            request.AddParameter("collection_id", collectionId);
+            request.AddParameter("limit", int.MaxValue);
 
-                return (IEnumerable<Episode>)await this.ExecuteRequestAsync<List<Episode>>(request) ?? Array.Empty<Episode>();
+            return (IEnumerable<Episode>) await this.ExecuteRequestAsync<List<Episode>>(request, cancellationToken) ??
+                   Array.Empty<Episode>();
         }
 
-        public async Task<Stream> GetStreamUrl(string mediaId, string language)
+        public async Task<Stream> GetStreamUrl(string mediaId, string language, CancellationToken cancellationToken = default)
         {
             const string infoApiCommand = "info.0.json";
             var request = new RestRequest(infoApiCommand, Method.GET);
             request.AddParameter("media_id", mediaId);
             request.AddParameter("fields", "media.stream_data");
             request.AddParameter("locale", language);
-            return (await this.ExecuteRequestAsync<StreamData>(request)).Stream;
+            return (await this.ExecuteRequestAsync<StreamData>(request, cancellationToken)).Stream;
         }
     }
 }

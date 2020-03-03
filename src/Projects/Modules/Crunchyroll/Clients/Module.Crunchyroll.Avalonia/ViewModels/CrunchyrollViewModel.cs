@@ -13,6 +13,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
+using Grpc.Core;
 using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.ViewModels
@@ -24,7 +25,8 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         private string searchTerm;
         private DispatcherTimer searchTermChangeTimer;
         private bool isSearching;
-        private SemaphoreSlim searchSemaphore;
+        private CancellationTokenSource searchTokenSource;
+        private SemaphoreSlim cancellationSemaphore;
 
         public string SearchTerm
         {
@@ -82,20 +84,34 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                 async (obj, args) =>
                 {
                     this.searchTermChangeTimer.Stop();
+                    var tokenSource = new CancellationTokenSource();
                     try
                     {
-                        await this.searchSemaphore.WaitAsync();
-                        this.IsSearching = true;
-                        await this.Search(this.SearchTerm);
-                        this.IsSearching = false;
+                        await this.cancellationSemaphore.WaitAsync();
+                        this.searchTokenSource?.Cancel();
+                        this.searchTokenSource?.Dispose();
+                        this.searchTokenSource = tokenSource;
                     }
                     finally
                     {
-                        this.searchSemaphore.Release();
+                        this.cancellationSemaphore.Release();
+                    }
+
+                    this.IsSearching = true;
+                    try
+                    {
+                        await this.Search(this.SearchTerm, tokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    finally
+                    {
+                        this.IsSearching = false;
                     }
                 });
 
-            this.searchSemaphore = new SemaphoreSlim(1, 1);
+            this.cancellationSemaphore = new SemaphoreSlim(1, 1);
         }
 
         public override async Task LoadAsync()
@@ -106,31 +122,49 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         public override string Name => "Crunchyroll";
 
 
-        public async Task Search(string searchTerm)
+        public async Task Search(string searchTerm, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(searchTerm))
             {
                 return;
             }
-            
-            var searchResult = await this.client.SearchAsync(new SearchRequest()
+
+            SearchResponse searchResult = null;
+
+            try
             {
-                SearchTerm = searchTerm,
-            });
+                searchResult = await this.client.SearchAsync(new SearchRequest()
+                {
+                    SearchTerm = searchTerm,
+                }, cancellationToken: cancellationToken);
+            }
+            catch (RpcException e)
+            {
+                if (e.StatusCode == StatusCode.Cancelled)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
 
             var results = new List<SeriesDetailViewModel>();
 
+            if (searchResult == null)
+            {
+                throw new OperationCanceledException();
+            }
+
             foreach (var searchResultItem in searchResult.Items)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 results.Add(new SeriesDetailViewModel(this.client)
                 {
                     Name = searchResultItem.Name,
                     ThumbnailUrl = searchResultItem.PortraitImage?.Medium ??
-                                                              searchResultItem.LandscapeImage?.Thumbnail ??
-                                                              "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
+                                   searchResultItem.LandscapeImage?.Thumbnail ??
+                                   "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
                     ImageUrl = searchResultItem.PortraitImage?.Full ??
-                                                          searchResultItem.LandscapeImage?.Large ??
-                                                          "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
+                               searchResultItem.LandscapeImage?.Large ??
+                               "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
                     Description = searchResultItem.Description,
                     Id = searchResultItem.Id,
                 });

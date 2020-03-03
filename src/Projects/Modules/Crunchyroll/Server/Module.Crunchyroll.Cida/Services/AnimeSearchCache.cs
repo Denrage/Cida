@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Module.Crunchyroll.Cida.Extensions;
@@ -44,7 +45,7 @@ namespace Module.Crunchyroll.Cida.Services
         }
 
 
-        public async Task<IEnumerable<Anime>> SearchAsync(string searchTerm)
+        public async Task<IEnumerable<Anime>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
         {
             searchTerm = searchTerm.ToLower();
             var result = new List<Anime>();
@@ -65,10 +66,12 @@ namespace Module.Crunchyroll.Cida.Services
                 .Select(x => x.item)
                 .Take(maxSearchResults))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 var cacheItem = await this.context.Animes
                     .Include(x => x.Landscape)
                     .Include(x => x.Portrait)
-                    .FirstOrDefaultAsync(x => x.Id == item.Id);
+                    .FirstOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
 
                 if (cacheItem != null)
                 {
@@ -76,13 +79,13 @@ namespace Module.Crunchyroll.Cida.Services
                 }
                 else
                 {
-                    var info = await this.apiService.GetAnimeDetailsAsync(item.Id);
+                    var info = await this.apiService.GetAnimeDetailsAsync(item.Id, cancellationToken);
 
                     if (info != null)
                     {
                         result.Add(info.ToDatabaseModel());
-                        await this.context.Animes.AddAsync(info.ToDatabaseModel());
-                        await this.context.SaveChangesAsync();
+                        await this.context.Animes.AddAsync(info.ToDatabaseModel(), cancellationToken);
+                        await this.context.SaveChangesAsync(cancellationToken);
                     }
                     else
                     {
@@ -94,20 +97,20 @@ namespace Module.Crunchyroll.Cida.Services
             return result;
         }
 
-        public async Task<IEnumerable<Episode>> GetEpisodesAsync(string collectionId)
+        public async Task<IEnumerable<Episode>> GetEpisodesAsync(string collectionId, CancellationToken cancellationToken = default)
         {
             var result = new List<Episode>();
 
             var collection = await this.context.Collections
                 .Include(x => x.Episodes)
                 .ThenInclude(x => x.Image)
-                .FirstOrDefaultAsync(x => x.Id == collectionId);
+                .FirstOrDefaultAsync(x => x.Id == collectionId, cancellationToken);
 
             if (collection is null)
             {
-                collection = (await this.apiService.GetCollectionAsync(collectionId)).ToDatabaseModel();
-                await this.context.Collections.AddAsync(collection);
-                await this.context.SaveChangesAsync();
+                collection = (await this.apiService.GetCollectionAsync(collectionId, cancellationToken)).ToDatabaseModel();
+                await this.context.Collections.AddAsync(collection, cancellationToken);
+                await this.context.SaveChangesAsync(cancellationToken);
             }
 
             if (collection.Episodes != null && collection.Episodes.Count > 0)
@@ -116,29 +119,29 @@ namespace Module.Crunchyroll.Cida.Services
             }
             else
             {
-                var episodes = (await this.apiService.GetEpisodes(collectionId)).Select(x => x.ToDatabaseModel())
+                var episodes = (await this.apiService.GetEpisodes(collectionId, cancellationToken)).Select(x => x.ToDatabaseModel())
                     .ToArray();
                 result.AddRange(episodes);
                 await this.context.Episodes.AddRangeAsync(episodes);
-                await this.context.SaveChangesAsync();
+                await this.context.SaveChangesAsync(cancellationToken);
             }
 
             return result;
         }
 
-        public async Task<IEnumerable<Collection>> GetCollectionsAsync(string seriesId)
+        public async Task<IEnumerable<Collection>> GetCollectionsAsync(string seriesId, CancellationToken cancellationToken = default)
         {
             var result = new List<Collection>();
 
             var series = await this.context.Animes
                 .Include(x => x.Collections)
-                .FirstOrDefaultAsync(x => x.Id == seriesId);
+                .FirstOrDefaultAsync(x => x.Id == seriesId, cancellationToken);
 
             if (series is null)
             {
-                series = (await this.apiService.GetAnimeDetailsAsync(seriesId)).ToDatabaseModel();
-                await this.context.Animes.AddAsync(series);
-                await this.context.SaveChangesAsync();
+                series = (await this.apiService.GetAnimeDetailsAsync(seriesId, cancellationToken)).ToDatabaseModel();
+                await this.context.Animes.AddAsync(series, cancellationToken);
+                await this.context.SaveChangesAsync(cancellationToken);
             }
 
             if (series.Collections != null && series.Collections.Count > 0)
@@ -147,19 +150,19 @@ namespace Module.Crunchyroll.Cida.Services
             }
             else
             {
-                var collections = (await this.apiService.GetAnimeCollectionsAsync(seriesId))
+                var collections = (await this.apiService.GetAnimeCollectionsAsync(seriesId, cancellationToken))
                     .Select(x => x.ToDatabaseModel()).ToArray();
                 result.AddRange(collections);
                 await this.context.Collections.AddRangeAsync(collections);
-                await this.context.SaveChangesAsync();
+                await this.context.SaveChangesAsync(cancellationToken);
             }
 
             return result;
         }
 
-        public async Task<IEnumerable<StreamInformation>> GetStream(string mediaId, string language)
+        public async Task<IEnumerable<StreamInformation>> GetStream(string mediaId, string language, CancellationToken cancellationToken = default)
         {
-            var result = (await this.apiService.GetStreamUrl(mediaId, language));
+            var result = (await this.apiService.GetStreamUrl(mediaId, language, cancellationToken));
             return result.Streams;
         }
     }
