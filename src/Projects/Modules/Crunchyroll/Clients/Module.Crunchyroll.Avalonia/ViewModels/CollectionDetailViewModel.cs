@@ -4,6 +4,7 @@ using Avalonia.Collections;
 using Avalonia.Threading;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
+using Module.Crunchyroll.Avalonia.Services;
 using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.ViewModels
@@ -11,6 +12,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     public class CollectionDetailViewModel : ViewModelBase
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
+        private readonly IImageDownloadService imageDownloadService;
         private EpisodeDetailViewModel selectedItem;
         public string Id { get; set; }
         public string Name { get; set; }
@@ -27,9 +29,10 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         }
 
 
-        public CollectionDetailViewModel(CrunchyrollService.CrunchyrollServiceClient client)
+        public CollectionDetailViewModel(CrunchyrollService.CrunchyrollServiceClient client, IImageDownloadService imageDownloadService)
         {
             this.client = client;
+            this.imageDownloadService = imageDownloadService;
         }
 
         public async Task LoadAsync()
@@ -42,14 +45,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
                 foreach (var episode in episodes.Episodes)
                 {
-                    this.Episodes.Add(new EpisodeDetailViewModel(this.client)
-                    {
-                        EpisodeNumber = episode.EpisodeNumber,
-                        Name = episode.Name,
-                        Description = episode.Description,
-                        Id = episode.Id,
-                        ImageUrl = episode.Image?.Thumbnail ?? "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg"
-                    });
+                    this.Episodes.Add(new EpisodeDetailViewModel(this.client, this.imageDownloadService, episode));
                 }
             });
         }

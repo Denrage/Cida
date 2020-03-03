@@ -14,6 +14,7 @@ using Avalonia.Threading;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
 using Grpc.Core;
+using Module.Crunchyroll.Avalonia.Services;
 using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.ViewModels
@@ -21,6 +22,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     public class CrunchyrollViewModel : ModuleViewModel
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
+        private readonly IImageDownloadService imageDownloadService;
         private SeriesDetailViewModel selectedItem;
         private string searchTerm;
         private DispatcherTimer searchTermChangeTimer;
@@ -74,9 +76,11 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             Task.Run(async () => { await this.SelectedItem.LoadAsync(); });
         }
 
-        public CrunchyrollViewModel(CrunchyrollService.CrunchyrollServiceClient client)
+        public CrunchyrollViewModel(CrunchyrollService.CrunchyrollServiceClient client,
+            IImageDownloadService imageDownloadService)
         {
             this.client = client;
+            this.imageDownloadService = imageDownloadService;
 
             this.searchTermChangeTimer = new DispatcherTimer(
                 TimeSpan.FromMilliseconds(500),
@@ -156,45 +160,12 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             foreach (var searchResultItem in searchResult.Items)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                results.Add(new SeriesDetailViewModel(this.client)
-                {
-                    Name = searchResultItem.Name,
-                    ThumbnailUrl = searchResultItem.PortraitImage?.Medium ??
-                                   searchResultItem.LandscapeImage?.Thumbnail ??
-                                   "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
-                    ImageUrl = searchResultItem.PortraitImage?.Full ??
-                               searchResultItem.LandscapeImage?.Large ??
-                               "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
-                    Description = searchResultItem.Description,
-                    Id = searchResultItem.Id,
-                });
+                results.Add(new SeriesDetailViewModel(this.client, this.imageDownloadService, searchResultItem));
             }
 
             this.SearchResults.Clear();
             this.SearchResults.AddRange(results);
             this.RaisePropertyChanged(nameof(this.SearchStatus));
-        }
-
-        // TODO: Move this somewhere else
-        public static async Task<IBitmap> DownloadImageAsync(string url)
-        {
-            var request = WebRequest.Create(new Uri(url, UriKind.Absolute));
-            request.Timeout = -1;
-            using var response = await request.GetResponseAsync();
-            await using var responseStream = response.GetResponseStream();
-
-            if (responseStream is null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            var memoryStream = new MemoryStream();
-
-            await responseStream.CopyToAsync(memoryStream);
-
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            return new Bitmap(memoryStream);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
 using Grpc.Core;
+using Module.Crunchyroll.Avalonia.Services;
 using Module.Crunchyroll.Avalonia.ViewModels;
 
 namespace Module.Crunchyroll.Avalonia
@@ -16,7 +17,7 @@ namespace Module.Crunchyroll.Avalonia
         public async Task LoadAsync(Channel channel)
         {
             this.client = new CrunchyrollService.CrunchyrollServiceClient(channel);
-            this.ViewModel = new CrunchyrollViewModel(this.client);
+            this.ViewModel = new CrunchyrollViewModel(this.client, new ImageDownlodService());
             await Task.CompletedTask;
         }
     }

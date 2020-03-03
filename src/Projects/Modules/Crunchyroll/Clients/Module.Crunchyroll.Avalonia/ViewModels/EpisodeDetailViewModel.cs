@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
+using Module.Crunchyroll.Avalonia.Services;
 using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.ViewModels
@@ -11,39 +12,51 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     public class EpisodeDetailViewModel : ViewModelBase
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
-        public string Id { get; set; }
-        public string EpisodeNumber { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        private readonly IImageDownloadService imageDownloadService;
+        private readonly EpisodeResponse.Types.EpisodeItem model;
+        private IBitmap image;
 
-        public IBitmap Image { get; set; }
-
-        // TODO: Find solution without double properties
-        public string ImageUrl
+        public string Id
         {
-            set => Task.Run(async () =>
-            {
-                this.Image = await CrunchyrollViewModel.DownloadImageAsync(value);
-                this.RaisePropertyChanged(nameof(this.Image));
-            });
+            get => this.model.Id;
+            set => this.model.Id = value;
         }
-        
-        public Dictionary<string, string> Languages { get; } = new Dictionary<string, string>()
-        {
-            { "enUS", "Englisch" },
-            { "arME", "Arabisch" },
-            { "itIT", "Italienisch" },
-            { "esES", "Spanisch" },
-            { "frFR", "Französisch" },
-            { "ptBR", "Portugiesisch" },
-            { "esLA", "Spanisch (Amerikanisch)" },
-            { "ruRU", "Russisch" },
-            { "deDE", "Deutsch" },
-        };
 
-        public EpisodeDetailViewModel(CrunchyrollService.CrunchyrollServiceClient client)
+        public string EpisodeNumber
+        {
+            get => this.model.EpisodeNumber;
+            set => this.model.EpisodeNumber = value;
+        }
+
+        public string Name
+        {
+            get => this.model.Name;
+            set => this.model.Name = value;
+        }
+
+        public string Description
+        {
+            get => this.model.Description;
+            set => this.model.Description = value;
+        }
+
+        public IBitmap Image
+        {
+            get => this.image;
+            private set => this.RaiseAndSetIfChanged(ref this.image, value);
+        }
+
+        public EpisodeDetailViewModel(CrunchyrollService.CrunchyrollServiceClient client,
+            IImageDownloadService imageDownloadService, EpisodeResponse.Types.EpisodeItem model)
         {
             this.client = client;
+            this.imageDownloadService = imageDownloadService;
+            this.model = model;
+
+            this.imageDownloadService.DownloadImageAsync(
+                this.model.Image?.Thumbnail ??
+                "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
+                bitmap => this.Image = bitmap);
         }
 
         public async Task OpenPlayer()
@@ -54,9 +67,8 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             });
 
             var processStartInfo = new ProcessStartInfo(@"F:\MPV\Baka MPlayer.exe");
-            processStartInfo.Arguments = "\"" +  episodeUrl.StreamUrl + "\""; 
+            processStartInfo.Arguments = "\"" + episodeUrl.StreamUrl + "\"";
             Process.Start(processStartInfo);
         }
     }
 }
-
