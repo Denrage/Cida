@@ -73,6 +73,8 @@ namespace Cida.Server.Infrastructure
             this.logger.Info("Uploaded file: {value1}", path);
         }
 
+
+
         private FtpWebRequest CreateRequest(params string[] path)
         {
             const string separator = "/";

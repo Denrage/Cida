@@ -10,6 +10,7 @@ using Cida.Server.Extensions;
 using Cida.Server.Infrastructure;
 using Cida.Server.Infrastructure.Database.EFC;
 using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+using Cida.Server.Interfaces;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 using NLog;
@@ -23,20 +24,20 @@ namespace Cida.Server.Module
         private readonly string moduleDirectory;
         private readonly IEnumerable<string> unpackedModuleDirectories;
         private readonly IGrpcRegistrar grpcRegistrar;
-        private readonly IFtpClient ftpClient;
+        private readonly Infrastructure.IFtpClient ftpClient;
         private readonly CidaContext databaseContext;
         private readonly IDatabaseConnector databaseConnector;
         private readonly ILogger logger;
         private readonly GlobalConfigurationService globalConfigurationService;
+        private readonly IModuleFtpClientFactory moduleFtpClientFactory;
         private readonly ConcurrentDictionary<Guid, CidaModule> modules;
         private readonly ConcurrentBag<Guid> unpackedModules;
 
         public IEnumerable<Guid> Modules
             => this.modules.Select(x => x.Key);
 
-        public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar, IFtpClient ftpClient,
-            CidaContext databaseContext, IDatabaseConnector databaseConnector, ILogger logger, GlobalConfigurationService globalConfigurationService,
-            IEnumerable<string> unpackedModuleDirectories = null)
+        public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar, Infrastructure.IFtpClient ftpClient,
+            CidaContext databaseContext, IDatabaseConnector databaseConnector, ILogger logger, GlobalConfigurationService globalConfigurationService, IModuleFtpClientFactory moduleFtpClientFactory, IEnumerable<string> unpackedModuleDirectories = null)
         {
             this.moduleDirectory = moduleDirectory;
             this.unpackedModuleDirectories = unpackedModuleDirectories ?? Array.Empty<string>();
@@ -46,6 +47,7 @@ namespace Cida.Server.Module
             this.databaseConnector = databaseConnector;
             this.logger = logger;
             this.globalConfigurationService = globalConfigurationService;
+            this.moduleFtpClientFactory = moduleFtpClientFactory;
             this.modules = new ConcurrentDictionary<Guid, CidaModule>();
             this.unpackedModules = new ConcurrentBag<Guid>();
 
@@ -273,7 +275,7 @@ namespace Cida.Server.Module
             {
                 if (this.modules.TryAdd(module.Metadata.Id, module))
                 {
-                    return await module.Load(this.databaseConnector);
+                    return await module.Load(this.databaseConnector, this.moduleFtpClientFactory.Create("ModuleFiles/" + module.Metadata.Id));
                 }
             }
             catch (Exception ex)
