@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Cida.Server.Module;
 using Google.Protobuf;
@@ -51,8 +49,13 @@ namespace Cida.Server.Api
             this.logger = logger;
             this.ports = configuration.Endpoints.Select(x => new ServerPort(x.Host, x.Port, ServerCredentials.Insecure)).ToArray();
             this.grpcServer = this.CreateServer(this.services);
-            this.grpcServer.Start();
             logger.Info($"gRPC Server started on {configuration.Endpoints[0].Host}:{configuration.Endpoints[0].Port}");
+        }
+
+        public async Task Start()
+        {
+            this.grpcServer.Start();
+            await Task.CompletedTask;
         }
 
         public async Task AddServicesAsync(IEnumerable<ServerServiceDefinition> definitions)

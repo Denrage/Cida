@@ -1,10 +1,5 @@
-﻿using Cida.Server.Infrastructure.Database;
-using Cida.Server.Infrastructure.Database.BaseClasses.EFC;
-using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+﻿using Cida.Server.Infrastructure.Database.BaseClasses.EFC;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Cida.Server.Infrastructure.Database.EFC
 {

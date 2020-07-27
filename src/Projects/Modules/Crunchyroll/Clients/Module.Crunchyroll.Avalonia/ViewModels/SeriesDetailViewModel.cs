@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Media.Imaging;
@@ -31,12 +28,12 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         public CollectionDetailViewModel SelectedItem
         {
-            get => selectedItem;
+            get => this.selectedItem;
             set
             {
                 this.RaiseAndSetIfChanged(ref this.selectedItem, value);
                 this.OnSelectedItemChanged();
-                selectedItem = value; 
+                this.selectedItem = value; 
             }
         }
 

@@ -20,7 +20,7 @@ namespace Cida.Client.Avalonia
 
         public override void OnFrameworkInitializationCompleted()
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (this.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.ShutdownMode = ShutdownMode.OnLastWindowClose;
                 var viewModel = new LauncherWindowViewModel(this.connectionService);

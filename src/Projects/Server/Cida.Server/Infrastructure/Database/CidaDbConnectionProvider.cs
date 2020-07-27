@@ -1,11 +1,7 @@
 ﻿using Cida.Server.Infrastructure.Database.Extensions;
 using Microsoft.Data.SqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
-using System.Text;
-using Cida.Server.Infrastructure.Database.Models;
-using Cida.Server.Interfaces;
 
 namespace Cida.Server.Infrastructure.Database
 {
@@ -35,6 +31,27 @@ namespace Cida.Server.Infrastructure.Database
                 this.ConnectionString = this.configurationService.ConfigurationManager.Database.ToConnectionString();
                 this.ConnectionStringUpdated?.Invoke();
             }
+        }
+
+        public bool ValidateConfiguration(DatabaseConnection connectionSettings)
+        {
+            if (string.IsNullOrEmpty(connectionSettings.DatabaseName))
+            {
+                return false;
+            }
+
+            if (connectionSettings.Connection == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(connectionSettings.Connection.Host) ||
+                string.IsNullOrEmpty(connectionSettings.Connection.Username))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

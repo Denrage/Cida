@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Cida.Server.Infrastructure;
 using Infrastructure;
 

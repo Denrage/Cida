@@ -1,12 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
 using ReactiveUI;
@@ -24,7 +21,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         public SeriesDetailViewModel SelectedItem
         {
-            get => selectedItem;
+            get => this.selectedItem;
             set
             {
                 this.RaiseAndSetIfChanged(ref this.selectedItem, value);

@@ -128,7 +128,7 @@ namespace Cida.Server
     /// </param>
     public StringFormatMethodAttribute([NotNull] string formatParameterName)
     {
-      FormatParameterName = formatParameterName;
+      this.FormatParameterName = formatParameterName;
     }
 
     [NotNull] public string FormatParameterName { get; }
@@ -168,7 +168,7 @@ namespace Cida.Server
   {
     public ValueProviderAttribute([NotNull] string name)
     {
-      Name = name;
+      this.Name = name;
     }
 
     [NotNull] public string Name { get; }
@@ -232,7 +232,7 @@ namespace Cida.Server
     public NotifyPropertyChangedInvocatorAttribute() { }
     public NotifyPropertyChangedInvocatorAttribute([NotNull] string parameterName)
     {
-      ParameterName = parameterName;
+      this.ParameterName = parameterName;
     }
 
     [CanBeNull] public string ParameterName { get; }
@@ -290,8 +290,8 @@ namespace Cida.Server
 
     public ContractAnnotationAttribute([NotNull] string contract, bool forceFullStates)
     {
-      Contract = contract;
-      ForceFullStates = forceFullStates;
+      this.Contract = contract;
+      this.ForceFullStates = forceFullStates;
     }
 
     [NotNull] public string Contract { get; }
@@ -315,7 +315,7 @@ namespace Cida.Server
 
     public LocalizationRequiredAttribute(bool required)
     {
-      Required = required;
+      this.Required = required;
     }
 
     public bool Required { get; }
@@ -361,7 +361,7 @@ namespace Cida.Server
   {
     public BaseTypeRequiredAttribute([NotNull] Type baseType)
     {
-      BaseType = baseType;
+      this.BaseType = baseType;
     }
 
     [NotNull] public Type BaseType { get; }
@@ -385,8 +385,8 @@ namespace Cida.Server
 
     public UsedImplicitlyAttribute(ImplicitUseKindFlags useKindFlags, ImplicitUseTargetFlags targetFlags)
     {
-      UseKindFlags = useKindFlags;
-      TargetFlags = targetFlags;
+      this.UseKindFlags = useKindFlags;
+      this.TargetFlags = targetFlags;
     }
 
     public ImplicitUseKindFlags UseKindFlags { get; }
@@ -414,8 +414,8 @@ namespace Cida.Server
 
     public MeansImplicitUseAttribute(ImplicitUseKindFlags useKindFlags, ImplicitUseTargetFlags targetFlags)
     {
-      UseKindFlags = useKindFlags;
-      TargetFlags = targetFlags;
+      this.UseKindFlags = useKindFlags;
+      this.TargetFlags = targetFlags;
     }
 
     [UsedImplicitly] public ImplicitUseKindFlags UseKindFlags { get; }
@@ -470,7 +470,7 @@ namespace Cida.Server
 
     public PublicAPIAttribute([NotNull] string comment)
     {
-      Comment = comment;
+      this.Comment = comment;
     }
 
     [CanBeNull] public string Comment { get; }
@@ -516,7 +516,7 @@ namespace Cida.Server
 
     public MustUseReturnValueAttribute([NotNull] string justification)
     {
-      Justification = justification;
+      this.Justification = justification;
     }
 
     [CanBeNull] public string Justification { get; }
@@ -553,7 +553,7 @@ namespace Cida.Server
 
     public PathReferenceAttribute([NotNull, PathReference] string basePath)
     {
-      BasePath = basePath;
+      this.BasePath = basePath;
     }
 
     [CanBeNull] public string BasePath { get; }
@@ -644,7 +644,7 @@ namespace Cida.Server
   {
     public AspMvcAreaMasterLocationFormatAttribute([NotNull] string format)
     {
-      Format = format;
+      this.Format = format;
     }
 
     [NotNull] public string Format { get; }
@@ -655,7 +655,7 @@ namespace Cida.Server
   {
     public AspMvcAreaPartialViewLocationFormatAttribute([NotNull] string format)
     {
-      Format = format;
+      this.Format = format;
     }
 
     [NotNull] public string Format { get; }
@@ -666,7 +666,7 @@ namespace Cida.Server
   {
     public AspMvcAreaViewLocationFormatAttribute([NotNull] string format)
     {
-      Format = format;
+      this.Format = format;
     }
 
     [NotNull] public string Format { get; }
@@ -677,7 +677,7 @@ namespace Cida.Server
   {
     public AspMvcMasterLocationFormatAttribute([NotNull] string format)
     {
-      Format = format;
+      this.Format = format;
     }
 
     [NotNull] public string Format { get; }
@@ -688,7 +688,7 @@ namespace Cida.Server
   {
     public AspMvcPartialViewLocationFormatAttribute([NotNull] string format)
     {
-      Format = format;
+      this.Format = format;
     }
 
     [NotNull] public string Format { get; }
@@ -699,7 +699,7 @@ namespace Cida.Server
   {
     public AspMvcViewLocationFormatAttribute([NotNull] string format)
     {
-      Format = format;
+      this.Format = format;
     }
 
     [NotNull] public string Format { get; }
@@ -718,7 +718,7 @@ namespace Cida.Server
 
     public AspMvcActionAttribute([NotNull] string anonymousProperty)
     {
-      AnonymousProperty = anonymousProperty;
+      this.AnonymousProperty = anonymousProperty;
     }
 
     [CanBeNull] public string AnonymousProperty { get; }
@@ -736,7 +736,7 @@ namespace Cida.Server
 
     public AspMvcAreaAttribute([NotNull] string anonymousProperty)
     {
-      AnonymousProperty = anonymousProperty;
+      this.AnonymousProperty = anonymousProperty;
     }
 
     [CanBeNull] public string AnonymousProperty { get; }
@@ -755,7 +755,7 @@ namespace Cida.Server
 
     public AspMvcControllerAttribute([NotNull] string anonymousProperty)
     {
-      AnonymousProperty = anonymousProperty;
+      this.AnonymousProperty = anonymousProperty;
     }
 
     [CanBeNull] public string AnonymousProperty { get; }
@@ -858,7 +858,7 @@ namespace Cida.Server
 
     public HtmlElementAttributesAttribute([NotNull] string name)
     {
-      Name = name;
+      this.Name = name;
     }
 
     [CanBeNull] public string Name { get; }
@@ -869,7 +869,7 @@ namespace Cida.Server
   {
     public HtmlAttributeValueAttribute([NotNull] string name)
     {
-      Name = name;
+      this.Name = name;
     }
 
     [NotNull] public string Name { get; }
@@ -915,7 +915,7 @@ namespace Cida.Server
   {
     public CollectionAccessAttribute(CollectionAccessType collectionAccessType)
     {
-      CollectionAccessType = collectionAccessType;
+      this.CollectionAccessType = collectionAccessType;
     }
 
     public CollectionAccessType CollectionAccessType { get; }
@@ -956,7 +956,7 @@ namespace Cida.Server
   {
     public AssertionConditionAttribute(AssertionConditionType conditionType)
     {
-      ConditionType = conditionType;
+      this.ConditionType = conditionType;
     }
 
     public AssertionConditionType ConditionType { get; }
@@ -1053,8 +1053,8 @@ namespace Cida.Server
   {
     public AspChildControlTypeAttribute([NotNull] string tagName, [NotNull] Type controlType)
     {
-      TagName = tagName;
-      ControlType = controlType;
+      this.TagName = tagName;
+      this.ControlType = controlType;
     }
 
     [NotNull] public string TagName { get; }
@@ -1076,7 +1076,7 @@ namespace Cida.Server
   {
     public AspRequiredAttributeAttribute([NotNull] string attribute)
     {
-      Attribute = attribute;
+      this.Attribute = attribute;
     }
 
     [NotNull] public string Attribute { get; }
@@ -1089,7 +1089,7 @@ namespace Cida.Server
 
     public AspTypePropertyAttribute(bool createConstructorReferences)
     {
-      CreateConstructorReferences = createConstructorReferences;
+      this.CreateConstructorReferences = createConstructorReferences;
     }
   }
 
@@ -1098,7 +1098,7 @@ namespace Cida.Server
   {
     public RazorImportNamespaceAttribute([NotNull] string name)
     {
-      Name = name;
+      this.Name = name;
     }
 
     [NotNull] public string Name { get; }
@@ -1109,8 +1109,8 @@ namespace Cida.Server
   {
     public RazorInjectionAttribute([NotNull] string type, [NotNull] string fieldName)
     {
-      Type = type;
-      FieldName = fieldName;
+      this.Type = type;
+      this.FieldName = fieldName;
     }
 
     [NotNull] public string Type { get; }
@@ -1123,7 +1123,7 @@ namespace Cida.Server
   {
     public RazorDirectiveAttribute([NotNull] string directive)
     {
-      Directive = directive;
+      this.Directive = directive;
     }
 
     [NotNull] public string Directive { get; }
@@ -1134,12 +1134,12 @@ namespace Cida.Server
   {
       public RazorPageBaseTypeAttribute([NotNull] string baseType)
       {
-        BaseType = baseType;
+        this.BaseType = baseType;
       }
       public RazorPageBaseTypeAttribute([NotNull] string baseType, string pageName)
       {
-          BaseType = baseType;
-          PageName = pageName;
+        this.BaseType = baseType;
+        this.PageName = pageName;
       }
 
       [NotNull] public string BaseType { get; }

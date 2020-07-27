@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Cida.Client.Avalonia.Api;
 
 namespace Cida.Client.Avalonia.Module
@@ -14,7 +13,6 @@ namespace Cida.Client.Avalonia.Module
         private const string PackagesInfo = "PackagesInfo.json";
         private readonly IDictionary<string, Stream> moduleFiles;
         private readonly CidaAvaloniaModuleLoadContext loadContext;
-        private readonly Type entryType;
 
         public Assembly Assembly { get; }
 
@@ -26,6 +24,7 @@ namespace Cida.Client.Avalonia.Module
             AvaloniaModuleMetadata metadata,
             IDictionary<string, Stream> moduleFiles)
         {
+            Type entryType = null;
             this.Metadata = metadata;
             this.moduleFiles = moduleFiles;
             this.loadContext = this.InitializeLoadContext();
@@ -41,20 +40,20 @@ namespace Cida.Client.Avalonia.Module
             // Hack: Don't use static
             ViewLocator.Assemblies.Add(this.Assembly);
 
-            this.entryType = this.Assembly.GetType(this.Metadata.EntryType);
-            if (this.entryType is null)
+            entryType = this.Assembly.GetType(this.Metadata.EntryType);
+            if (entryType is null)
             {
                 // TODO: Replace this with custom exception
                 throw new InvalidOperationException($"Entry type '{this.Metadata.EntryType}' not found in assembly");
             }
 
-            this.Module = (IModule)Activator.CreateInstance(this.entryType);
+            this.Module = (IModule)Activator.CreateInstance(entryType);
         }
 
         private CidaAvaloniaModuleLoadContext InitializeLoadContext()
         {
-            var loadContext = new CidaAvaloniaModuleLoadContext();
-            loadContext.Resolving += (context, name) =>
+            var context = new CidaAvaloniaModuleLoadContext();
+            context.Resolving += (resolveContext, name) =>
             {
                 if (!this.moduleFiles.TryGetValue($"{name.Name}.dll", out var resolvedDependency))
                 {
@@ -62,10 +61,10 @@ namespace Cida.Client.Avalonia.Module
                     throw new InvalidOperationException($"Assembly '{name.Name}.dll' not found.");
                 }
 
-                return context.LoadFromStream(resolvedDependency);
+                return resolveContext.LoadFromStream(resolvedDependency);
             };
 
-            return loadContext;
+            return context;
         }
 
         ~AvaloniaModule()

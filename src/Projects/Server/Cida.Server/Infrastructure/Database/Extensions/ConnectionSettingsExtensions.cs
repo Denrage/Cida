@@ -1,8 +1,4 @@
-﻿using Cida.Server.Infrastructure.Database.Models;
-using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.Data.SqlClient;
 
 namespace Cida.Server.Infrastructure.Database.Extensions
 {

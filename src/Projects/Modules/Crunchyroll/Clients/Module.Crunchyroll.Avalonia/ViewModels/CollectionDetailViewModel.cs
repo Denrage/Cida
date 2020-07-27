@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Threading;
@@ -22,7 +19,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
 
         public EpisodeDetailViewModel SelectedItem
         {
-            get => selectedItem;
+            get => this.selectedItem;
             set
             {
                 this.RaiseAndSetIfChanged(ref this.selectedItem, value);

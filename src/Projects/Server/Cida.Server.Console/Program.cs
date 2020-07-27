@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using Autofac;
 using Cida.Server.Interfaces;
 using Grpc.Core;
@@ -7,7 +9,7 @@ using ILogger = NLog.ILogger;
 
 namespace Cida.Server.Console
 {
-    internal partial class Program
+    internal class Program
     {
         private readonly string currentWorkingDirectory = Path
             .GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase)
@@ -38,15 +40,34 @@ namespace Cida.Server.Console
         public Program(string nodeName = "")
         {
             this.nodeName = string.IsNullOrEmpty(nodeName) ? "Node" : nodeName;
-            this.container = InitializeDependencies();
+            this.container = this.InitializeDependencies();
         }
 
         public void Start()
         {
-            GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<NLog.ILogger>()));
-            
+            GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<ILogger>()));
+
             var server =
-                new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>(), this.container.Resolve<ILogger>());
+                new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>(),
+                    this.container.Resolve<ILogger>());
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await server.Start();
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine(e.Message);
+                    
+                    if (e.InnerException != null)
+                    {
+                        System.Console.WriteLine(e.InnerException.Message);
+                    }
+                    System.Console.ReadKey();
+                    Environment.Exit(1);
+                }
+            });
         }
 
         private IContainer InitializeDependencies()
@@ -58,7 +79,7 @@ namespace Cida.Server.Console
                         $"{this.nodeName}.json"))))
                 .As<ISettingsProvider>()
                 .SingleInstance();
-            builder.RegisterInstance(NLog.LogManager.GetCurrentClassLogger()).As<NLog.ILogger>().SingleInstance();
+            builder.RegisterInstance(NLog.LogManager.GetCurrentClassLogger()).As<ILogger>().SingleInstance();
             return builder.Build();
         }
     }

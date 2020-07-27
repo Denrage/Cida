@@ -1,16 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Loader;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Avalonia.Collections;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using Cida.Client.Avalonia.Api;
 using Cida.Client.Avalonia.Module;
@@ -26,8 +15,8 @@ namespace Cida.Client.Avalonia.ViewModels
 
         public ViewModelBase Content
         {
-            get => content;
-            set => this.RaiseAndSetIfChanged(ref content, value);
+            get => this.content;
+            set => this.RaiseAndSetIfChanged(ref this.content, value);
         }
 
         public AvaloniaList<IModule> Modules { get; } = new AvaloniaList<IModule>();
@@ -37,7 +26,7 @@ namespace Cida.Client.Avalonia.ViewModels
 
         public IModule SelectedModule
         {
-            get => selectedModule;
+            get => this.selectedModule;
             set
             {
                 if (this.selectedModule != value && value != null)

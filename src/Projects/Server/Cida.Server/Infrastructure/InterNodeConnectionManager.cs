@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Cida.Server.Models;
 using Cida.Server.Module;
@@ -10,47 +9,40 @@ using Infrastructure;
 using NLog;
 using Cida.Server.Extensions;
 using Cida.Server.Infrastructure.Database;
-using Cida.Server.Infrastructure.Database.EFC;
 
 namespace Cida.Server.Infrastructure
 {
     public class InterNodeConnectionManager
     {
         private readonly Grpc.Core.Server server;
-        private IList<Grpc.Core.Channel> connections;
+        private IList<Channel> connections;
         private readonly IInfrastructureConfiguration configuration;
         private readonly GlobalConfigurationService globalConfigurationService;
-        private readonly IFtpClient ftpClient;
-        private readonly CidaDbConnectionProvider provider;
-        private readonly ModuleLoaderManager manager;
-        private readonly IModulePublisher modulePublisher;
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
         private CidaInfrastructureService.CidaInfrastructureServiceClient client;
 
         // TODO: Better dependency injection
         public InterNodeConnectionManager(IInfrastructureConfiguration configuration,
-            GlobalConfigurationService globalConfigurationService, IFtpClient ftpClient,
-            CidaDbConnectionProvider provider, ModuleLoaderManager manager)
+            GlobalConfigurationService globalConfigurationService)
         {
             this.configuration = configuration;
             this.globalConfigurationService = globalConfigurationService;
-            this.ftpClient = ftpClient;
-            this.provider = provider;
-            this.manager = manager;
             this.server = new Grpc.Core.Server();
-            this.server.Ports.Add(this.configuration.ServerEndpoint.Host, this.configuration.ServerEndpoint.Port,
-                ServerCredentials.Insecure);
+            
             var implementation =
                 new CidaInfrastructureServiceImplementation(this.logger, this.globalConfigurationService);
             this.server.Services.Add(
                 CidaInfrastructureService.BindService(implementation));
 
-            implementation.OnSynchronize += ImplementationOnOnSynchronize;
+            implementation.OnSynchronize += this.ImplementationOnOnSynchronize;
 
         }
 
-        public void Start()
+        public async Task Start()
         {
+            this.server.Ports.Add(this.configuration.ServerEndpoint.Host, this.configuration.ServerEndpoint.Port,
+                ServerCredentials.Insecure);
+            
             this.server.Start();
             this.logger.Info(
                 $"InfrastructureServer started on {this.configuration.ServerEndpoint.Host}:{this.configuration.ServerEndpoint.Port}");
@@ -60,16 +52,16 @@ namespace Cida.Server.Infrastructure
 
             if (!string.IsNullOrEmpty(this.configuration.Node.Host) && this.configuration.Node.Port != default)
             {
-                this.InitializeClient(this.configuration.Node);
+                await this.InitializeClient(this.configuration.Node);
             }
         }
 
-        private void ImplementationOnOnSynchronize(Endpoint endpoint)
+        private async void ImplementationOnOnSynchronize(Endpoint endpoint)
         {
-            this.InitializeClient(endpoint);
+            await this.InitializeClient(endpoint);
         }
 
-        private void InitializeClient(Endpoint endpoint)
+        private async Task InitializeClient(Endpoint endpoint)
         {
             // TODO: Add algorithm to use more than one other connection
             if (this.connections.Count == 0 && this.client == null)
@@ -101,6 +93,8 @@ namespace Cida.Server.Infrastructure
 
                 this.logger.Info("Synchronize successful");
             }
+
+            await Task.CompletedTask;
         }
 
         public class CidaInfrastructureServiceImplementation : CidaInfrastructureService.CidaInfrastructureServiceBase
@@ -142,7 +136,7 @@ namespace Cida.Server.Infrastructure
 
     public class InfrastructureConfiguration : IInfrastructureConfiguration
     {
-        public Endpoint ServerEndpoint { get; set; } = new Endpoint();
+        public Endpoint ServerEndpoint { get; set; } = new Endpoint() { Host = "127.0.0.1", Port = 31565};
 
         public Endpoint Node { get; set; } = new Endpoint();
     }
@@ -150,6 +144,7 @@ namespace Cida.Server.Infrastructure
     public interface IInfrastructureConfiguration
     {
         Endpoint ServerEndpoint { get; }
+        
         Endpoint Node { get; }
     }
 }

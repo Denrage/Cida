@@ -7,7 +7,6 @@ using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Cida.Client.Avalonia.Api;
-using Cida.Client.Avalonia.ViewModels;
 
 namespace Cida.Client.Avalonia
 {

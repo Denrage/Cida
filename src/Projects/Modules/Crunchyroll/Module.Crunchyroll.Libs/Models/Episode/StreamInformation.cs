@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using Module.Crunchyroll.Libs.Models.Search;
 
 namespace Module.Crunchyroll.Libs.Models.Episode
 {

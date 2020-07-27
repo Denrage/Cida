@@ -9,8 +9,8 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
 
         public string Address
         {
-            get => address;
-            set => this.RaiseAndSetIfChanged(ref address, value);
+            get => this.address;
+            set => this.RaiseAndSetIfChanged(ref this.address, value);
         }
     }
 }
