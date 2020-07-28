@@ -20,6 +20,7 @@ namespace Cida.Api.Models.Filesystem
             {
                 throw new InvalidOperationException("This file is already disposed");
             }
+            
             var file = new File(this.Name, this.Directory, stream);
             this.Dispose();
             return file;
@@ -27,6 +28,11 @@ namespace Cida.Api.Models.Filesystem
 
         public async Task<MemoryStream> GetStreamAsync()
         {
+            if (this.Disposed)
+            {
+                throw new InvalidOperationException("This file is already disposed");
+            }
+            
             var memoryStream = new MemoryStream();
 
             if (this.stream.CanSeek)
