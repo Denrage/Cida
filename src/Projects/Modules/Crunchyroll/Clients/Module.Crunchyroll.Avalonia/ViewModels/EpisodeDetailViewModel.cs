@@ -66,6 +66,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
                 Id = this.Id,
             });
 
+            // TODO: Create settings page or another possibility to change the player
             var processStartInfo = new ProcessStartInfo(@"F:\MPV\Baka MPlayer.exe");
             processStartInfo.Arguments = "\"" + episodeUrl.StreamUrl + "\"";
             Process.Start(processStartInfo);
