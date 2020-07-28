@@ -4,35 +4,31 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Cida.Api.Models.Filesystem;
 using Cida.Server.Infrastructure;
 
 namespace Cida.Server.Module
 {
     public class ModuleFtpClient : Cida.Api.IFtpClient
     {
-        private readonly string rootPath;
+        private readonly Cida.Api.Models.Filesystem.Directory ModuleDirectory;
         private readonly IFtpClient ftpClient;
 
-        public ModuleFtpClient(IFtpClient ftpClient, string rootPath)
+        public ModuleFtpClient(IFtpClient ftpClient, Cida.Api.Models.Filesystem.Directory directory)
         {
             this.ftpClient = ftpClient;
-            this.rootPath = rootPath;
+            this.ModuleDirectory = directory;
         }
 
-        public async Task<Stream> DownloadFileAsync(params string[] path)
+        public async Task<Cida.Api.Models.Filesystem.File> DownloadFileAsync(Cida.Api.Models.Filesystem.File file)
         {
-            return new MemoryStream((await this.ftpClient.GetFileAsync(new[] { this.rootPath }.Concat(path).ToArray())).ToArray());
+            file.Move(this.ModuleDirectory);
+            return await this.ftpClient.GetFileAsync(file);
         }
 
-        public async Task UploadFileAsync(Stream file, params string[] path)
+        public async Task UploadFileAsync(Cida.Api.Models.Filesystem.File file)
         {
-            if(file.CanSeek)
-            {
-                file.Seek(0, SeekOrigin.Begin);
-            }
-            using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
-            await this.ftpClient.SaveFileAsync(memoryStream.ToArray(), new[] { this.rootPath }.Concat(path).ToArray());
+            await this.ftpClient.SaveFileAsync(file);
         }
     }
 }

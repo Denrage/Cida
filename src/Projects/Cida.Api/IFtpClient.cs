@@ -8,7 +8,8 @@ namespace Cida.Api
 {
     public interface IFtpClient
     {
-        Task<Stream> DownloadFileAsync(params string[] file);
-        Task UploadFileAsync(Stream file, params string[] path);
+        Task<Cida.Api.Models.Filesystem.File> DownloadFileAsync(Cida.Api.Models.Filesystem.File file);
+        
+        Task UploadFileAsync(Cida.Api.Models.Filesystem.File file);
     }
 }

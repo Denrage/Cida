@@ -6,6 +6,6 @@ namespace Cida.Server.Interfaces
 {
     public interface IModuleFtpClientFactory
     {
-        Cida.Api.IFtpClient Create(string rootPath);
+        Cida.Api.IFtpClient Create(string rootPath, string moduleId);
     }
 }

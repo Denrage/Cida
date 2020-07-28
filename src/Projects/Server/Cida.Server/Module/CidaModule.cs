@@ -165,9 +165,9 @@ namespace Cida.Server.Module
             GC.SuppressFinalize(this);
         }
 
-        public async Task<byte[]> ToArchive()
+        public async Task<MemoryStream> ToArchiveStream()
         {
-            await using var memoryStream = new MemoryStream();
+            var memoryStream = new MemoryStream();
             using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
                 foreach (var (filePath, value) in this.moduleFiles)
@@ -180,7 +180,15 @@ namespace Cida.Server.Module
                 }
             }
 
-            return memoryStream.ToArray();
+            return memoryStream;
+        }
+
+        public async Task<byte[]> ToArchiveBytes()
+        {
+            var stream = await this.ToArchiveStream();
+            var result = stream.ToArray();
+            stream.Close();
+            return result;
         }
 
         public async Task<IEnumerable<KeyValuePair<string, byte[]>>> Serialize()
