@@ -80,13 +80,13 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             this.imageDownloadService
                 .DownloadImageAsync(this.model.PortraitImage?.Full ??
                                     this.model.LandscapeImage?.Large ??
-                                    "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
+                                    Module.ImageUnavailable,
                     bitmap => this.Image = bitmap);
 
             this.imageDownloadService
                 .DownloadImageAsync(this.model.PortraitImage?.Medium ??
                                     this.model.LandscapeImage?.Thumbnail ??
-                                    "https://media.wired.com/photos/5a0201b14834c514857a7ed7/master/pass/1217-WI-APHIST-01.jpg",
+                                    Module.ImageUnavailable,
                     bitmap => this.Thumbnail = bitmap);
         }
 
