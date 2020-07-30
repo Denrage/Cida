@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Filesystem = Cida.Api.Models.Filesystem;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -42,7 +43,7 @@ namespace Cida.Server.Infrastructure
             return Array.Empty<string>();
         }
 
-        public async Task<Cida.Api.Models.Filesystem.File> GetFileAsync(Cida.Api.Models.Filesystem.File file)
+        public async Task<Filesystem.File> GetFileAsync(Filesystem.File file)
         {
             this.logger.Info("Downloading File: {value1}", file.FullPath(Separator));
             var request = this.CreateRequest(file.FullPath(Separator));
@@ -63,7 +64,7 @@ namespace Cida.Server.Infrastructure
             return null;
         }
 
-        public async Task SaveFileAsync(Cida.Api.Models.Filesystem.File file)
+        public async Task SaveFileAsync(Filesystem.File file)
         {
             this.logger.Info("Uploading file: {value1}", file.FullPath(Separator));
 
@@ -163,10 +164,10 @@ namespace Cida.Server.Infrastructure
     // TODO: Move out
     public interface IFtpClient
     {
-        Task<IEnumerable<string>> GetFilesAsync(Cida.Api.Models.Filesystem.Directory directory);
+        Task<IEnumerable<string>> GetFilesAsync(Directory directory);
 
-        Task<Cida.Api.Models.Filesystem.File> GetFileAsync(Cida.Api.Models.Filesystem.File file);
+        Task<Filesystem.File> GetFileAsync(Filesystem.File file);
 
-        Task SaveFileAsync(Cida.Api.Models.Filesystem.File file);
+        Task SaveFileAsync(Filesystem.File file);
     }
 }
