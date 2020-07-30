@@ -8,10 +8,6 @@ namespace IrcClient.Downloaders
     public class DccDownloader : IDisposable
     {
         private readonly DccClient client;
-        private readonly object streamLock;
-
-        private Stream stream;
-        private ulong downloadedBytes;
 
         public DccDownloader(DccClient client, string filename, string tempFolder, ulong filesize)
             : this(client, filename, tempFolder)
@@ -24,16 +20,7 @@ namespace IrcClient.Downloaders
             this.client = client;
             Filename = filename;
             TempFolder = tempFolder;
-            streamLock = new object();
-
-            this.client.DataReceived += DccClient_DataReceived;
         }
-
-        public event Action DownloadFinished;
-
-        public event Action DownloadCanceled;
-
-        public event Action<ulong, ulong> ProgressChanged;
 
         public string Filename { get; }
 
@@ -70,35 +57,37 @@ namespace IrcClient.Downloaders
             }
         }
 
-        public void StartDownload()
-            => StartDownload(Path.Combine(TempFolder, Filename));
+        public async Task StartDownload()
+            => await StartDownload(Path.Combine(TempFolder, Filename));
 
-        public void StartDownload(string outputPath)
+        public async Task StartDownload(string outputPath)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? throw new InvalidOperationException());
-            downloadedBytes = 0;
 
-            lock (streamLock)
+            ulong downloadedBytes = 0;
+            using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
+
+            this.client.Connect();
+
+            await Task.Run(() =>
             {
-                stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
-            }
+                // TODO Find a better way to check for finished downloads (which works on clients not sending filesize)
+                while ((downloadedBytes >= Filesize || !client.IsConnected) && !client.IsDataAvailable)
+                {
+                    (byte[] buffer, int count) = this.client.GetBuffer();
+                    stream.Write(buffer, 0, count);
+                    downloadedBytes += (ulong)count;
+                }
+            });
 
-            client.Connect();
+            stream.Close();
+            this.client.Disconnect();
+            
         }
-
-        public void CancelDownload() => OnDownloadCanceled();
 
         public void Dispose()
         {
-            CleanupStream();
             client.Dispose();
-            stream.Dispose();
-        }
-
-        protected virtual void OnDownloadCanceled()
-        {
-            DownloadCanceled?.Invoke();
-            OnDownloadFinished();
         }
 
         private static string ParseFilename(ref string processedMessage)
@@ -150,38 +139,6 @@ namespace IrcClient.Downloaders
             }
 
             return port;
-        }
-
-        private void DccClient_DataReceived(byte[] buffer, int index, int count)
-        {
-            lock (streamLock)
-            {
-                stream.Write(buffer, index, count);
-            }
-
-            downloadedBytes += (ulong)count;
-            Task.Run(() => ProgressChanged?.Invoke(downloadedBytes, Filesize));
-
-            // TODO Find a better way to check for finished downloads (which works on clients not sending filesize)
-            if ((downloadedBytes >= Filesize || !client.IsConnected) && !client.IsDataAvailable)
-            {
-                Task.Run(() => OnDownloadFinished());
-            }
-        }
-
-        private void OnDownloadFinished()
-        {
-            client.Disconnect();
-            CleanupStream();
-            DownloadFinished?.Invoke();
-        }
-
-        private void CleanupStream()
-        {
-            lock (streamLock)
-            {
-                stream.Close();
-            }
         }
     }
 }

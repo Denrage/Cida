@@ -179,7 +179,6 @@ namespace IrcClient.Clients
             {
                 if (DccDownloader.TryCreateFromSendMessage(message.Message, tempFolder, out var downloader))
                 {
-                    downloader.DownloadCanceled += () => this.SendMessage("xdcc cancel", message.Sender);
                     OnDownloadRequested(downloader);
                 }
                 else

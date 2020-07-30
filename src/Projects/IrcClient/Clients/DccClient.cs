@@ -14,10 +14,7 @@ namespace IrcClient.Clients
             Port = port;
 
             connection = new DccConnection(bufferSize);
-            connection.DataReceived += (buffer, index, count) => DataReceived?.Invoke(buffer, index, count);
         }
-
-        public event Action<byte[], int, int> DataReceived;
 
         public string Host { get; private set; }
 
@@ -28,6 +25,9 @@ namespace IrcClient.Clients
 
         public bool IsDataAvailable
             => connection.IsDataAvailable;
+
+        public (byte[], int) GetBuffer()
+            => connection.GetBuffer();
 
         public static string GetHostFromBitwiseIp(long bitwiseIp)
         {
