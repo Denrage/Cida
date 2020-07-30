@@ -8,6 +8,6 @@ namespace Cida.Api
     {
         IEnumerable<ServerServiceDefinition> GrpcServices { get; }
 
-        Task Load(IDatabaseConnector connector);
+        Task Load(IDatabaseConnector connector, IFtpClient ftpClient);
     }
 }

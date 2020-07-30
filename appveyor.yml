@@ -1,0 +1,42 @@
+version: '1.0.{build}'
+image: Visual Studio 2019
+branches:
+  only:
+  - master
+init:
+  # Good practise, because Windows line endings are different from Unix/Linux ones
+  - cmd: git config --global core.autocrlf true
+install:
+  # Install repo specific stuff here
+before_build:
+  # Display .NET Core version
+  - cmd: dotnet --version
+  # Display minimal restore text
+  - cmd: dotnet restore ./src/Cida.sln --verbosity m
+build_script:
+  - cmd: dotnet build ./src/Cida.sln -c Release
+after_build:
+  # For once the build has completed
+  - 7z a crunchyroll\avalonia.acm %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.Avalonia\bin\Release\netstandard2.1\*
+  - 7z a crunchyroll.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Server\Module.Crunchyroll.Cida\bin\Release\netstandard2.1\*
+  - 7z a crunchyroll.cidam .\crunchyroll\avalonia.acm
+  - 7z a hsnr.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Hsnr\Server\Module.Hsnr.Cida\bin\Release\netstandard2.1\*
+  - 7z a modules.zip crunchyroll.cidam
+  - 7z a modules.zip hsnr.cidam
+artifacts:
+ - path: '\src\Projects\Server\Cida.Server.Console\bin\Release\netcoreapp3.0'
+   name: Cida-Server
+   type: Zip
+
+ - path: '\src\Projects\Clients\Cida.Client.Avalonia\bin\Release\netcoreapp3.0'
+   name: Avalonia-Client
+   type: Zip
+  
+ - path: modules.zip
+   name: Modules
+   type: Zip
+clone_depth: 1
+test_script:
+on_finish :
+  # any cleanup in here
+deploy: off

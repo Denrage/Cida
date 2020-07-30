@@ -12,7 +12,7 @@ namespace Module.Hsnr
 {
     public class Module : IModule
     {
-        public async Task Load(IDatabaseConnector connector)
+        public async Task Load(IDatabaseConnector connector, IFtpClient ftpClient)
         {
             Console.WriteLine("Loaded");
 

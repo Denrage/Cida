@@ -20,7 +20,7 @@ namespace Module.Crunchyroll.Cida
         private AnimeSearchCache cache;
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
-        public async Task Load(IDatabaseConnector databaseConnector)
+        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient)
         {
             this.connectionString =
                 await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
