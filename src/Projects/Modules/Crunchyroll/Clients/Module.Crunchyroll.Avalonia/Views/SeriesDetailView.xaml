@@ -6,30 +6,36 @@
              x:Class="Module.Crunchyroll.Avalonia.Views.SeriesDetailView">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.6*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="0.3*" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid Margin="5" Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.3*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Image Grid.Column="0" Source="{Binding Image}" Stretch="Uniform" VerticalAlignment="Top" HorizontalAlignment="Center"/>
-            <ScrollViewer Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <TextBlock  TextWrapping="Wrap" Text="{Binding Description}"/>
-            </ScrollViewer>
+            <Image Margin="0,0,10,0" Grid.Column="0" Source="{Binding Image}" Stretch="Uniform" VerticalAlignment="Top"
+                   HorizontalAlignment="Left" />
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="{Binding Name}" FontWeight="Bold" />
+                <ScrollViewer Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock TextWrapping="Wrap" Text="{Binding Description}" />
+                </ScrollViewer>
+                <ComboBox Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" SelectedItem="{Binding SelectedItem}" Items="{Binding Collections}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
         </Grid>
-        <TabControl SelectedItem="{Binding SelectedItem}" Grid.Row="1" Items="{Binding Collections}">
-            <TabControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-            <TabControl.ContentTemplate>
-                <DataTemplate>
-                    <ContentControl Content="{Binding}"/>
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+        <ContentControl Content="{Binding SelectedItem}" Grid.Row="1" />
     </Grid>
 </UserControl>

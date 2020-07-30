@@ -38,7 +38,9 @@ namespace Module.Crunchyroll.Cida.Extensions
             {
                 Name = episode.Name,
                 Id = episode.Id,
+                EpisodeNumber = episode.EpisodeNumber,
                 Description = episode.Description,
+                Image = episode.Image.ToGrpc(),
             };
 
         public static CR.CollectionsResponse.Types.CollectionItem ToGrpc(this Collection collection) =>

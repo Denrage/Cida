@@ -6,41 +6,37 @@
              x:Class="Module.Crunchyroll.Avalonia.Views.CrunchyrollView">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0.45*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Text="{Binding SearchTerm}"/>
-            <Button Grid.Column="1" Content="Search" Command="{Binding Search}"/>
+        <TextBox x:Name="Search" Text="{Binding SearchTerm}" />
+        <Grid Grid.Row="1">
+            <Grid VerticalAlignment="Top" ZIndex="1" IsVisible="{Binding #Search.IsFocused}" MinHeight="50" Background="Gray">
+                <ListBox Background="Transparent" IsVisible="{Binding !#SearchStatusInformation.IsVisible}" MaxHeight="250" Width="{Binding #Search.Bounds.Width}" VerticalAlignment="Top"
+                         Items="{Binding SearchResults}" SelectedItem="{Binding SelectedItem}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="5" />
+                        </Style>
+                    </ListBox.Styles>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Image Source="{Binding Thumbnail}" Stretch="Uniform" Width="64" Height="64" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" TextAlignment="Center"
+                                           Text="{Binding Name}" TextWrapping="Wrap" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding SearchStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding SearchStatus}" x:Name="SearchStatusInformation" />
+            </Grid>
+            <ContentControl Content="{Binding SelectedItem}" />
         </Grid>
-        <ListBox SelectedItem="{Binding SelectedItem}" Grid.Column="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Grid.Row="1" Items="{Binding SearchResults}">
-            <ListBox.Styles>
-                <Style Selector="ListBoxItem">
-                    <Setter Property="Padding" Value="5"/>
-                </Style>
-            </ListBox.Styles>
-            <ListBox.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel ItemWidth="160"/>
-                </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel>
-                        <Image Source="{Binding Thumbnail}" Stretch="Uniform"/>
-                        <TextBlock HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding Name}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <ContentControl Content="{Binding SelectedItem}" Grid.Row="1" Grid.Column="1"/>
     </Grid>
 </UserControl>

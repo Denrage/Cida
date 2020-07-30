@@ -4,29 +4,42 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.Crunchyroll.Avalonia.Views.CollectionDetailView">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="0.3*"/>
-        </Grid.RowDefinitions>
-        <TextBlock TextWrapping="Wrap" Text="{Binding Description}"/>
-        <ListBox SelectedItem="{Binding SelectedItem}" Grid.IsSharedSizeScope="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.Row="1" Items="{Binding Episodes}">
-            <ListBox.ItemTemplate>
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+
+        <ItemsControl Items="{Binding Episodes}">
+            <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border BorderBrush="Black" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition SharedSizeGroup="Name" Width="Auto"/>
-                                <ColumnDefinition SharedSizeGroup="Description"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Name}" Margin="0,0,5,0"/>
-                            <TextBlock Grid.Column="1" Margin="5,0,0,0" TextWrapping="NoWrap" Text="{Binding Description}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Command="{Binding OpenPlayer}">
+                            <Image
+                                Source="{Binding Image}"
+                                Grid.Column="0" />
+                        </Button>
+                        <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                <TextBlock Margin="0,0,5,0" FontWeight="Bold" TextWrapping="Wrap"
+                                           Text="{Binding EpisodeNumber}" />
+                                <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                            </StackPanel>
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                          Grid.Row="2">
+                                <TextBlock TextWrapping="Wrap" Text="{Binding Description}" />
+                            </ScrollViewer>
+                            <Button Grid.Row="3" HorizontalAlignment="Right" Content="Download" />
                         </Grid>
-                    </Border>
+                    </Grid>
                 </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <ContentControl Grid.Row="2" Content="{Binding SelectedItem}"/>
-    </Grid>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
 </UserControl>

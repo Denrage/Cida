@@ -41,21 +41,21 @@ namespace Module.Crunchyroll.Cida
             public override async Task<SearchResponse> Search(SearchRequest request, ServerCallContext context) =>
                 new SearchResponse()
                 {
-                    Items = { (await this.cache.SearchAsync(request.SearchTerm)).Select(x => x.ToGrpc()).ToArray() }
+                    Items = { (await this.cache.SearchAsync(request.SearchTerm, context.CancellationToken)).Select(x => x.ToGrpc()).ToArray() }
                 };
 
             public override async Task<EpisodeResponse> GetEpisodes(EpisodeRequest request, ServerCallContext context)
             {
                 return new EpisodeResponse()
                 {
-                    Episodes = { (await this.cache.GetEpisodesAsync(request.Id)).Select(x => x.ToGrpc()).ToArray() }
+                    Episodes = { (await this.cache.GetEpisodesAsync(request.Id, context.CancellationToken)).Select(x => x.ToGrpc()).ToArray() }
                     };
             }
 
             public override async Task<CollectionsResponse> GetCollections(CollectionsRequest request, ServerCallContext context)
             {
                 return new CollectionsResponse() {
-                Collections    = { (await this.cache.GetCollectionsAsync(request.Id)).Select(x => x.ToGrpc()).ToArray()}
+                Collections    = { (await this.cache.GetCollectionsAsync(request.Id, context.CancellationToken)).Select(x => x.ToGrpc()).ToArray()}
                 };
             }
 
@@ -63,7 +63,7 @@ namespace Module.Crunchyroll.Cida
             {
                 return new EpisodeStreamResponse()
                 {
-                    StreamUrl = (await this.cache.GetStream(request.Id, "enUS")).FirstOrDefault(x => x.Quality == Quality.Adaptive).Url,
+                    StreamUrl = (await this.cache.GetStream(request.Id, "enUS", context.CancellationToken)).FirstOrDefault(x => x.Quality == Quality.Adaptive).Url,
                 };
             }
         }

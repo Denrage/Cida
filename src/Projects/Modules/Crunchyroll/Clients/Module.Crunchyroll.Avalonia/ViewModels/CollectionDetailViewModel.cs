@@ -4,6 +4,7 @@ using Avalonia.Collections;
 using Avalonia.Threading;
 using Cida.Client.Avalonia.Api;
 using Crunchyroll;
+using Module.Crunchyroll.Avalonia.Services;
 using ReactiveUI;
 
 namespace Module.Crunchyroll.Avalonia.ViewModels
@@ -11,6 +12,7 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
     public class CollectionDetailViewModel : ViewModelBase
     {
         private readonly CrunchyrollService.CrunchyrollServiceClient client;
+        private readonly IImageDownloadService imageDownloadService;
         private EpisodeDetailViewModel selectedItem;
         public string Id { get; set; }
         public string Name { get; set; }
@@ -27,19 +29,24 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
         }
 
 
-        public CollectionDetailViewModel(CrunchyrollService.CrunchyrollServiceClient client)
+        public CollectionDetailViewModel(CrunchyrollService.CrunchyrollServiceClient client, IImageDownloadService imageDownloadService)
         {
             this.client = client;
+            this.imageDownloadService = imageDownloadService;
         }
 
         public async Task LoadAsync()
         {
             var episodes = await this.client.GetEpisodesAsync(new EpisodeRequest() { Id = this.Id });
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.UIThread.InvokeAsync( () =>
             {
                 this.Episodes.Clear();
-                this.Episodes.AddRange(episodes.Episodes.Select(x => new EpisodeDetailViewModel(this.client) { Name = x.Name, Description = x.Description, Id = x.Id}));
+
+                foreach (var episode in episodes.Episodes)
+                {
+                    this.Episodes.Add(new EpisodeDetailViewModel(this.client, this.imageDownloadService, episode));
+                }
             });
         }
     }
