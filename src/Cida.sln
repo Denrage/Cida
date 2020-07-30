@@ -56,6 +56,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Avalonia", "Avalonia", "{1C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.Avalonia.Api", "Projects\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj", "{9A6E650D-3A0B-41FE-81A9-2211CA3970FB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HorribleSubs", "HorribleSubs", "{CE68205A-4D16-4CD9-A877-400EBDB4FE62}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{789E3E07-E05A-46EE-8982-219626BC76DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.HorribleSubs.Cida", "Projects\Modules\HorribleSubs\Server\Module.HorribleSubs.Cida\Module.HorribleSubs.Cida.csproj", "{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,6 +112,10 @@ Global
 		{9A6E650D-3A0B-41FE-81A9-2211CA3970FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A6E650D-3A0B-41FE-81A9-2211CA3970FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A6E650D-3A0B-41FE-81A9-2211CA3970FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,6 +137,9 @@ Global
 		{BC464C2D-20C1-4E78-9543-64253E329F4A} = {958C5A6D-5D4C-4D77-A9BB-E47B394F6197}
 		{1CABD27E-C969-4ECD-9F8E-AD990CA5CF48} = {46F9BD61-2E93-4B81-959E-2B278F2135B7}
 		{9A6E650D-3A0B-41FE-81A9-2211CA3970FB} = {1CABD27E-C969-4ECD-9F8E-AD990CA5CF48}
+		{CE68205A-4D16-4CD9-A877-400EBDB4FE62} = {DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}
+		{789E3E07-E05A-46EE-8982-219626BC76DD} = {CE68205A-4D16-4CD9-A877-400EBDB4FE62}
+		{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8} = {789E3E07-E05A-46EE-8982-219626BC76DD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD4E48FF-111A-4466-A02E-3AA5EFC36655}

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package horriblesubs;
+
+service HorribleSubsService {
+    rpc Version (VersionRequest) returns (VersionResponse);
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+    int32 Version = 1;
+}
