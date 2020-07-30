@@ -62,10 +62,10 @@ namespace Cida.Server.Module
             return context;
         }
 
-        public async Task<IModule> Load(IDatabaseConnector databaseConnector)
+        public async Task<IModule> Load(IDatabaseConnector databaseConnector, Cida.Api.IFtpClient ftpClient)
         {
             var instance = (IModule)Activator.CreateInstance(this.entryType);
-            await instance.Load(databaseConnector);
+            await instance.Load(databaseConnector, ftpClient);
             return instance;
         }
 
@@ -165,9 +165,9 @@ namespace Cida.Server.Module
             GC.SuppressFinalize(this);
         }
 
-        public async Task<byte[]> ToArchive()
+        public async Task<MemoryStream> ToArchiveStream()
         {
-            await using var memoryStream = new MemoryStream();
+            var memoryStream = new MemoryStream();
             using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
                 foreach (var (filePath, value) in this.moduleFiles)
@@ -180,7 +180,15 @@ namespace Cida.Server.Module
                 }
             }
 
-            return memoryStream.ToArray();
+            return memoryStream;
+        }
+
+        public async Task<byte[]> ToArchiveBytes()
+        {
+            var stream = await this.ToArchiveStream();
+            var result = stream.ToArray();
+            stream.Close();
+            return result;
         }
 
         public async Task<IEnumerable<KeyValuePair<string, byte[]>>> Serialize()

@@ -38,6 +38,7 @@ namespace Cida.Server
                 new DatabaseConnector(this.cidaContext, this.databaseProvider, this.globalConfigurationService),
                 this.logger,
                 this.globalConfigurationService,
+                new ModuleFtpClientFactory(ftpClient),
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
 
             this.interNodeConnectionManager = new InterNodeConnectionManager(
