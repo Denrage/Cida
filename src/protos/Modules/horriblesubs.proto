@@ -4,6 +4,7 @@ package horriblesubs;
 
 service HorribleSubsService {
     rpc Version (VersionRequest) returns (VersionResponse);
+    rpc Search (SearchRequest) returns (SearchResponse);
 }
 
 message VersionRequest {
@@ -12,3 +13,20 @@ message VersionRequest {
 message VersionResponse {
     int32 Version = 1;
 }
+
+
+message SearchRequest {
+    string SearchTerm = 1;
+}
+
+message SearchResponse {
+    message SearchResult {
+        string BotName = 1;
+        int64 PackageNumber = 2;
+        int64 FileSize = 3;
+        string FileName = 4;
+    }
+
+    repeated SearchResult SearchResults = 1;
+}
+
