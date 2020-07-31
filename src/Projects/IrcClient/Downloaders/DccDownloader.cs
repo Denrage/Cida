@@ -22,6 +22,8 @@ namespace IrcClient.Downloaders
             TempFolder = tempFolder;
         }
 
+        public event Action<ulong, ulong> ProgressChanged;
+
         public string Filename { get; }
 
         public ulong Filesize { get; }
@@ -77,6 +79,8 @@ namespace IrcClient.Downloaders
                     (byte[] buffer, int count) = this.client.GetBuffer();
                     stream.Write(buffer, 0, count);
                     downloadedBytes += (ulong)count;
+                    
+                    Task.Run(() => ProgressChanged?.Invoke(downloadedBytes, Filesize));
                 }
             });
 
