@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Grpc.Core;
+using Horriblesubs;
+using System;
 using System.Net;
 
 namespace TestApplication
@@ -7,6 +9,17 @@ namespace TestApplication
     {
         static void Main(string[] args)
         {
+            var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
+            var client = new HorribleSubsService.HorribleSubsServiceClient(channel);
+            var results = client.Search(new SearchRequest()
+            {
+                SearchTerm = "Sword Art Online",
+            });
+
+            foreach(var result in results.SearchResults)
+            {
+                Console.WriteLine($"Botname:{result.BotName};Filename:{result.FileName};Filesize:{result.FileSize};PackageNumber:{result.PackageNumber}");
+            }
             // var channel = new Channel("ipv4:127.0.0.1:31564,127.0.0.2:31564", ChannelCredentials.Insecure, new[] { new ChannelOption("grpc.lb_policy_name", "round_robin") });
             // var client = new HsnrTimetableService.HsnrTimetableServiceClient(channel);
             // Console.WriteLine("Ready");
@@ -39,11 +52,6 @@ namespace TestApplication
             //     }
             // }
             // Console.WriteLine("Done");
-            var result = (FtpWebRequest)WebRequest.Create($"ftp://127.0.0.1:21");
-            result.Credentials = new NetworkCredential("Cida", "cida");
-            result.Method = WebRequestMethods.Ftp.ListDirectory;
-            using var response = (FtpWebResponse) result.GetResponse();
-            Console.WriteLine(response.StatusCode);
         }
     }
 }
