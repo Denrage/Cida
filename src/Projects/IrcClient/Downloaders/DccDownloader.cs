@@ -74,19 +74,21 @@ namespace IrcClient.Downloaders
             await Task.Run(() =>
             {
                 // TODO Find a better way to check for finished downloads (which works on clients not sending filesize)
-                while ((downloadedBytes >= Filesize || !client.IsConnected) && !client.IsDataAvailable)
+                while ((downloadedBytes < Filesize && client.IsConnected) || client.IsDataAvailable)
                 {
                     (byte[] buffer, int count) = this.client.GetBuffer();
                     stream.Write(buffer, 0, count);
                     downloadedBytes += (ulong)count;
-                    
+
                     Task.Run(() => ProgressChanged?.Invoke(downloadedBytes, Filesize));
                 }
+            }).ContinueWith(_ =>
+            {
+                stream.Close();
+                this.client.Disconnect();
             });
 
-            stream.Close();
-            this.client.Disconnect();
-            
+
         }
 
         public void Dispose()
