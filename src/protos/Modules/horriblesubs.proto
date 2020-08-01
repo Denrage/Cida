@@ -6,6 +6,7 @@ service HorribleSubsService {
     rpc Version (VersionRequest) returns (VersionResponse);
     rpc Search (SearchRequest) returns (SearchResponse);
     rpc Download (DownloadRequest) returns (DownloadResponse);
+    rpc DownloadStatus (DownloadStatusRequest) returns (DownloadStatusResponse);
 }
 
 message VersionRequest {
@@ -45,3 +46,17 @@ message DownloadResponse {
     
 }
 
+
+message DownloadStatusRequest {
+}
+
+message DownloadStatusResponse {
+    message DownloadStatus {
+        string Filename = 1;
+        uint64 DownloadedBytes = 2;
+        uint64 Filesize = 3;
+        bool Downloaded = 4;
+	}
+
+    repeated DownloadStatus Status = 1;
+}

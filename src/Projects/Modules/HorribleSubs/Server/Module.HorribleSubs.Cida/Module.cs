@@ -59,6 +59,21 @@ namespace Module.HorribleSubs.Cida
                 await this.downloadService.CreateDownloader(request.DownloadRequest_.FromGrpc());
                 return new DownloadResponse();
             }
+
+            public override async Task<DownloadStatusResponse> DownloadStatus(DownloadStatusRequest request, ServerCallContext context)
+            {
+                return await Task.FromResult(new DownloadStatusResponse()
+                {
+                    Status = { this.downloadService.CurrentDownloadStatus.Select(x => new DownloadStatusResponse.Types.DownloadStatus()
+                    {
+                        Downloaded = false,
+                        DownloadedBytes = x.Value.DownloadedBytes,
+                        Filename = x.Key,
+                        Filesize = x.Value.Size,
+                    }).ToArray() }
+                });
+
+            }
         }
     }
 }

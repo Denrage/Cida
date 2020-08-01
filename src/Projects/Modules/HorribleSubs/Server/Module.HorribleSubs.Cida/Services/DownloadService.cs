@@ -15,30 +15,36 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cida.Api;
 using System.Security.Cryptography;
+using System.Linq;
+using System.Collections.Immutable;
 
 namespace Module.HorribleSubs.Cida.Services
 {
     public class DownloadService
     {
-        public static string Separator = "/";   
+        public static string Separator = "/";
         private static Filesystem.Directory DownloadedFilesDirectory = new Filesystem.Directory("Files", null);
         private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "IrcDownloads");
         private readonly IrcClient.Clients.IrcClient ircClient;
         private readonly ConcurrentDictionary<string, CreateDownloaderContext> requestedDownloads;
+        private readonly ConcurrentDictionary<string, DownloadProgress> downloadStatus;
         private readonly HorribleSubsDbContext context;
         private readonly IFtpClient ftpClient;
+
+        public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
         public DownloadService(string host, int port, string connectionString, IFtpClient ftpClient)
         {
             string name = "ad_" + Guid.NewGuid();
             this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
+            this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
             this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder);
             this.context = new HorribleSubsDbContext(connectionString);
             this.context.Database.EnsureCreated();
 
             this.ircClient.DownloadRequested += downloader =>
             {
-                if(this.requestedDownloads.TryGetValue(downloader.Filename, out var context))
+                if (this.requestedDownloads.TryGetValue(downloader.Filename, out var context))
                 {
                     context.Downloader = downloader;
                     context.ManualResetEvent.Set();
@@ -89,22 +95,34 @@ namespace Module.HorribleSubs.Cida.Services
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(async () =>
             {
-                await downloader.StartDownload();
-
-                var file = new Filesystem.File(downloader.Filename, DownloadedFilesDirectory, new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
-                var databaseDownloadEntry = await this.context.Downloads.FindAsync(downloader.Filename);
-                if (databaseDownloadEntry != null)
+                if (this.downloadStatus.TryAdd(downloader.Filename, new DownloadProgress() { Size = downloader.Filesize }))
                 {
-                    using var sha256 = SHA256.Create();
-                    using var fileStream = await file.GetStreamAsync();
-                    
-                    databaseDownloadEntry.Sha256 = BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
-                    databaseDownloadEntry.Date = DateTime.Now;
-                    databaseDownloadEntry.FtpPath = file.FullPath(Separator);
+                    downloader.ProgressChanged += (downloadedBytes, size) =>
+                    {
+                        if(this.downloadStatus.TryGetValue(downloader.Filename, out var downloadProgress))
+                        {
+                            downloadProgress.DownloadedBytes = downloadedBytes;
+                        }
+                    };
+                    await downloader.StartDownload();
 
-                    await this.ftpClient.UploadFileAsync(file);
-                    databaseDownloadEntry.DownloadStatus = DownloadStatus.Available;
-                    await this.context.SaveChangesAsync();
+                    this.downloadStatus.TryRemove(downloader.Filename, out _);
+
+                    var file = new Filesystem.File(downloader.Filename, DownloadedFilesDirectory, new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
+                    var databaseDownloadEntry = await this.context.Downloads.FindAsync(downloader.Filename);
+                    if (databaseDownloadEntry != null)
+                    {
+                        using var sha256 = SHA256.Create();
+                        using var fileStream = await file.GetStreamAsync();
+
+                        databaseDownloadEntry.Sha256 = BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
+                        databaseDownloadEntry.Date = DateTime.Now;
+                        databaseDownloadEntry.FtpPath = file.FullPath(Separator);
+
+                        await this.ftpClient.UploadFileAsync(file);
+                        databaseDownloadEntry.DownloadStatus = DownloadStatus.Available;
+                        await this.context.SaveChangesAsync();
+                    }
                 }
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -115,6 +133,12 @@ namespace Module.HorribleSubs.Cida.Services
             public string Filename { get; set; }
             public DccDownloader Downloader { get; set; }
             public ManualResetEventSlim ManualResetEvent { get; } = new ManualResetEventSlim(false);
+        }
+
+        public class DownloadProgress
+        {
+            public ulong DownloadedBytes { get; set; }
+            public ulong Size { get; set; }
         }
 
     }
