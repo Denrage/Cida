@@ -16,10 +16,20 @@ namespace TestApplication
                 SearchTerm = "Sword Art Online",
             });
 
-            foreach(var result in results.SearchResults)
+            client.Download(new DownloadRequest()
             {
-                Console.WriteLine($"Botname:{result.BotName};Filename:{result.FileName};Filesize:{result.FileSize};PackageNumber:{result.PackageNumber}");
-            }
+                DownloadRequest_ = new DownloadRequest.Types.Request()
+                {
+                    BotName = "Ginpachi-Sensei",
+                    FileName = "[tlacatlc6] Sword Art Online Alternative - Gun Gale Online Ad4 (BD-Raw 1920x1080 HEVC AAC) [7D954099].mkv",
+                    PackageNumber = 553
+                }
+            });
+
+            //foreach(var result in results.SearchResults)
+            //{
+            //    Console.WriteLine($"Botname:{result.BotName};Filename:{result.FileName};Filesize:{result.FileSize};PackageNumber:{result.PackageNumber}");
+            //}
             // var channel = new Channel("ipv4:127.0.0.1:31564,127.0.0.2:31564", ChannelCredentials.Insecure, new[] { new ChannelOption("grpc.lb_policy_name", "round_robin") });
             // var client = new HsnrTimetableService.HsnrTimetableServiceClient(channel);
             // Console.WriteLine("Ready");

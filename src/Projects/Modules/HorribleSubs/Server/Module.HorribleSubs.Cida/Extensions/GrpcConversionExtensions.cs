@@ -13,5 +13,13 @@ namespace Module.Crunchyroll.Cida.Extensions
                 FileSize = data.FileSize,
                 PackageNumber = data.PackageNumber,
             };
+
+        public static DownloadRequest FromGrpc(this HS.DownloadRequest.Types.Request data) =>
+            new DownloadRequest()
+            {
+                BotName = data.BotName,
+                FileName = data.FileName,
+                PackageNumber = data.PackageNumber,
+            };
     }
 }
