@@ -48,7 +48,6 @@ namespace Cida.Api.Models.Filesystem
                 }
 
                 previousParent.Move(directory, false);
-
             }
             else
             {
@@ -56,7 +55,6 @@ namespace Cida.Api.Models.Filesystem
                 this.Directory = directory;
                 this.Directory?.InternalFiles.Add(this);
             }
-
         }
 
         public void Dispose()
