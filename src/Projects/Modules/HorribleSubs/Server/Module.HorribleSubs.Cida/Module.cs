@@ -127,6 +127,7 @@ namespace Module.HorribleSubs.Cida
                     using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), DownloadService.DownloadedFilesDirectory, null);
                     using var downloadedFile = await this.ftpClient.DownloadFileAsync(file);
                     using var fileStream = await downloadedFile.GetStreamAsync();
+                    fileStream.Seek((long)request.Position, System.IO.SeekOrigin.Begin);
                     
                     while (fileStream.Position != fileStream.Length)
                     {
