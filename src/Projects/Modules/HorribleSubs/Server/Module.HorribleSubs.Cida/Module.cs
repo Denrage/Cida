@@ -62,15 +62,25 @@ namespace Module.HorribleSubs.Cida
 
             public override async Task<DownloadStatusResponse> DownloadStatus(DownloadStatusRequest request, ServerCallContext context)
             {
+                var currentDownloads = this.downloadService.CurrentDownloadStatus.Select(x => new DownloadStatusResponse.Types.DownloadStatus()
+                {
+                    Downloaded = false,
+                    DownloadedBytes = x.Value.DownloadedBytes,
+                    Filename = x.Key,
+                    Filesize = x.Value.Size,
+                }).ToList();
+
+                currentDownloads.AddRange(await this.context.Downloads.Where(x => x.DownloadStatus == Models.Database.DownloadStatus.Available).Select(x => new DownloadStatusResponse.Types.DownloadStatus()
+                {
+                    Downloaded = true,
+                    DownloadedBytes = 0,
+                    Filename = x.Name,
+                    Filesize = x.Size,
+                }).ToArrayAsync());
+
                 return await Task.FromResult(new DownloadStatusResponse()
                 {
-                    Status = { this.downloadService.CurrentDownloadStatus.Select(x => new DownloadStatusResponse.Types.DownloadStatus()
-                    {
-                        Downloaded = false,
-                        DownloadedBytes = x.Value.DownloadedBytes,
-                        Filename = x.Key,
-                        Filesize = x.Value.Size,
-                    }).ToArray() }
+                    Status = { currentDownloads }
                 });
 
             }
