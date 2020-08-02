@@ -20,7 +20,7 @@ using System.Collections.Immutable;
 
 namespace Module.HorribleSubs.Cida.Services
 {
-    public class DownloadService
+    public partial class DownloadService
     {
         public static Filesystem.Directory DownloadedFilesDirectory = new Filesystem.Directory("Files", null);
         public static string Separator = "/";
@@ -49,6 +49,7 @@ namespace Module.HorribleSubs.Cida.Services
                     context.ManualResetEvent.Set();
                 }
             };
+
             this.context = context;
             this.ftpClient = ftpClient;
         }
@@ -93,39 +94,49 @@ namespace Module.HorribleSubs.Cida.Services
             await this.context.SaveChangesAsync();
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () =>
-            {
-                if (this.downloadStatus.TryAdd(downloader.Filename, new DownloadProgress() { Size = downloader.Filesize }))
-                {
-                    downloader.ProgressChanged += (downloadedBytes, size) =>
-                    {
-                        if(this.downloadStatus.TryGetValue(downloader.Filename, out var downloadProgress))
-                        {
-                            downloadProgress.DownloadedBytes = downloadedBytes;
-                        }
-                    };
-                    await downloader.StartDownload();
-
-                    this.downloadStatus.TryRemove(downloader.Filename, out _);
-
-                    var file = new Filesystem.File(downloader.Filename, DownloadedFilesDirectory, new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
-                    var databaseDownloadEntry = await this.context.Downloads.FindAsync(downloader.Filename);
-                    if (databaseDownloadEntry != null)
-                    {
-                        using var sha256 = SHA256.Create();
-                        using var fileStream = await file.GetStreamAsync();
-
-                        databaseDownloadEntry.Sha256 = BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
-                        databaseDownloadEntry.Date = DateTime.Now;
-                        databaseDownloadEntry.FtpPath = file.FullPath(Separator);
-
-                        await this.ftpClient.UploadFileAsync(file);
-                        databaseDownloadEntry.DownloadStatus = DownloadStatus.Available;
-                        await this.context.SaveChangesAsync();
-                    }
-                }
-            });
+            Task.Run(async () => await this.DownloadFile(downloader));
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        }
+
+        private async Task DownloadFile(DccDownloader downloader)
+        {
+            if (this.downloadStatus.TryAdd(downloader.Filename, new DownloadProgress() { Size = downloader.Filesize }))
+            {
+                downloader.ProgressChanged += (downloadedBytes, size) => UpdateProgress(downloader, downloadedBytes);
+
+                await downloader.StartDownload();
+
+                this.downloadStatus.TryRemove(downloader.Filename, out _);
+
+                var file = new Filesystem.File(
+                    downloader.Filename,
+                    DownloadedFilesDirectory,
+                    new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
+
+                var databaseDownloadEntry = await this.context.Downloads.FindAsync(downloader.Filename);
+                if (databaseDownloadEntry != null)
+                {
+                    this.context.Downloads.Update(databaseDownloadEntry);
+                    using var sha256 = SHA256.Create();
+                    using var fileStream = await file.GetStreamAsync();
+
+                    databaseDownloadEntry.Sha256 = BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
+                    databaseDownloadEntry.Date = DateTime.Now;
+                    databaseDownloadEntry.FtpPath = file.FullPath(Separator);
+
+                    await this.ftpClient.UploadFileAsync(file);
+                    databaseDownloadEntry.DownloadStatus = DownloadStatus.Available;
+                    await this.context.SaveChangesAsync();
+                }
+            }
+        }
+
+        private void UpdateProgress(DccDownloader downloader, ulong downloadedBytes)
+        {
+            if (this.downloadStatus.TryGetValue(downloader.Filename, out var downloadProgress))
+            {
+                downloadProgress.DownloadedBytes = downloadedBytes;
+            }
         }
 
         private class CreateDownloaderContext
@@ -133,12 +144,6 @@ namespace Module.HorribleSubs.Cida.Services
             public string Filename { get; set; }
             public DccDownloader Downloader { get; set; }
             public ManualResetEventSlim ManualResetEvent { get; } = new ManualResetEventSlim(false);
-        }
-
-        public class DownloadProgress
-        {
-            public ulong DownloadedBytes { get; set; }
-            public ulong Size { get; set; }
         }
 
     }

@@ -55,6 +55,7 @@ namespace Cida.Server.Infrastructure
 
             if (responseStream != null)
             {
+                System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
                 var fileStream = new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.Create);
                 await responseStream.CopyToAsync(fileStream);
                 fileStream.Seek(0, SeekOrigin.Begin);

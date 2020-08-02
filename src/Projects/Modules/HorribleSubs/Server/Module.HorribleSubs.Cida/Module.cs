@@ -84,13 +84,13 @@ namespace Module.HorribleSubs.Cida
                     Filesize = x.Value.Size,
                 }).ToList();
 
-                currentDownloads.AddRange(await this.context.Downloads.Where(x => x.DownloadStatus == Models.Database.DownloadStatus.Available).Select(x => new DownloadStatusResponse.Types.DownloadStatus()
+                currentDownloads.AddRange((await this.context.Downloads.Where(x => x.DownloadStatus == Models.Database.DownloadStatus.Available).ToArrayAsync()).Select(x => new DownloadStatusResponse.Types.DownloadStatus()
                 {
                     Downloaded = true,
                     DownloadedBytes = 0,
                     Filename = x.Name,
                     Filesize = x.Size,
-                }).ToArrayAsync());
+                }));
 
                 return await Task.FromResult(new DownloadStatusResponse()
                 {
