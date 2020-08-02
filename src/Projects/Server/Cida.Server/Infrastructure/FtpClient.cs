@@ -43,6 +43,7 @@ namespace Cida.Server.Infrastructure
             return Array.Empty<string>();
         }
 
+        // TODO: Make it possible to safe a file to a temp folder and reference it in the File-Class. Otherwise the RAM usage can skyrocket pretty quick with large files
         public async Task<Filesystem.File> GetFileAsync(Filesystem.File file)
         {
             this.logger.Info("Downloading File: {value1}", file.FullPath(Separator));

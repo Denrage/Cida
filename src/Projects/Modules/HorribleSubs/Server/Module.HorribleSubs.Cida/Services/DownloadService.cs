@@ -22,8 +22,8 @@ namespace Module.HorribleSubs.Cida.Services
 {
     public class DownloadService
     {
+        public static Filesystem.Directory DownloadedFilesDirectory = new Filesystem.Directory("Files", null);
         public static string Separator = "/";
-        private static Filesystem.Directory DownloadedFilesDirectory = new Filesystem.Directory("Files", null);
         private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "IrcDownloads");
         private readonly IrcClient.Clients.IrcClient ircClient;
         private readonly ConcurrentDictionary<string, CreateDownloaderContext> requestedDownloads;
@@ -33,14 +33,13 @@ namespace Module.HorribleSubs.Cida.Services
 
         public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-        public DownloadService(string host, int port, string connectionString, IFtpClient ftpClient)
+        public DownloadService(string host, int port, HorribleSubsDbContext context, IFtpClient ftpClient)
         {
             string name = "ad_" + Guid.NewGuid();
             this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
             this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
             this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder);
-            this.context = new HorribleSubsDbContext(connectionString);
-            this.context.Database.EnsureCreated();
+
 
             this.ircClient.DownloadRequested += downloader =>
             {
@@ -50,6 +49,7 @@ namespace Module.HorribleSubs.Cida.Services
                     context.ManualResetEvent.Set();
                 }
             };
+            this.context = context;
             this.ftpClient = ftpClient;
         }
 

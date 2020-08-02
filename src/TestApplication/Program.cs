@@ -1,7 +1,11 @@
 ﻿using Grpc.Core;
+using Grpc.Core.Utils;
 using Horriblesubs;
 using System;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Threading;
 
 namespace TestApplication
 {
@@ -9,6 +13,7 @@ namespace TestApplication
     {
         static void Main(string[] args)
         {
+            var filename = "[HorribleSubs] Sword Art Online - Alicization - War of Underworld - 16 [1080p].mkv";
             var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
             var client = new HorribleSubsService.HorribleSubsServiceClient(channel);
             var results = client.Search(new SearchRequest()
@@ -20,11 +25,39 @@ namespace TestApplication
             {
                 DownloadRequest_ = new DownloadRequest.Types.Request()
                 {
-                    BotName = "Ginpachi-Sensei",
-                    FileName = "[tlacatlc6] Sword Art Online Alternative - Gun Gale Online Ad4 (BD-Raw 1920x1080 HEVC AAC) [7D954099].mkv",
-                    PackageNumber = 553
+                    BotName = "CR-HOLLAND|NEW",
+                    FileName = filename,
+                    PackageNumber = 10734
                 }
             });
+
+            var isDownloaded = false;
+            while (!isDownloaded)
+            {
+                var downloadStatus = client.DownloadStatus(new DownloadStatusRequest());
+                isDownloaded = downloadStatus.Status.FirstOrDefault(x => x.Filename == filename).Downloaded;
+                Thread.Sleep(1000);
+            }
+
+            var information = client.FileTransferInformation(new FileTransferInformationRequest()
+            {
+                FileName = filename
+            });
+
+            Console.WriteLine($"ChunkSize: {information.ChunkSize} Size: {information.Size} SHA256: {information.Sha256}");
+
+            var response = client.File(new FileRequest()
+            {
+                FileName = filename
+            });
+
+            using var fileStream = new FileStream(@"D:\Animes\temp\SAO.mkv", FileMode.Create);
+
+            response.ResponseStream.ForEachAsync(async fileResponse =>
+            {
+                await fileStream.WriteAsync(fileResponse.Chunk.ToByteArray(), 0, (int)fileResponse.Length);
+                fileStream.Seek((long)fileResponse.Position, SeekOrigin.Begin);
+            }).GetAwaiter().GetResult();
 
             //foreach(var result in results.SearchResults)
             //{

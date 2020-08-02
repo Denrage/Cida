@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Cida.Api;
+using Cida.Api.Models.Filesystem;
+using Google.Protobuf;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using Horriblesubs;
+using Microsoft.EntityFrameworkCore;
 using Module.Crunchyroll.Cida.Extensions;
 using Module.HorribleSubs.Cida.Services;
 
@@ -20,6 +24,7 @@ namespace Module.HorribleSubs.Cida
         private string connectionString;
         private SearchService searchService;
         private DownloadService downloadService;
+        private HorribleSubsDbContext context;
 
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
@@ -28,22 +33,31 @@ namespace Module.HorribleSubs.Cida
             this.connectionString =
                 await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
 
-            this.searchService = new SearchService();
-            this.downloadService = new DownloadService("irc.rizon.net", 6667, this.connectionString, ftpClient);
+            this.context = new HorribleSubsDbContext(connectionString);
+            await this.context.Database.EnsureCreatedAsync();
 
-            this.GrpcServices = new[] {HorribleSubsService.BindService(new HorribleSubsImplementation(this.searchService, this.downloadService)),};
+            this.searchService = new SearchService();
+            this.downloadService = new DownloadService("irc.rizon.net", 6667, this.context, ftpClient);
+
+            this.GrpcServices = new[] {HorribleSubsService.BindService(new HorribleSubsImplementation(this.searchService, this.downloadService, this.context, ftpClient)),};
             Console.WriteLine("Loaded HorribleSubs");
         }
 
         public class HorribleSubsImplementation : HorribleSubsService.HorribleSubsServiceBase
         {
+            // One megabyte
+            private const int ChunkSize = 1024 * 1024;
             private readonly SearchService searchService;
             private readonly DownloadService downloadService;
+            private readonly HorribleSubsDbContext context;
+            private readonly IFtpClient ftpClient;
 
-            public HorribleSubsImplementation(SearchService searchService, DownloadService downloadService)
+            public HorribleSubsImplementation(SearchService searchService, DownloadService downloadService, HorribleSubsDbContext context, IFtpClient ftpClient)
             {
                 this.searchService = searchService;
                 this.downloadService = downloadService;
+                this.context = context;
+                this.ftpClient = ftpClient;
             }
 
             public override async Task<SearchResponse> Search(SearchRequest request, ServerCallContext context)
@@ -83,6 +97,51 @@ namespace Module.HorribleSubs.Cida
                     Status = { currentDownloads }
                 });
 
+            }
+
+            public override async Task<FileTransferInformationResponse> FileTransferInformation(FileTransferInformationRequest request, ServerCallContext context)
+            {
+                var downloadItem = await this.context.Downloads.FindAsync(request.FileName);
+                ulong fileSize = 0;
+                var sha = string.Empty;
+
+                if (downloadItem != null)
+                {
+                    fileSize = downloadItem.Size;
+                    sha = downloadItem.Sha256;
+                }
+
+                return new FileTransferInformationResponse()
+                {
+                    ChunkSize = ChunkSize,
+                    Size = fileSize,
+                    Sha256 = sha,
+                };
+            }
+
+            public override async Task File(FileRequest request, IServerStreamWriter<FileResponse> responseStream, ServerCallContext context)
+            {
+                var databaseFile = await this.context.Downloads.FindAsync(request.FileName);
+                if(databaseFile != null)
+                {
+                    using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), DownloadService.DownloadedFilesDirectory, null);
+                    using var downloadedFile = await this.ftpClient.DownloadFileAsync(file);
+                    using var fileStream = await downloadedFile.GetStreamAsync();
+                    
+                    while (fileStream.Position != fileStream.Length)
+                    {
+                        var buffer = new byte[ChunkSize];
+                        var oldPosition = fileStream.Position;
+                        await fileStream.ReadAsync(buffer, 0, ChunkSize);
+
+                        await responseStream.WriteAsync(new FileResponse()
+                        {
+                            Chunk = ByteString.CopyFrom(buffer),
+                            Length = (ulong)Math.Min(ChunkSize, fileStream.Length - oldPosition),
+                            Position = (ulong)fileStream.Position,
+                        });
+                    }
+                }
             }
         }
     }
