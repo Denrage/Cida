@@ -14,6 +14,7 @@ namespace Cida.Server.Infrastructure
     {
         private const string Separator = "/";
         private readonly ILogger logger;
+        private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "FtpDownloads");
         private GlobalConfigurationManager.ExternalServerConnectionManager settings;
 
         public FtpClient(GlobalConfigurationService globalConfiguration, ILogger logger)
@@ -43,7 +44,6 @@ namespace Cida.Server.Infrastructure
             return Array.Empty<string>();
         }
 
-        // TODO: Make it possible to safe a file to a temp folder and reference it in the File-Class. Otherwise the RAM usage can skyrocket pretty quick with large files
         public async Task<Filesystem.File> GetFileAsync(Filesystem.File file)
         {
             this.logger.Info("Downloading File: {value1}", file.FullPath(Separator));
@@ -55,11 +55,11 @@ namespace Cida.Server.Infrastructure
 
             if (responseStream != null)
             {
-                var memoryStream = new MemoryStream();
-                await responseStream.CopyToAsync(memoryStream);
-                memoryStream.Seek(0, SeekOrigin.Begin);
+                var fileStream = new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.Create);
+                await responseStream.CopyToAsync(fileStream);
+                fileStream.Seek(0, SeekOrigin.Begin);
                 this.logger.Info("Downloaded File: {value1}", file.FullPath());
-                return file.ReplaceContent(memoryStream);
+                return file.ReplaceContent(fileStream);
             }
 
             return null;
