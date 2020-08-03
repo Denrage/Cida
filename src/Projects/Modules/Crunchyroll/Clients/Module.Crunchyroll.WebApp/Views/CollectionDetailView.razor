@@ -1,0 +1,57 @@
+﻿@inject Grpc.Net.Client.GrpcChannel channel
+
+@if (this.episodes != Enumerable.Empty<CrunchyrollLibs.Collection.Collection>())
+{
+    <div class="d-flex bd-highlight">
+        <ul>
+            @foreach (var episode in this.episodes)
+            {
+                <li @onclick="() => this.selectedEpisode = episode">
+                    @episode.Name
+                </li>
+            }
+        </ul>
+
+    @if (this.selectedEpisode != null)
+    {
+        <EpisodeDetailView Episode="@this.selectedEpisode" />
+    }
+    </div>
+}
+
+@code {
+    private CrunchyrollLibs.Collection.Collection collection;
+    private IEnumerable<CrunchyrollLibs.Episode.Episode> episodes;
+    private CrunchyrollLibs.Episode.Episode selectedEpisode;
+    private TestService testService;
+
+    [Parameter]
+    public CrunchyrollLibs.Collection.Collection Collection
+    {
+        get
+        {
+            return this.collection;
+        }
+
+        set
+        {
+            if (this.Collection != value)
+            {
+                this.collection = value;
+                this.selectedEpisode = null;
+                Task.Run(async () =>
+                {
+                    this.episodes = await this.testService.GetEpisodes(this.Collection.CollectionId);
+                    await this.InvokeAsync(this.StateHasChanged);
+                });
+                this.InvokeAsync(this.StateHasChanged);
+            }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        this.testService = new TestService(channel);
+        this.episodes = Enumerable.Empty<CrunchyrollLibs.Episode.Episode>();
+    }
+}

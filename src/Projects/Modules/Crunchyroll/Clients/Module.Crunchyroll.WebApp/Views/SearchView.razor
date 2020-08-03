@@ -1,0 +1,60 @@
+﻿@inject Grpc.Net.Client.GrpcChannel channel;
+
+<link rel="stylesheet" type="text/css" href="_content/Module.Crunchyroll.WebApp/css/searchView.css">
+
+<div class="d-flex h-100 align-items-center container">
+    <input @bind-value="SearchTerm" @bind-value:event="oninput" @onfocusout="async() => { await Task.Delay(100); this.SearchTerm = string.Empty; this.focused = false; }" @onfocus="() => this.focused = true" placeholder="Search..." style="background-color:cyan; height:100%;" />
+    <div class="search"  ></div>
+</div>
+
+<div style="z-index: 1; position:relative; visibility:@(this.focused ? "visible" : "hidden")">
+    <Module.Crunchyroll.WebApp.Views.SearchResultView @ref="searchResultView" AnimeSelectedDelegate="this.OnAnimedSelected" SearchResultTask="this.searchTask" />
+</div>
+
+@code {
+    [Parameter]
+    public Action<CrunchyrollLibs.Search.SearchItem> AnimeSearchedDelegate { get; set; }
+
+    private TestService testService;
+    private string searchTerm;
+    private bool focused;
+    private Task<IEnumerable<CrunchyrollLibs.Search.SearchItem>> searchTask;
+    private SearchResultView searchResultView;
+
+    private string SearchTerm
+    {
+        get
+        {
+            return this.searchTerm;
+        }
+        set
+        {
+            if (this.SearchTerm != value)
+            {
+                this.searchTerm = value;
+
+                if (this.SearchTerm != string.Empty)
+                {
+                    this.searchTask = this.testService.Search(this.SearchTerm);
+                }
+                else
+                {
+                    this.searchTask = null;
+                }
+            }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        this.testService = new TestService(channel);
+    }
+
+    private void OnAnimedSelected(CrunchyrollLibs.Search.SearchItem selectedAnime)
+    {
+        this.focused = false;
+        this.searchTask = null;
+        this.AnimeSearchedDelegate(selectedAnime);
+        this.StateHasChanged();
+    }
+}

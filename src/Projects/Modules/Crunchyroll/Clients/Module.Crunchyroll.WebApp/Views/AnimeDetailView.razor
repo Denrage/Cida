@@ -1,0 +1,58 @@
+﻿@inject Grpc.Net.Client.GrpcChannel channel
+
+@if (this.Anime != null)
+{
+    <header>@this.Anime.Name</header>
+
+    @if (this.collections != Enumerable.Empty<CrunchyrollLibs.Collection.Collection>())
+    {
+        <ul class="btn-group rounded border">
+            @foreach (var collection in this.collections)
+            {
+                <li class="btn btn-link" @onclick="() => this.selectedCollection = collection">@collection.Name</li>
+            }
+        </ul>
+
+        @if (this.selectedCollection != null)
+        {
+            <CollectionDetailView Collection="this.selectedCollection" />
+        }
+    }
+}
+
+@code {
+    private TestService testService;
+    private CrunchyrollLibs.Search.SearchItem anime;
+    private IEnumerable<CrunchyrollLibs.Collection.Collection> collections;
+    private CrunchyrollLibs.Collection.Collection selectedCollection;
+
+    public CrunchyrollLibs.Search.SearchItem Anime
+    {
+        get
+        {
+            return this.anime;
+        }
+        set
+        {
+            if (this.Anime != value)
+            {
+                this.anime = value;
+                this.collections = Enumerable.Empty<CrunchyrollLibs.Collection.Collection>();
+                this.selectedCollection = null;
+                Task.Run(async () =>
+                {
+                    this.collections = (await this.testService.GetCollections(this.Anime.Id)).ToArray();
+                    await this.InvokeAsync(StateHasChanged);
+                });
+
+                this.InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        this.testService = new TestService(channel);
+        this.collections = Enumerable.Empty<CrunchyrollLibs.Collection.Collection>();
+    }
+}

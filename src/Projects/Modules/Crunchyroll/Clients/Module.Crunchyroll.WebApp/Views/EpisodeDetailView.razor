@@ -1,0 +1,41 @@
+﻿@inject Grpc.Net.Client.GrpcChannel channel
+
+@if(this.streamUrl != null)
+{
+    <VideoPlayer Url="@this.streamUrl"/>
+}
+
+@code {
+    [Parameter]
+    public CrunchyrollLibs.Episode.Episode Episode
+    {
+        get
+        {
+            return this.episode;
+        }
+
+        set
+        {
+            if(this.Episode != value)
+            {
+                this.episode = value;
+                this.streamUrl = null;
+
+                Task.Run(async() =>
+                {
+                    this.streamUrl = await this.testService.GetStreamUrl(this.Episode.MediaId);
+                    await this.InvokeAsync(this.StateHasChanged);
+                });
+            }
+        }
+    }
+
+    private TestService testService;
+    private CrunchyrollLibs.Episode.Episode episode;
+    private string streamUrl;
+
+    protected override void OnInitialized()
+    {
+        this.testService = new TestService(channel);
+    }
+}

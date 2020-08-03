@@ -1,0 +1,73 @@
+﻿@inject Grpc.Net.Client.GrpcChannel channel
+
+@if (this.SearchResultTask == null)
+{
+    <h1>Type to search...</h1>
+}
+
+else
+{
+    if (this.SearchResultTask.IsFaulted)
+    {
+        <h1>Something went wrong with Tim's stupid search</h1>
+        this.SearchResultTask.Exception.ToString();
+    }
+
+    else
+    {
+        if (this.SearchResultTask.IsCompleted)
+        {
+            <ul class="list-group w-100" style="overflow:auto;height:40vh;">
+                @foreach (var searchResult in this.SearchResultTask.Result)
+                {
+                    <li class="list-group-item list-group-item-action" @onclick="() => this.AnimeSelectedDelegate.Invoke(searchResult)">
+                        @searchResult.Name
+                        <a href="@searchResult.Link">Link</a>
+                    </li>
+                }
+            </ul>
+        }
+
+        else
+        {
+            <h1>Loading...</h1>
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public Action<CrunchyrollLibs.Search.SearchItem> AnimeSelectedDelegate { get; set; }
+
+    [Parameter]
+    public Task<IEnumerable<CrunchyrollLibs.Search.SearchItem>> SearchResultTask
+    {
+        get
+        {
+            return this.searchResultTask;
+        }
+
+        set
+        {
+            if (this.SearchResultTask != value)
+            {
+                this.searchResultTask = value;
+                if (this.SearchResultTask != null)
+                {
+                    this.SearchResultTask.ContinueWith((result) => this.InvokeAsync(this.StateHasChanged));
+                }
+                this.StateHasChanged();
+            }
+        }
+    }
+
+    private TestService testService;
+
+    private Task<IEnumerable<CrunchyrollLibs.Search.SearchItem>> searchResultTask;
+
+
+    protected override void OnInitialized()
+    {
+        this.testService = new TestService(channel);
+    }
+}
