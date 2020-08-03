@@ -14,6 +14,7 @@ namespace Cida.Server.Infrastructure
     {
         private const string Separator = "/";
         private readonly ILogger logger;
+        private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "FtpDownloads");
         private GlobalConfigurationManager.ExternalServerConnectionManager settings;
 
         public FtpClient(GlobalConfigurationService globalConfiguration, ILogger logger)
@@ -54,11 +55,12 @@ namespace Cida.Server.Infrastructure
 
             if (responseStream != null)
             {
-                var memoryStream = new MemoryStream();
-                await responseStream.CopyToAsync(memoryStream);
-                memoryStream.Seek(0, SeekOrigin.Begin);
+                System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
+                var fileStream = new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.Create);
+                await responseStream.CopyToAsync(fileStream);
+                fileStream.Seek(0, SeekOrigin.Begin);
                 this.logger.Info("Downloaded File: {value1}", file.FullPath());
-                return file.ReplaceContent(memoryStream);
+                return file.ReplaceContent(fileStream);
             }
 
             return null;

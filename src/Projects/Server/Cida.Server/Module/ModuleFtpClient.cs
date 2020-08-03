@@ -21,12 +21,13 @@ namespace Cida.Server.Module
 
         public async Task<File> DownloadFileAsync(File file)
         {
-            file.Move(this.ModuleDirectory);
+            file.Move(this.ModuleDirectory, true);
             return await this.ftpClient.GetFileAsync(file);
         }
 
         public async Task UploadFileAsync(File file)
         {
+            file.Move(this.ModuleDirectory, true);
             await this.ftpClient.SaveFileAsync(file);
         }
     }

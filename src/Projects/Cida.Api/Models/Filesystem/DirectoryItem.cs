@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Cida.Api.Models.Filesystem
@@ -10,7 +11,7 @@ namespace Cida.Api.Models.Filesystem
         public string Name { get; }
 
         public Directory Directory { get; private set; }
-        
+
         public string FullPath() => GetFullPath(this, Separator);
 
         public string FullPath(string separator) => GetFullPath(this, separator);
@@ -24,16 +25,36 @@ namespace Cida.Api.Models.Filesystem
             this.Directory?.InternalFiles.Add(this);
         }
 
-        public void Move(Directory directory)
+        public void Move(Directory directory, bool moveParent = false)
         {
             if (this.Disposed)
             {
                 throw new InvalidOperationException("This file is already disposed");
             }
 
-            this.Directory?.InternalFiles.Remove(this);
-            this.Directory = directory;
-            this.Directory?.InternalFiles.Add(this);
+            if (moveParent)
+            {
+                var previousParent = this;
+                var currentParent = this.Directory;
+                while (currentParent != null)
+                {
+                    previousParent = currentParent;
+                    if (currentParent == directory)
+                    {
+                        return;
+                    }
+
+                    currentParent = currentParent.Directory;
+                }
+
+                previousParent.Move(directory, false);
+            }
+            else
+            {
+                this.Directory?.InternalFiles.Remove(this);
+                this.Directory = directory;
+                this.Directory?.InternalFiles.Add(this);
+            }
         }
 
         public void Dispose()

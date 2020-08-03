@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package horriblesubs;
+
+service HorribleSubsService {
+    rpc Version (VersionRequest) returns (VersionResponse);
+    rpc Search (SearchRequest) returns (SearchResponse);
+    rpc Download (DownloadRequest) returns (DownloadResponse);
+    rpc DownloadStatus (DownloadStatusRequest) returns (DownloadStatusResponse);
+    rpc File (FileRequest) returns (stream FileResponse);
+    rpc FileTransferInformation (FileTransferInformationRequest) returns (FileTransferInformationResponse);
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+    int32 Version = 1;
+}
+
+
+message SearchRequest {
+    string SearchTerm = 1;
+}
+
+message SearchResponse {
+    message SearchResult {
+        string BotName = 1;
+        int64 PackageNumber = 2;
+        int64 FileSize = 3;
+        string FileName = 4;
+    }
+
+    repeated SearchResult SearchResults = 1;
+}
+
+message DownloadRequest {
+    message Request {
+        string BotName = 1;
+        int64 PackageNumber = 2;
+        string FileName = 3;
+	}
+
+    Request DownloadRequest = 1;
+}
+
+message DownloadResponse {
+    
+}
+
+
+message DownloadStatusRequest {
+}
+
+message DownloadStatusResponse {
+    message DownloadStatus {
+        string Filename = 1;
+        uint64 DownloadedBytes = 2;
+        uint64 Filesize = 3;
+        bool Downloaded = 4;
+	}
+
+    repeated DownloadStatus Status = 1;
+}
+
+message FileRequest {
+    string FileName = 1;
+    uint64 Position = 2;
+}
+
+message FileResponse {
+    uint64 Position = 1;
+    uint64 Length = 2;
+    bytes Chunk = 3;
+}
+
+message FileTransferInformationRequest {
+    string FileName = 1;
+}
+
+message FileTransferInformationResponse {
+    uint64 Size = 1;
+    uint64 ChunkSize = 2;
+    string Sha256 = 3;
+}
