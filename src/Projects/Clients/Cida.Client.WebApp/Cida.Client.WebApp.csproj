@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Cida.Api\Cida.Api.csproj" />
+    <ProjectReference Include="..\..\Server\Cida.Server\Cida.Server.csproj" />
+    <ProjectReference Include="..\Cida.Client.WebApp.Api\Cida.Client.WebApp.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.9.1" />
+    <PackageReference Include="Grpc" Version="2.23.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.23.0" />
+  </ItemGroup>
+
+</Project>

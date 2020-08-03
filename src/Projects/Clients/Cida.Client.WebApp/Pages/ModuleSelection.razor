@@ -1,0 +1,26 @@
+﻿@inject IModuleLoaderService moduleLoaderService
+
+<ul>
+    @foreach (var loadedModule in this.loadedModules)
+    {
+        <li>
+            @loadedModule.ToString()
+        </li>
+    }
+</ul>
+
+@code
+{
+    private IList<WebModule> loadedModules;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.loadedModules = new List<WebModule>();
+
+        await foreach (var module in moduleLoaderService.LoadModulesAsync())
+        {
+            this.loadedModules.Add(module);
+            Console.WriteLine("Added a module");
+        }
+    }
+}
