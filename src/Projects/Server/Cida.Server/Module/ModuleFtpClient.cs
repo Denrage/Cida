@@ -21,14 +21,24 @@ namespace Cida.Server.Module
 
         public async Task<File> DownloadFileAsync(File file)
         {
-            file.Move(this.ModuleDirectory, true);
-            return await this.ftpClient.GetFileAsync(file);
+            if (file.IsInDirectory(this.ModuleDirectory))
+            {
+                return await this.ftpClient.GetFileAsync(file);
+            }
+
+            throw new InvalidOperationException("File to download needs to be in the module directory");
         }
 
         public async Task UploadFileAsync(File file)
         {
-            file.Move(this.ModuleDirectory, true);
-            await this.ftpClient.SaveFileAsync(file);
+            if (file.IsInDirectory(this.ModuleDirectory))
+            {
+                await this.ftpClient.SaveFileAsync(file);
+            }
+            else
+            {
+                throw new InvalidOperationException("File to upload needs to be in the module directory");
+            }
         }
     }
 }

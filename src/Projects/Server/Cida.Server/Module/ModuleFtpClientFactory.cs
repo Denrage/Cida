@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Cida.Api.Models.Filesystem;
 using Cida.Server.Infrastructure;
 using Cida.Server.Interfaces;
 
@@ -15,10 +16,8 @@ namespace Cida.Server.Module
             this.ftpClient = ftpClient;
         }
 
-        public Cida.Api.IFtpClient Create(string rootPath, string moduleId)
+        public Cida.Api.IFtpClient Create(Directory moduleDirectory)
         {
-            var rootDirectory = new Cida.Api.Models.Filesystem.Directory(rootPath, null);
-            var moduleDirectory = new Cida.Api.Models.Filesystem.Directory(moduleId, rootDirectory);
             return new ModuleFtpClient(this.ftpClient, moduleDirectory);
         }
     }

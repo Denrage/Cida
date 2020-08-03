@@ -22,7 +22,6 @@ namespace Module.HorribleSubs.Cida.Services
 {
     public partial class DownloadService
     {
-        public static Filesystem.Directory DownloadedFilesDirectory = new Filesystem.Directory("Files", null);
         public static string Separator = "/";
         private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "IrcDownloads");
         private readonly IrcClient.Clients.IrcClient ircClient;
@@ -30,16 +29,17 @@ namespace Module.HorribleSubs.Cida.Services
         private readonly ConcurrentDictionary<string, DownloadProgress> downloadStatus;
         private readonly HorribleSubsDbContext context;
         private readonly IFtpClient ftpClient;
+        private readonly Filesystem.Directory downloadDirectory;
 
         public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-        public DownloadService(string host, int port, HorribleSubsDbContext context, IFtpClient ftpClient)
+        public DownloadService(string host, int port, HorribleSubsDbContext context, IFtpClient ftpClient, Filesystem.Directory downloadDirectory)
         {
             string name = "ad_" + Guid.NewGuid();
             this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
             this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
             this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder);
-
+            this.downloadDirectory = downloadDirectory;
 
             this.ircClient.DownloadRequested += downloader =>
             {
@@ -108,9 +108,9 @@ namespace Module.HorribleSubs.Cida.Services
 
                 this.downloadStatus.TryRemove(downloader.Filename, out _);
 
-                var file = new Filesystem.File(
+                using var file = new Filesystem.File(
                     downloader.Filename,
-                    DownloadedFilesDirectory,
+                    this.downloadDirectory,
                     new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
 
                 var databaseDownloadEntry = await this.context.Downloads.FindAsync(downloader.Filename);

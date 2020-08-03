@@ -62,10 +62,10 @@ namespace Cida.Server.Module
             return context;
         }
 
-        public async Task<IModule> Load(IDatabaseConnector databaseConnector, Cida.Api.IFtpClient ftpClient)
+        public async Task<IModule> Load(IDatabaseConnector databaseConnector, Cida.Api.IFtpClient ftpClient, Cida.Api.Models.Filesystem.Directory moduleDirectory)
         {
             var instance = (IModule)Activator.CreateInstance(this.entryType);
-            await instance.Load(databaseConnector, ftpClient);
+            await instance.Load(databaseConnector, ftpClient, moduleDirectory);
             return instance;
         }
 

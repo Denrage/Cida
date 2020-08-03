@@ -25,21 +25,26 @@ namespace Module.HorribleSubs.Cida
         private SearchService searchService;
         private DownloadService downloadService;
         private HorribleSubsDbContext context;
+        private Directory moduleDirectory;
+        private Directory downloadDirectory;
 
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
-        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient)
+        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient, Directory moduleDirectory)
         {
             this.connectionString =
                 await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
+
+            this.moduleDirectory = moduleDirectory;
+            this.downloadDirectory = new Directory("Files", moduleDirectory);
 
             this.context = new HorribleSubsDbContext(connectionString);
             await this.context.Database.EnsureCreatedAsync();
 
             this.searchService = new SearchService();
-            this.downloadService = new DownloadService("irc.rizon.net", 6667, this.context, ftpClient);
+            this.downloadService = new DownloadService("irc.rizon.net", 6667, this.context, ftpClient, downloadDirectory);
 
-            this.GrpcServices = new[] {HorribleSubsService.BindService(new HorribleSubsImplementation(this.searchService, this.downloadService, this.context, ftpClient)),};
+            this.GrpcServices = new[] {HorribleSubsService.BindService(new HorribleSubsImplementation(this.searchService, this.downloadService, this.context, ftpClient, downloadDirectory)),};
             Console.WriteLine("Loaded HorribleSubs");
         }
 
@@ -51,13 +56,15 @@ namespace Module.HorribleSubs.Cida
             private readonly DownloadService downloadService;
             private readonly HorribleSubsDbContext context;
             private readonly IFtpClient ftpClient;
+            private readonly Directory downloadDirectory;
 
-            public HorribleSubsImplementation(SearchService searchService, DownloadService downloadService, HorribleSubsDbContext context, IFtpClient ftpClient)
+            public HorribleSubsImplementation(SearchService searchService, DownloadService downloadService, HorribleSubsDbContext context, IFtpClient ftpClient, Directory downloadDirectory)
             {
                 this.searchService = searchService;
                 this.downloadService = downloadService;
                 this.context = context;
                 this.ftpClient = ftpClient;
+                this.downloadDirectory = downloadDirectory;
             }
 
             public override async Task<SearchResponse> Search(SearchRequest request, ServerCallContext context)
@@ -124,7 +131,7 @@ namespace Module.HorribleSubs.Cida
                 var databaseFile = await this.context.Downloads.FindAsync(request.FileName);
                 if(databaseFile != null)
                 {
-                    using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), DownloadService.DownloadedFilesDirectory, null);
+                    using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), this.downloadDirectory, null);
                     using var downloadedFile = await this.ftpClient.DownloadFileAsync(file);
                     using var fileStream = await downloadedFile.GetStreamAsync();
                     fileStream.Seek((long)request.Position, System.IO.SeekOrigin.Begin);

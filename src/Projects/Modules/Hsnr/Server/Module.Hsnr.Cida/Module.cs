@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cida.Api;
+using Cida.Api.Models.Filesystem;
 using Grpc.Core;
 using Hsnr;
 using Module.Hsnr.Extensions;
@@ -12,7 +13,7 @@ namespace Module.Hsnr
 {
     public class Module : IModule
     {
-        public async Task Load(IDatabaseConnector connector, IFtpClient ftpClient)
+        public async Task Load(IDatabaseConnector connector, IFtpClient ftpClient, Directory moduleDirectory)
         {
             Console.WriteLine("Loaded");
 

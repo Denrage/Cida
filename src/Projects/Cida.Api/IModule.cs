@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cida.Api.Models.Filesystem;
 using Grpc.Core;
 
 namespace Cida.Api
@@ -8,6 +9,6 @@ namespace Cida.Api
     {
         IEnumerable<ServerServiceDefinition> GrpcServices { get; }
 
-        Task Load(IDatabaseConnector connector, IFtpClient ftpClient);
+        Task Load(IDatabaseConnector connector, IFtpClient ftpClient, Directory moduleDirectory);
     }
 }

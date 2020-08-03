@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Cida.Api;
+using Cida.Api.Models.Filesystem;
 using Crunchyroll;
 using Grpc.Core;
 using Module.Crunchyroll.Cida.Extensions;
@@ -20,7 +21,7 @@ namespace Module.Crunchyroll.Cida
         private AnimeSearchCache cache;
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
-        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient)
+        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient, Directory moduleDirectory)
         {
             this.connectionString =
                 await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);

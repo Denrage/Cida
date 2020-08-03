@@ -277,7 +277,9 @@ namespace Cida.Server.Module
             {
                 if (this.modules.TryAdd(module.Metadata.Id, module))
                 {
-                    return await module.Load(this.databaseConnector, this.moduleFtpClientFactory.Create("ModuleFiles",  module.Metadata.Id.ToString()));
+                    var rootDirectory = new Cida.Api.Models.Filesystem.Directory("ModuleFiles", null);
+                    var moduleDirectory = new Cida.Api.Models.Filesystem.Directory(module.Metadata.Id.ToString(), rootDirectory);
+                    return await module.Load(this.databaseConnector, this.moduleFtpClientFactory.Create(moduleDirectory), moduleDirectory);
                 }
             }
             catch (Exception ex)

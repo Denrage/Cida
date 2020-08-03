@@ -25,36 +25,16 @@ namespace Cida.Api.Models.Filesystem
             this.Directory?.InternalFiles.Add(this);
         }
 
-        public void Move(Directory directory, bool moveParent = false)
+        public void Move(Directory directory)
         {
             if (this.Disposed)
             {
                 throw new InvalidOperationException("This file is already disposed");
             }
 
-            if (moveParent)
-            {
-                var previousParent = this;
-                var currentParent = this.Directory;
-                while (currentParent != null)
-                {
-                    previousParent = currentParent;
-                    if (currentParent == directory)
-                    {
-                        return;
-                    }
-
-                    currentParent = currentParent.Directory;
-                }
-
-                previousParent.Move(directory, false);
-            }
-            else
-            {
-                this.Directory?.InternalFiles.Remove(this);
-                this.Directory = directory;
-                this.Directory?.InternalFiles.Add(this);
-            }
+            this.Directory?.InternalFiles.Remove(this);
+            this.Directory = directory;
+            this.Directory?.InternalFiles.Add(this);
         }
 
         public void Dispose()
@@ -78,6 +58,22 @@ namespace Cida.Api.Models.Filesystem
         private static string GetFullPath(DirectoryItem item, string separator)
         {
             return item.Directory == null ? item.Name : $"{GetFullPath(item.Directory, separator)}{separator}{item.Name}";
+        }
+
+        public bool IsInDirectory(Directory directory)
+        {
+            var currentDirectory = this.Directory;
+            while (currentDirectory != null)
+            {
+                if (currentDirectory == directory)
+                {
+                    return true;
+                }
+
+                currentDirectory = currentDirectory.Directory;
+            }
+
+            return false;
         }
     }
 }
