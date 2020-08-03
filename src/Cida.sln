@@ -62,7 +62,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{789E3E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.HorribleSubs.Cida", "Projects\Modules\HorribleSubs\Server\Module.HorribleSubs.Cida\Module.HorribleSubs.Cida.csproj", "{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IrcClient", "Projects\IrcClient\IrcClient.csproj", "{82833DAF-9BA2-4E11-9FBE-738EAD248E66}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IrcClient", "Projects\IrcClient\IrcClient.csproj", "{82833DAF-9BA2-4E11-9FBE-738EAD248E66}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebApp", "WebApp", "{2AF4C1B8-D68B-46C1-AF25-1797B2F4B050}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.WebApp", "Projects\Clients\Cida.Client.WebApp\Cida.Client.WebApp.csproj", "{9BBB6153-B4E1-4624-A881-25859A9F2136}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.WebApp.Api", "Projects\Clients\Cida.Client.WebApp.Api\Cida.Client.WebApp.Api.csproj", "{4FEAD6DA-D468-4DD1-874D-AE7B3A81FFE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.Crunchyroll.WebApp", "Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.WebApp\Module.Crunchyroll.WebApp.csproj", "{1A2C42A8-25F6-40DB-893D-08CF649BEA19}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -122,6 +130,18 @@ Global
 		{82833DAF-9BA2-4E11-9FBE-738EAD248E66}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82833DAF-9BA2-4E11-9FBE-738EAD248E66}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82833DAF-9BA2-4E11-9FBE-738EAD248E66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BBB6153-B4E1-4624-A881-25859A9F2136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BBB6153-B4E1-4624-A881-25859A9F2136}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BBB6153-B4E1-4624-A881-25859A9F2136}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BBB6153-B4E1-4624-A881-25859A9F2136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FEAD6DA-D468-4DD1-874D-AE7B3A81FFE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FEAD6DA-D468-4DD1-874D-AE7B3A81FFE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FEAD6DA-D468-4DD1-874D-AE7B3A81FFE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FEAD6DA-D468-4DD1-874D-AE7B3A81FFE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2C42A8-25F6-40DB-893D-08CF649BEA19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2C42A8-25F6-40DB-893D-08CF649BEA19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2C42A8-25F6-40DB-893D-08CF649BEA19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2C42A8-25F6-40DB-893D-08CF649BEA19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -146,6 +166,10 @@ Global
 		{CE68205A-4D16-4CD9-A877-400EBDB4FE62} = {DFAE3B31-6CA4-4C67-AF1F-FAC384978EA9}
 		{789E3E07-E05A-46EE-8982-219626BC76DD} = {CE68205A-4D16-4CD9-A877-400EBDB4FE62}
 		{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8} = {789E3E07-E05A-46EE-8982-219626BC76DD}
+		{2AF4C1B8-D68B-46C1-AF25-1797B2F4B050} = {46F9BD61-2E93-4B81-959E-2B278F2135B7}
+		{9BBB6153-B4E1-4624-A881-25859A9F2136} = {2AF4C1B8-D68B-46C1-AF25-1797B2F4B050}
+		{4FEAD6DA-D468-4DD1-874D-AE7B3A81FFE4} = {2AF4C1B8-D68B-46C1-AF25-1797B2F4B050}
+		{1A2C42A8-25F6-40DB-893D-08CF649BEA19} = {958C5A6D-5D4C-4D77-A9BB-E47B394F6197}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD4E48FF-111A-4466-A02E-3AA5EFC36655}
