@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,13 +30,16 @@ namespace Module.Crunchyroll.Cida.Services
             this.apiService = apiService;
             this.context = new CrunchyrollDbContext(connectionString);
             this.context.Database.EnsureCreated();
-            this.Refresh();
+            Task.Run(async () => await this.Refresh());
         }
 
-        public void Refresh()
+        public async Task Refresh()
         {
-            using var webClient = new WebClient();
-            var result = webClient.DownloadString(SearchEndpoint);
+            var clearanceHandler = new CloudFlareUtilities.ClearanceHandler();
+            using var httpClient = new HttpClient(clearanceHandler);
+
+            var httpResult = await httpClient.GetAsync(SearchEndpoint);
+            var result = await httpResult.Content.ReadAsStringAsync();
             var prefixLength = "/*-secure-".Length;
             var suffixLength = "*/".Length;
             result = result.Substring(prefixLength, result.Length - prefixLength - suffixLength);
@@ -59,7 +63,7 @@ namespace Module.Crunchyroll.Cida.Services
             var threshold = ratios.Max(x => x.ratio) * percentualThreshold;
 
             const int maxSearchResults = 50;
-            
+
             foreach (var item in ratios
                 .Where(x => x.ratio >= threshold)
                 .OrderByDescending(x => x.ratio)
@@ -67,7 +71,7 @@ namespace Module.Crunchyroll.Cida.Services
                 .Take(maxSearchResults))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 var cacheItem = await this.context.Animes
                     .Include(x => x.Landscape)
                     .Include(x => x.Portrait)
