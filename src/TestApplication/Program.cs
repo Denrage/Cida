@@ -50,7 +50,7 @@ namespace TestApplication
                         break;
                     case ConsoleKey.A:
                         Console.WriteLine("Searching for \"sword\"");
-                        var searchResult = await client2.SearchAsync(new SearchRequest() { SearchTerm = "sword" });
+                        var searchResult = await client2.SearchAsync(new Crunchyroll.SearchRequest() { SearchTerm = "sword" });
                         Console.WriteLine($"Found {searchResult.Items.Count} results");
                         break;
                     default:
