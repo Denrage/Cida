@@ -5,64 +5,59 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading;
+using Grpc.Core;
+using Hsnr;
+﻿using Grpc.Core;
+using Hsnr;
+using System;
+using System.Net;
+using Crunchyroll;
+using System.Threading.Tasks;
 
 namespace TestApplication
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            var filename = "[HorribleSubs] Yahari Ore no Seishun Love Come wa Machigatteiru Kan - 04 [1080p].mkv";
-            var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
-            var client = new HorribleSubsService.HorribleSubsServiceClient(channel);
-            var results = client.Search(new SearchRequest()
+            var channel = new Channel("ipv4:127.0.0.1:31564", ChannelCredentials.Insecure);
+            var client = new HsnrTimetableService.HsnrTimetableServiceClient(channel);
+            var client2 = new CrunchyrollService.CrunchyrollServiceClient(channel);
+            Console.WriteLine("Ready");
+            while (true)
             {
-                SearchTerm = "Sword Art Online",
-            });
-
-            foreach (var result in results.SearchResults)
-            {
-                Console.WriteLine($"Botname:{result.BotName};Filename:{result.FileName};Filesize:{result.FileSize};PackageNumber:{result.PackageNumber}");
-            }
-
-            client.Download(new DownloadRequest()
-            {
-                DownloadRequest_ = new DownloadRequest.Types.Request()
+                var key = Console.ReadKey();
+                switch (key.Key)
                 {
-                    BotName = "CR-HOLLAND|NEW",
-                    FileName = filename,
-                    PackageNumber = 10692
+                    case ConsoleKey.Q:
+                        return;
+                    case ConsoleKey.T:
+                        Console.WriteLine("Getting timetable");
+                        var timetable = client.Timetable(new TimetableRequest()
+                        {
+                            Calendar = CalendarType.BranchOfStudy,
+                            BranchOfStudy = "KBI5",
+                            Semester = SemesterType.WinterSemester,
+                        });
+                        foreach (var day in timetable.Result.WeekDays)
+                        {
+                            Console.WriteLine(Enum.GetName(typeof(TimetableResponse.Types.Timetable.Types.WeekDay.Types.Days), day.Day));
+                            foreach (var subject in day.Subjects)
+                            {
+                                Console.WriteLine($"{subject.Start}-{subject.End}: {subject.Name} - {subject.Room} - {subject.Lecturer}");
+                            }
+                        }
+                        break;
+                    case ConsoleKey.A:
+                        Console.WriteLine("Searching for \"sword\"");
+                        var searchResult = await client2.SearchAsync(new SearchRequest() { SearchTerm = "sword" });
+                        Console.WriteLine($"Found {searchResult.Items.Count} results");
+                        break;
+                    default:
+                        break;
                 }
-            });
-
-            var isDownloaded = false;
-            while (!isDownloaded)
-            {
-                var downloadStatus = client.DownloadStatus(new DownloadStatusRequest());
-                isDownloaded = downloadStatus.Status.FirstOrDefault(x => x.Filename == filename).Downloaded;
-                Thread.Sleep(1000);
             }
-
-            var information = client.FileTransferInformation(new FileTransferInformationRequest()
-            {
-                FileName = filename
-            });
-
-            Console.WriteLine($"ChunkSize: {information.ChunkSize} Size: {information.Size} SHA256: {information.Sha256}");
-
-            var response = client.File(new FileRequest()
-            {
-                FileName = filename
-            });
-
-            using var fileStream = new FileStream(@"D:\Animes\temp\SAO.mkv", FileMode.Create);
-
-            response.ResponseStream.ForEachAsync(async fileResponse =>
-            {
-                await fileStream.WriteAsync(fileResponse.Chunk.ToByteArray(), 0, (int)fileResponse.Length);
-                fileStream.Seek((long)fileResponse.Position, SeekOrigin.Begin);
-            }).GetAwaiter().GetResult();
+            Console.WriteLine("Done");
         }
     }
 }
