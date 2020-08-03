@@ -55,7 +55,7 @@ namespace Module.HorribleSubs.Cida.Services
             const string nIdentifier = "n:";
             const string sIdentifier = "s:";
             const string fIdentifier = "f:\"";
-            var regex = new Regex("([b|n|s|f]:\\\"?.*?\\\"?[,|\\}])");
+            var regex = new Regex("((b|n|s|f):\\\"?.*?\\\"?(,|\\}))");
             var result = new JsonData();
             foreach (var match in regex.Matches(line))
             {
