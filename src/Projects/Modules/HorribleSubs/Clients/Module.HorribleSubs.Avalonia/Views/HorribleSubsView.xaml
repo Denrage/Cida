@@ -2,75 +2,88 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converter="clr-namespace:Module.HorribleSubs.Avalonia.Converter"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.HorribleSubs.Avalonia.Views.HorribleSubsView">
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
-    <Grid Grid.Row="0">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="Auto"/>
-      </Grid.ColumnDefinitions>
-      <TextBox Grid.Column="0"  x:Name="Search" Text="{Binding SearchTerm}" />
-      <Button Grid.Column="1" Command="{Binding Search}" Content="Search" />
-    </Grid>
-    <Grid Grid.Row="1">
-      <Grid>
+    <UserControl.Resources>
+        <converter:MultiValueAndConverter x:Key="MultiValueAndConverter"/>
+    </UserControl.Resources>
+    <Grid>
         <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <ComboBox Grid.Column="0"  SelectedIndex="0">
-            <ComboBoxItem>Bot 1</ComboBoxItem>
-            <ComboBoxItem>Bot 2</ComboBoxItem>
-            <ComboBoxItem>Bot 3</ComboBoxItem>
-          </ComboBox>
-          <ComboBox Grid.Column="1" SelectedIndex="0">
-            <ComboBoxItem>480p</ComboBoxItem>
-            <ComboBoxItem>720p</ComboBoxItem>
-            <ComboBoxItem>1080p</ComboBoxItem>
-          </ComboBox>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0"  x:Name="Search" Text="{Binding SearchTerm}" />
+            <Button Grid.Column="1" Command="{Binding Search}" Content="Search" />
         </Grid>
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-          <ItemsControl Items="{Binding Packs}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-                  <Grid>
-                    <Grid.RowDefinitions>
-                      <RowDefinition />
-                      <RowDefinition />
-                    </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="0.45*" />
-                      <ColumnDefinition Width="0.45*" />
-                      <ColumnDefinition Width="0.1*" />
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0"  SelectedIndex="0">
+                        <ComboBoxItem>Bot 1</ComboBoxItem>
+                        <ComboBoxItem>Bot 2</ComboBoxItem>
+                        <ComboBoxItem>Bot 3</ComboBoxItem>
+                    </ComboBox>
+                    <ComboBox Grid.Column="1" SelectedIndex="0">
+                        <ComboBoxItem>480p</ComboBoxItem>
+                        <ComboBoxItem>720p</ComboBoxItem>
+                        <ComboBoxItem>1080p</ComboBoxItem>
+                    </ComboBox>
+                </Grid>
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl Items="{Binding Packs}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition />
+                                            <RowDefinition />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="0.45*" />
+                                            <ColumnDefinition Width="0.45*" />
+                                            <ColumnDefinition Width="0.1*" />
+                                        </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Resolution}"/>
-                    <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding Bot}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding PackNumber}"/>
-                    <Button Grid.RowSpan="2" Grid.Column="2" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
-                  </Grid>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ScrollViewer>
-      </Grid>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Resolution}"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding Bot}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding PackNumber}"/>
+                                        <ProgressBar  Grid.RowSpan="2" Grid.Column="2" Value="{Binding Progress}" Minimum="0" Maximum="100">
+                                            <ProgressBar.IsVisible>
+                                                <MultiBinding Converter="{StaticResource MultiValueAndConverter}">
+                                                    <Binding Path="Downloaded"/>
+                                                    <Binding Path="NotDownloaded"/>
+                                                </MultiBinding>
+                                            </ProgressBar.IsVisible>
+                                        </ProgressBar>
+                                        <Button Grid.RowSpan="2" Grid.Column="2" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding NotDownloaded}"/>
+                                        <TextBlock  Grid.RowSpan="2" Grid.Column="2" IsVisible="{Binding Downloaded}" Text="YES"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+        <StackPanel Background="DarkGray"  Grid.Row="2">
+            <Button x:Name="AvailableDownloads" HorizontalAlignment="Right" Content="Available Downloads" />
+        </StackPanel>
     </Grid>
-    <StackPanel Background="DarkGray"  Grid.Row="2">
-      <Button x:Name="AvailableDownloads" HorizontalAlignment="Right" Content="Available Downloads" />
-    </StackPanel>
-  </Grid>
 </UserControl>

@@ -18,7 +18,7 @@ namespace Module.HorribleSubs.Avalonia
         public async Task LoadAsync(Channel channel)
         {
             client = new HorribleSubsService.HorribleSubsServiceClient(channel);
-            ViewModel = new HorribleSubsViewModel(client);
+            ViewModel = new HorribleSubsViewModel(client, new Services.DownloadStatusService(client));
             await Task.CompletedTask;
         }
     }
