@@ -23,10 +23,24 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
         private readonly List<PackItem> relevantUpdatingPacks = new List<PackItem>();
         private readonly SemaphoreSlim packSemaphore = new SemaphoreSlim(1, 1);
         private string searchTerm;
+        private string selectedResolution;
+        private string selectedBot;
 
-        public string SelectedResolution { get; set; } = "480p";
+        public string SelectedResolution
+        {
+            get => selectedResolution;
+            set => this.RaiseAndSetIfChanged(ref this.selectedResolution, value);
+        }
 
-        public string SelectedBot { get; set; } = "CR-ARUTHA|NEW";
+        public string SelectedBot 
+        { 
+            get => selectedBot; 
+            set => this.RaiseAndSetIfChanged(ref this.selectedBot, value); 
+        }
+
+        public AvaloniaList<string> Bots { get; } = new AvaloniaList<string>();
+
+        public AvaloniaList<string> Resolutions { get; } = new AvaloniaList<string>();
 
 
         public string SearchTerm
@@ -116,7 +130,39 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
                     try
                     {
                         this.Packs.Clear();
+                        this.SelectedBot = null;
+                        this.SelectedResolution = null;
+                        this.Bots.Clear();
+                        this.Resolutions.Clear();
+                        var bots = new List<string>();
+                        var resolutions = new List<string>();
                         var packItems = PackItem.FromSearchResults(result.SearchResults);
+
+                        foreach (var pack in packItems)
+                        {
+                            foreach (var bot in pack.Bots)
+                            {
+                                if (!bots.Contains(bot.Name))
+                                {
+                                    bots.Add(bot.Name);
+                                }
+
+                                foreach (var resolution in bot.Resolutions)
+                                {
+                                    if (!resolutions.Contains(resolution.Resolution))
+                                    {
+                                        resolutions.Add(resolution.Resolution);
+                                    }
+                                }
+                            }
+                        }
+
+                        this.Bots.AddRange(bots.OrderBy(x => x));
+                        this.Resolutions.AddRange(resolutions.OrderBy(x => x));
+
+                        this.SelectedBot = this.Bots.FirstOrDefault();
+                        this.SelectedResolution = this.Resolutions.FirstOrDefault();
+
                         this.Packs.AddRange(packItems);
                     }
                     finally
@@ -233,6 +279,7 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
     [DebuggerDisplay("{Resolution}")]
     public class ResolutionInformation : ReactiveObject
     {
+        private const string DefaultResolution = "480p";
         private static readonly Regex ResolutionRegex = new Regex("(480p|720p|1080p)");
 
         public string Resolution { get; }
@@ -249,7 +296,8 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
 
         public static string GetResolution(string fullName)
         {
-            return ResolutionRegex.Match(fullName).Value;
+            var result = ResolutionRegex.Match(fullName).Value;
+            return string.IsNullOrEmpty(result) ? DefaultResolution : result;
         }
     }
 

@@ -38,16 +38,8 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0"  SelectedIndex="0">
-                        <ComboBoxItem>Bot 1</ComboBoxItem>
-                        <ComboBoxItem>Bot 2</ComboBoxItem>
-                        <ComboBoxItem>Bot 3</ComboBoxItem>
-                    </ComboBox>
-                    <ComboBox Grid.Column="1" SelectedIndex="0">
-                        <ComboBoxItem>480p</ComboBoxItem>
-                        <ComboBoxItem>720p</ComboBoxItem>
-                        <ComboBoxItem>1080p</ComboBoxItem>
-                    </ComboBox>
+                    <ComboBox Grid.Column="0"  SelectedItem="{Binding SelectedBot}" Items="{Binding Bots}"/>
+                    <ComboBox Grid.Column="1" SelectedItem="{Binding SelectedResolution}" Items="{Binding Resolutions}"/>
                 </Grid>
                 <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl Items="{Binding Packs}">
