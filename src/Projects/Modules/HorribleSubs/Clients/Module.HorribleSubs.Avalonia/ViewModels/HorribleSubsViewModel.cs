@@ -7,9 +7,11 @@ using ReactiveUI;
 using SharpDX.Direct2D1;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Module.HorribleSubs.Avalonia.ViewModels
@@ -18,7 +20,13 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
     {
         private readonly HorribleSubsService.HorribleSubsServiceClient client;
         private readonly DownloadStatusService downloadStatusService;
+        private readonly List<PackItem> relevantUpdatingPacks = new List<PackItem>();
+        private readonly SemaphoreSlim packSemaphore = new SemaphoreSlim(1, 1);
         private string searchTerm;
+
+        public string SelectedResolution { get; set; } = "480p";
+
+        public string SelectedBot { get; set; } = "CR-ARUTHA|NEW";
 
 
         public string SearchTerm
@@ -38,15 +46,50 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
             this.downloadStatusService = downloadStatusService;
             this.downloadStatusService.OnStatusUpdate += async () =>
             {
+                await this.packSemaphore.WaitAsync();
 
-                foreach (var pack in this.Packs)
+                try
                 {
-                    var status = await this.downloadStatusService.GetStatus(pack.OriginalName);
-                    if (status != null)
+                    if (this.relevantUpdatingPacks.Count == 0)
                     {
-                        pack.Size = (long)status.Filesize;
-                        pack.DownloadedBytes = !status.Downloaded ? (long)status.DownloadedBytes : (long)status.Filesize;
+                        this.relevantUpdatingPacks.AddRange(this.Packs);
                     }
+
+                    var toRemoved = new List<PackItem>();
+
+                    foreach (var pack in this.relevantUpdatingPacks)
+                    {
+                        var selectedBot = pack.Bots.FirstOrDefault(x => x.Name == this.SelectedBot);
+
+                        if (selectedBot != null)
+                        {
+                            var selectedResolution = selectedBot.Resolutions.FirstOrDefault(x => x.Resolution == this.SelectedResolution);
+                            if (selectedResolution != null)
+                            {
+                                var status = await this.downloadStatusService.GetStatus(selectedResolution.FullName);
+                                if (status != null)
+                                {
+                                    pack.DownloadInformation.Size = (long)status.Filesize;
+                                    pack.DownloadInformation.DownloadedBytes = !status.Downloaded ? (long)status.DownloadedBytes : (long)status.Filesize;
+
+                                    if (status.Downloaded)
+                                    {
+                                        toRemoved.Add(pack);
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
+                    foreach (var toRemovedItem in toRemoved)
+                    {
+                        this.relevantUpdatingPacks.Remove(toRemovedItem);
+                    }
+                }
+                finally
+                {
+                    this.packSemaphore.Release();
                 }
             };
         }
@@ -67,35 +110,103 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
                     SearchTerm = this.SearchTerm
                 });
 
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    this.Packs.Clear();
-                    this.Packs.AddRange(result.SearchResults.Select(x => new PackItem(x.FileName, x.PackageNumber.ToString(), x.BotName, x.FileSize, -1)));
+                    await this.packSemaphore.WaitAsync();
+                    try
+                    {
+                        this.Packs.Clear();
+                        var packItems = PackItem.FromSearchResults(result.SearchResults);
+                        this.Packs.AddRange(packItems);
+                    }
+                    finally
+                    {
+                        this.packSemaphore.Release();
+                    }
                 });
 
             }
         }
     }
 
+    [DebuggerDisplay("{Name}")]
     public class PackItem : ReactiveObject
     {
-        private static readonly Regex ResolutionRegex = new Regex("(480p|720p|1080p)");
-        private static readonly Regex BracketsRegex = new Regex("\\[.*?\\]");
-        private static readonly Regex BracesRegex = new Regex("\\(.*?\\)");
-        private long downloadedBytes;
+        private static readonly Regex SanitizeNameRegex = new Regex("(\\[.*?\\]|\\(.*?\\)|-|\\.mkv|\\.mp4|\\{.*?\\])");
+        private static readonly Regex WhitespaceRegex = new Regex("[ ]{2,}");
+
+        public AvaloniaList<BotInformation> Bots { get; } = new AvaloniaList<BotInformation>();
+
+        public PackDownloadInformation DownloadInformation { get; }
 
         public string Name { get; }
 
-        public string OriginalName { get; }
+        public PackItem(string name, long size)
+        {
+            this.DownloadInformation = new PackDownloadInformation()
+            {
+                DownloadedBytes = -1,
+                Size = size,
+            };
 
-        public string PackNumber { get; }
+            this.Name = name;
+        }
 
-        public string Bot { get; }
+        public static string SanitizeName(string name)
+        {
+            name = SanitizeNameRegex.Replace(name, string.Empty);
+            name = WhitespaceRegex.Replace(name, " ");
+            name = name.Trim();
 
-        public string Resolution { get; }
+            return name;
+        }
 
+        public static PackItem[] FromSearchResults(IEnumerable<Horriblesubs.SearchResponse.Types.SearchResult> results)
+        {
+            var packItems = new Dictionary<string, PackItem>();
+
+            foreach (var result in results)
+            {
+                var sanitizedName = SanitizeName(result.FileName);
+
+                if (!packItems.TryGetValue(sanitizedName, out var packItem))
+                {
+                    packItem = new PackItem(sanitizedName, result.FileSize);
+                    packItems[sanitizedName] = packItem;
+                }
+
+                var botInformation = packItem.Bots.FirstOrDefault(x => x.Name == result.BotName);
+
+                if (botInformation == null)
+                {
+                    botInformation = new BotInformation()
+                    {
+                        Name = result.BotName,
+                    };
+                    packItem.Bots.Add(botInformation);
+                }
+
+                var resolution = ResolutionInformation.GetResolution(result.FileName);
+
+                var resolutionInformation = botInformation.Resolutions.FirstOrDefault(x => x.Resolution == resolution);
+
+                if (resolutionInformation == null)
+                {
+                    resolutionInformation = new ResolutionInformation(result.FileName, result.PackageNumber.ToString());
+                    botInformation.Resolutions.Add(resolutionInformation);
+                }
+            }
+
+            return packItems.Values.ToArray();
+        }
+
+    }
+
+    public class PackDownloadInformation : ReactiveObject
+    {
         public long Size { get; set; }
+
+        private long downloadedBytes;
 
         public long DownloadedBytes
         {
@@ -117,24 +228,36 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
         public bool Downloaded => this.DownloadedBytes == this.Size;
 
         public bool NotDownloaded => this.DownloadedBytes == -1;
+    }
 
-        public PackItem(string name, string packNumber, string bot, long size, long downloadedBytes)
+    [DebuggerDisplay("{Resolution}")]
+    public class ResolutionInformation : ReactiveObject
+    {
+        private static readonly Regex ResolutionRegex = new Regex("(480p|720p|1080p)");
+
+        public string Resolution { get; }
+
+        public string PackNumber { get; }
+
+        public string FullName { get; set; }
+
+        public ResolutionInformation(string fullName, string PackNumber)
         {
-            this.OriginalName = name;
-            this.Name = name;
-            foreach (var match in BracesRegex.Matches(this.Name).Concat(BracketsRegex.Matches(this.Name)))
-            {
-                this.Name = this.Name.Replace(match.ToString(), string.Empty);
-            }
-
-            this.Name = this.Name.Trim();
-
-            this.Resolution = ResolutionRegex.Match(name).Value;
-
-            this.PackNumber = packNumber;
-            this.Bot = bot;
-            this.Size = size;
-            this.DownloadedBytes = downloadedBytes;
+            this.Resolution = GetResolution(fullName);
+            this.FullName = fullName;
         }
+
+        public static string GetResolution(string fullName)
+        {
+            return ResolutionRegex.Match(fullName).Value;
+        }
+    }
+
+    [DebuggerDisplay("{Name}")]
+    public class BotInformation : ReactiveObject
+    {
+        public string Name { get; set; }
+
+        public AvaloniaList<ResolutionInformation> Resolutions { get; } = new AvaloniaList<ResolutionInformation>();
     }
 }

@@ -1,0 +1,21 @@
+﻿<ResourceDictionary  xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    <DataTemplate x:Key="Checkmark">
+        <Viewbox Stretch="Uniform">
+            <Canvas Name="svg18" Width="100" Height="100" Canvas.Left="0" Canvas.Top="0">
+                <Canvas.RenderTransform>
+                    <TranslateTransform X="0" Y="0"/>
+                </Canvas.RenderTransform>
+                <Canvas.Resources/>
+                <!--Unknown tag: metadata-->
+                <!--Unknown tag: sodipodi:namedview-->
+                <Canvas Name="g16">
+                    <Path Name="path12" Fill="#FF000000" Data="M65.62 34.74 45.09 56.26l-11.16-9.8A3 3 0 0 0 30 51L43.3 62.67a3 3 0 0 0 4.15-.18L70 38.88a3 3 0 1 0-4.34-4.14Z"/>
+                    <Path Name="path14" Fill="#FF000000" Data="M50 11A39 39 0 1 0 89 50 39 39 0 0 0 50 11ZM50 83A33 33 0 1 1 83 50 33 33 0 0 1 50 83Z"/>
+                </Canvas>
+            </Canvas>
+        </Viewbox>
+    </DataTemplate>
+</ResourceDictionary>

@@ -6,7 +6,12 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.HorribleSubs.Avalonia.Views.HorribleSubsView">
     <UserControl.Resources>
-        <converter:MultiValueAndConverter x:Key="MultiValueAndConverter"/>
+        <ResourceDictionary>
+            <converter:MultiValueAndConverter x:Key="MultiValueAndConverter"/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude  Source="avares://Module.HorribleSubs.Avalonia/Icons/Icons.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -51,29 +56,26 @@
                                 <Border Padding="5" BorderBrush="Black" BorderThickness="2">
                                     <Grid>
                                         <Grid.RowDefinitions>
-                                            <RowDefinition />
-                                            <RowDefinition />
+                                            <RowDefinition Height="16" />
+                                            <RowDefinition Height="16"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="0.45*" />
-                                            <ColumnDefinition Width="0.45*" />
+                                            <ColumnDefinition Width="0.9*" />
                                             <ColumnDefinition Width="0.1*" />
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Resolution}"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding Bot}"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Text="{Binding PackNumber}"/>
-                                        <ProgressBar  Grid.RowSpan="2" Grid.Column="2" Value="{Binding Progress}" Minimum="0" Maximum="100">
+                                        <TextBlock ZIndex="1"  Grid.Row="0" Grid.Column="0" Text="{Binding Name}"/>
+                                        <TextBlock ZIndex="1"  Grid.Row="1" Grid.Column="0" Text="{Binding Resolution}"/>
+                                        <ProgressBar ZIndex="0"  Background="Transparent" Grid.RowSpan="2" Grid.Column="0"  Value="{Binding Progress}" Minimum="0" Maximum="100">
                                             <ProgressBar.IsVisible>
                                                 <MultiBinding Converter="{StaticResource MultiValueAndConverter}">
-                                                    <Binding Path="Downloaded"/>
-                                                    <Binding Path="NotDownloaded"/>
+                                                    <Binding Path="DownloadInformation.Downloaded"/>
+                                                    <Binding Path="DownloadInformation.NotDownloaded"/>
                                                 </MultiBinding>
                                             </ProgressBar.IsVisible>
                                         </ProgressBar>
-                                        <Button Grid.RowSpan="2" Grid.Column="2" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding NotDownloaded}"/>
-                                        <TextBlock  Grid.RowSpan="2" Grid.Column="2" IsVisible="{Binding Downloaded}" Text="YES"/>
+                                        <Button ZIndex="1"  Grid.RowSpan="2" Grid.Column="1" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding !DownloadInformation.Downloaded}"/>
+                                        <ContentControl Grid.RowSpan="2" Grid.Column="1" Content="Hello World" ContentTemplate="{StaticResource Checkmark}"  IsVisible="{Binding DownloadInformation.Downloaded}"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
