@@ -58,7 +58,7 @@
 
                                         <TextBlock ZIndex="1"  Grid.Row="0" Grid.Column="0" Text="{Binding Name}"/>
                                         <TextBlock ZIndex="1"  Grid.Row="1" Grid.Column="0" Text="{Binding Resolution}"/>
-                                        <ProgressBar ZIndex="0"  Background="Transparent" Grid.RowSpan="2" Grid.Column="0"  Value="{Binding Progress}" Minimum="0" Maximum="100">
+                                        <ProgressBar ZIndex="0"  Background="Transparent" Grid.RowSpan="2" Grid.Column="0"  Value="{Binding DownloadInformation.Progress}" Minimum="0" Maximum="100">
                                             <ProgressBar.IsVisible>
                                                 <MultiBinding Converter="{StaticResource MultiValueAndConverter}">
                                                     <Binding Path="DownloadInformation.Downloaded"/>
@@ -66,7 +66,7 @@
                                                 </MultiBinding>
                                             </ProgressBar.IsVisible>
                                         </ProgressBar>
-                                        <Button ZIndex="1"  Grid.RowSpan="2" Grid.Column="1" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding !DownloadInformation.Downloaded}"/>
+                                        <Button ZIndex="1"  Grid.RowSpan="2" Grid.Column="1" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding !DownloadInformation.Downloaded}" Command="{Binding Download}" />
                                         <ContentControl Grid.RowSpan="2" Grid.Column="1" Content="Hello World" ContentTemplate="{StaticResource Checkmark}"  IsVisible="{Binding DownloadInformation.Downloaded}"/>
                                     </Grid>
                                 </Border>

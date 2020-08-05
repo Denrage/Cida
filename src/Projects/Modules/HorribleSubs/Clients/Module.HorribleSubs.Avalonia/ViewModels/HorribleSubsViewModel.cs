@@ -32,10 +32,10 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
             set => this.RaiseAndSetIfChanged(ref this.selectedResolution, value);
         }
 
-        public string SelectedBot 
-        { 
-            get => selectedBot; 
-            set => this.RaiseAndSetIfChanged(ref this.selectedBot, value); 
+        public string SelectedBot
+        {
+            get => selectedBot;
+            set => this.RaiseAndSetIfChanged(ref this.selectedBot, value);
         }
 
         public AvaloniaList<string> Bots { get; } = new AvaloniaList<string>();
@@ -115,6 +115,29 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
             await Task.CompletedTask;
         }
 
+        public async Task Download(PackItem pack)
+        {
+            var bot = pack.Bots.FirstOrDefault(x => x.Name == this.SelectedBot);
+
+            if (bot != null)
+            {
+                var resolution = bot.Resolutions.FirstOrDefault(x => x.Resolution == this.SelectedResolution);
+
+                if (resolution != null)
+                {
+                    await this.client.DownloadAsync(new DownloadRequest()
+                    {
+                        DownloadRequest_ = new DownloadRequest.Types.Request()
+                        {
+                            BotName = this.SelectedBot,
+                            FileName = resolution.FullName,
+                            PackageNumber = int.Parse(resolution.PackNumber),
+                        }
+                    });
+                }
+            }
+        }
+
         public async Task Search()
         {
             if (!string.IsNullOrEmpty(this.SearchTerm))
@@ -136,7 +159,7 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
                         this.Resolutions.Clear();
                         var bots = new List<string>();
                         var resolutions = new List<string>();
-                        var packItems = PackItem.FromSearchResults(result.SearchResults);
+                        var packItems = PackItem.FromSearchResults(result.SearchResults, async packItem => await this.Download(packItem));
 
                         foreach (var pack in packItems)
                         {
@@ -180,6 +203,7 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
     {
         private static readonly Regex SanitizeNameRegex = new Regex("(\\[.*?\\]|\\(.*?\\)|-|\\.mkv|\\.mp4|\\{.*?\\])");
         private static readonly Regex WhitespaceRegex = new Regex("[ ]{2,}");
+        private readonly Func<PackItem, Task> onDownload;
 
         public AvaloniaList<BotInformation> Bots { get; } = new AvaloniaList<BotInformation>();
 
@@ -187,7 +211,7 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
 
         public string Name { get; }
 
-        public PackItem(string name, long size)
+        public PackItem(string name, long size, Func<PackItem, Task> onDownload)
         {
             this.DownloadInformation = new PackDownloadInformation()
             {
@@ -196,6 +220,12 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
             };
 
             this.Name = name;
+            this.onDownload = onDownload;
+        }
+
+        public async Task Download()
+        {
+            await this.onDownload.Invoke(this);
         }
 
         public static string SanitizeName(string name)
@@ -207,7 +237,7 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
             return name;
         }
 
-        public static PackItem[] FromSearchResults(IEnumerable<Horriblesubs.SearchResponse.Types.SearchResult> results)
+        public static PackItem[] FromSearchResults(IEnumerable<Horriblesubs.SearchResponse.Types.SearchResult> results, Func<PackItem, Task> onDownload)
         {
             var packItems = new Dictionary<string, PackItem>();
 
@@ -217,7 +247,7 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
 
                 if (!packItems.TryGetValue(sanitizedName, out var packItem))
                 {
-                    packItem = new PackItem(sanitizedName, result.FileSize);
+                    packItem = new PackItem(sanitizedName, result.FileSize, onDownload);
                     packItems[sanitizedName] = packItem;
                 }
 
@@ -288,10 +318,11 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
 
         public string FullName { get; set; }
 
-        public ResolutionInformation(string fullName, string PackNumber)
+        public ResolutionInformation(string fullName, string packNumber)
         {
             this.Resolution = GetResolution(fullName);
             this.FullName = fullName;
+            this.PackNumber = packNumber;
         }
 
         public static string GetResolution(string fullName)
