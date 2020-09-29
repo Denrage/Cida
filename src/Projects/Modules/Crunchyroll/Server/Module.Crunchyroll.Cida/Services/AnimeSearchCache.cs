@@ -16,23 +16,28 @@ namespace Module.Crunchyroll.Cida.Services
 {
     public class AnimeSearchCache
     {
+        private readonly string connectionString;
         private readonly CrunchyrollApiService apiService;
         private const string SearchEndpoint = "https://crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates";
 
         private readonly List<string> ignoreIds = new List<string>();
-        private CrunchyrollDbContext context;
 
         public List<SearchItem> Items { get; set; }
 
         public AnimeSearchCache(string connectionString, CrunchyrollApiService apiService)
         {
+            this.connectionString = connectionString;
             this.apiService = apiService;
-            this.context = new CrunchyrollDbContext(connectionString);
-            this.context.Database.EnsureCreated();
-            this.Refresh();
+            using (var context = this.GetContext())
+            {
+                context.Database.EnsureCreated();
+            }
+            Task.Run(async () => await this.Refresh());
         }
 
-        public void Refresh()
+        public CrunchyrollDbContext GetContext() => new CrunchyrollDbContext(this.connectionString);
+
+        public async Task Refresh()
         {
             using var webClient = new WebClient();
             var result = webClient.DownloadString(SearchEndpoint);
@@ -59,7 +64,9 @@ namespace Module.Crunchyroll.Cida.Services
             var threshold = ratios.Max(x => x.ratio) * percentualThreshold;
 
             const int maxSearchResults = 50;
-            
+
+            using var context = this.GetContext();
+            context.ChangeTracker.AutoDetectChangesEnabled = false;
             foreach (var item in ratios
                 .Where(x => x.ratio >= threshold)
                 .OrderByDescending(x => x.ratio)
@@ -67,8 +74,9 @@ namespace Module.Crunchyroll.Cida.Services
                 .Take(maxSearchResults))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                
-                var cacheItem = await this.context.Animes
+
+
+                var cacheItem = await context.Animes
                     .Include(x => x.Landscape)
                     .Include(x => x.Portrait)
                     .FirstOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
@@ -84,8 +92,7 @@ namespace Module.Crunchyroll.Cida.Services
                     if (info != null)
                     {
                         result.Add(info.ToDatabaseModel());
-                        await this.context.Animes.AddAsync(info.ToDatabaseModel(), cancellationToken);
-                        await this.context.SaveChangesAsync(cancellationToken);
+                        await context.Animes.AddAsync(info.ToDatabaseModel(), cancellationToken);
                     }
                     else
                     {
@@ -94,14 +101,20 @@ namespace Module.Crunchyroll.Cida.Services
                 }
             }
 
+            context.ChangeTracker.DetectChanges();
+            await context.SaveChangesAsync(cancellationToken);
+
+
             return result;
         }
 
         public async Task<IEnumerable<Episode>> GetEpisodesAsync(string collectionId, CancellationToken cancellationToken = default)
         {
             var result = new List<Episode>();
+            using var context = this.GetContext();
+            context.ChangeTracker.AutoDetectChangesEnabled = false;
 
-            var collection = await this.context.Collections
+            var collection = await context.Collections
                 .Include(x => x.Episodes)
                 .ThenInclude(x => x.Image)
                 .FirstOrDefaultAsync(x => x.Id == collectionId, cancellationToken);
@@ -109,8 +122,7 @@ namespace Module.Crunchyroll.Cida.Services
             if (collection is null)
             {
                 collection = (await this.apiService.GetCollectionAsync(collectionId, cancellationToken)).ToDatabaseModel();
-                await this.context.Collections.AddAsync(collection, cancellationToken);
-                await this.context.SaveChangesAsync(cancellationToken);
+                await context.Collections.AddAsync(collection, cancellationToken);
             }
 
             if (collection.Episodes != null && collection.Episodes.Count > 0)
@@ -122,9 +134,11 @@ namespace Module.Crunchyroll.Cida.Services
                 var episodes = (await this.apiService.GetEpisodes(collectionId, cancellationToken)).Select(x => x.ToDatabaseModel())
                     .ToArray();
                 result.AddRange(episodes);
-                await this.context.Episodes.AddRangeAsync(episodes);
-                await this.context.SaveChangesAsync(cancellationToken);
+                await context.Episodes.AddRangeAsync(episodes);
             }
+
+            context.ChangeTracker.DetectChanges();
+            await context.SaveChangesAsync(cancellationToken);
 
             return result;
         }
@@ -132,16 +146,17 @@ namespace Module.Crunchyroll.Cida.Services
         public async Task<IEnumerable<Collection>> GetCollectionsAsync(string seriesId, CancellationToken cancellationToken = default)
         {
             var result = new List<Collection>();
+            using var context = this.GetContext();
+            context.ChangeTracker.AutoDetectChangesEnabled = false;
 
-            var series = await this.context.Animes
+            var series = await context.Animes
                 .Include(x => x.Collections)
                 .FirstOrDefaultAsync(x => x.Id == seriesId, cancellationToken);
 
             if (series is null)
             {
                 series = (await this.apiService.GetAnimeDetailsAsync(seriesId, cancellationToken)).ToDatabaseModel();
-                await this.context.Animes.AddAsync(series, cancellationToken);
-                await this.context.SaveChangesAsync(cancellationToken);
+                await context.Animes.AddAsync(series, cancellationToken);
             }
 
             if (series.Collections != null && series.Collections.Count > 0)
@@ -153,10 +168,12 @@ namespace Module.Crunchyroll.Cida.Services
                 var collections = (await this.apiService.GetAnimeCollectionsAsync(seriesId, cancellationToken))
                     .Select(x => x.ToDatabaseModel()).ToArray();
                 result.AddRange(collections);
-                await this.context.Collections.AddRangeAsync(collections);
-                await this.context.SaveChangesAsync(cancellationToken);
+                await context.Collections.AddRangeAsync(collections);
             }
 
+            context.ChangeTracker.DetectChanges();    
+            await context.SaveChangesAsync(cancellationToken);
+            
             return result;
         }
 
