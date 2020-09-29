@@ -24,12 +24,12 @@ namespace Cida.Client.Avalonia
             {
                 desktop.ShutdownMode = ShutdownMode.OnLastWindowClose;
                 var viewModel = new LauncherWindowViewModel(this.connectionService);
-                viewModel.ConnectionSuccessfull += () =>
+                viewModel.ModuleSelected += viewModel =>
                 {
                     var oldWindow = desktop.MainWindow;
                     desktop.MainWindow = new MainWindow()
                     {
-                        DataContext = new MainWindowViewModel(this.connectionService),
+                        DataContext = new MainWindowViewModel(viewModel),
                     };
                     desktop.MainWindow.Show();
                     oldWindow.Close();

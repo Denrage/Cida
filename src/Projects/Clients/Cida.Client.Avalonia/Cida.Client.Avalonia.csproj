@@ -16,11 +16,13 @@
   <ItemGroup>
     <AvaloniaResource Remove="Views\LauncherWindow.xaml" />
     <AvaloniaResource Remove="Views\Launcher\ConnectionScreenView.xaml" />
+    <AvaloniaResource Remove="Views\Launcher\ModuleSelectScreenView.xaml" />
     <AvaloniaResource Remove="Views\Launcher\StatusScreenView.xaml" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Views\LauncherWindow.xaml" />
     <None Remove="Views\Launcher\ConnectionScreenView.xaml" />
+    <None Remove="Views\Launcher\ModuleSelectScreenView.xaml" />
     <None Remove="Views\Launcher\StatusScreenView.xaml" />
   </ItemGroup>
   <ItemGroup>
@@ -37,6 +39,9 @@
     <Protobuf Include="../../../protos/server.proto" Link="server.proto" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Views\Launcher\ModuleSelectScreenView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Include="Views\Launcher\LauncherWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
@@ -55,6 +60,9 @@
     <ProjectReference Include="..\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\Launcher\ConnectionScreenView - Copy.xaml.cs">
+      <DependentUpon>ConnectionScreenView.xaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\Launcher\ConnectionScreenView.xaml.cs">
       <DependentUpon>ConnectionScreenView.xaml</DependentUpon>
     </Compile>
