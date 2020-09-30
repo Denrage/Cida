@@ -4,5 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250" Width="400" Height="250"
         x:Class="Cida.Client.Avalonia.Views.Launcher.LauncherWindow"
+        Background="Transparent"
+        TransparencyLevelHint="Blur"
         Title="Module Selection" Content="{Binding Content}">
 </Window>

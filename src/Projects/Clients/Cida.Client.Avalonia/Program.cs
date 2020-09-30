@@ -1,5 +1,5 @@
 ﻿using Avalonia;
-using Avalonia.Logging.Serilog;
+using Avalonia.Platform;
 using Avalonia.ReactiveUI;
 
 namespace Cida.Client.Avalonia

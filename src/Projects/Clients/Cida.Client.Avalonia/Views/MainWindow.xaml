@@ -6,19 +6,15 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Cida.Client.Avalonia.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
+        TransparencyLevelHint="AcrylicBlur"
         Title="Cida.Client.Avalonia">
-
-  <Design.DataContext>
+    <Window.Background>
+        <SolidColorBrush Color="Gray" Opacity="0.5"/>
+    </Window.Background>
+<Design.DataContext>
     <vm:MainWindowViewModel/>
   </Design.DataContext>
-  <Grid>
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="Auto" />
-      <ColumnDefinition />
-    </Grid.ColumnDefinitions>
-
     <ContentControl Grid.Column="1" Content="{Binding Content}"/>
-  </Grid>
 
 
 </Window>
