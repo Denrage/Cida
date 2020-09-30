@@ -5,6 +5,9 @@
              xmlns:converter="clr-namespace:Module.HorribleSubs.Avalonia.Converter"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.HorribleSubs.Avalonia.Views.HorribleSubsView">
+    <UserControl.Styles>
+        <StyleInclude Source="avares://Module.HorribleSubs.Avalonia/Assets/SideBar.xaml"/>
+    </UserControl.Styles>
     <UserControl.Resources>
         <ResourceDictionary>
             <converter:MultiValueAndConverter x:Key="MultiValueAndConverter"/>
@@ -13,71 +16,94 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0"  x:Name="Search" Text="{Binding SearchTerm}" />
-            <Button Grid.Column="1" Command="{Binding Search}" Content="Search" />
-        </Grid>
-        <Grid Grid.Row="1">
-            <Grid>
+    <TabControl Classes="sidebar" Name="Sidebar" Grid.Column="0">
+        <TabItem Header="Search">
+            <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition/>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0"  SelectedItem="{Binding SelectedBot}" Items="{Binding Bots}"/>
-                    <ComboBox Grid.Column="1" SelectedItem="{Binding SelectedResolution}" Items="{Binding Resolutions}"/>
+                    <TextBox Grid.Column="0"  x:Name="Search" Text="{Binding SearchTerm}" />
+                    <Button Grid.Column="1" Command="{Binding Search}" Content="Search" />
                 </Grid>
-                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-                    <ItemsControl Items="{Binding Packs}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="16" />
-                                            <RowDefinition Height="16"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="0.9*" />
-                                            <ColumnDefinition Width="0.1*" />
-                                        </Grid.ColumnDefinitions>
+                <Grid Grid.Row="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0"  SelectedItem="{Binding SelectedBot}" Items="{Binding Bots}"/>
+                            <ComboBox Grid.Column="1" SelectedItem="{Binding SelectedResolution}" Items="{Binding Resolutions}"/>
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl Items="{Binding Packs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="16" />
+                                                    <RowDefinition Height="16"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="0.9*" />
+                                                    <ColumnDefinition Width="0.1*" />
+                                                </Grid.ColumnDefinitions>
 
-                                        <TextBlock ZIndex="1"  Grid.Row="0" Grid.Column="0" Text="{Binding Name}"/>
-                                        <TextBlock ZIndex="1"  Grid.Row="1" Grid.Column="0" Text="{Binding Resolution}"/>
-                                        <ProgressBar ZIndex="0"  Background="Transparent" Grid.RowSpan="2" Grid.Column="0"  Value="{Binding DownloadInformation.Progress}" Minimum="0" Maximum="100">
-                                            <ProgressBar.IsVisible>
-                                                <MultiBinding Converter="{StaticResource MultiValueAndConverter}">
-                                                    <Binding Path="DownloadInformation.Downloaded"/>
-                                                    <Binding Path="DownloadInformation.NotDownloaded"/>
-                                                </MultiBinding>
-                                            </ProgressBar.IsVisible>
-                                        </ProgressBar>
-                                        <Button ZIndex="1"  Grid.RowSpan="2" Grid.Column="1" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding !DownloadInformation.Downloaded}" Command="{Binding Download}" />
-                                        <ContentControl Grid.RowSpan="2" Grid.Column="1" Content="Hello World" ContentTemplate="{StaticResource Checkmark}"  IsVisible="{Binding DownloadInformation.Downloaded}"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                                                <TextBlock ZIndex="1"  Grid.Row="0" Grid.Column="0" Text="{Binding Name}"/>
+                                                <TextBlock ZIndex="1"  Grid.Row="1" Grid.Column="0" Text="{Binding Resolution}"/>
+                                                <ProgressBar ZIndex="0"  Background="Transparent" Grid.RowSpan="2" Grid.Column="0"  Value="{Binding DownloadInformation.Progress}" Minimum="0" Maximum="100">
+                                                    <ProgressBar.IsVisible>
+                                                        <MultiBinding Converter="{StaticResource MultiValueAndConverter}">
+                                                            <Binding Path="DownloadInformation.Downloaded"/>
+                                                            <Binding Path="DownloadInformation.NotDownloaded"/>
+                                                        </MultiBinding>
+                                                    </ProgressBar.IsVisible>
+                                                </ProgressBar>
+                                                <Button ZIndex="1"  Grid.RowSpan="2" Grid.Column="1" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding !DownloadInformation.Downloaded}" Command="{Binding Download}" />
+                                                <ContentControl Grid.RowSpan="2" Grid.Column="1" Content="Hello World" ContentTemplate="{StaticResource Checkmark}"  IsVisible="{Binding DownloadInformation.Downloaded}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
             </Grid>
-        </Grid>
-        <StackPanel Background="DarkGray"  Grid.Row="2">
-            <Button x:Name="AvailableDownloads" HorizontalAlignment="Right" Content="Available Downloads" />
-        </StackPanel>
-    </Grid>
+        </TabItem>
+        <TabItem Header="Available Downloads">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+            <Button Content="Refresh" Command="{Binding RefreshAvailableDownloads}"/>
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl Items="{Binding AvailableDownloads}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                                <Grid>
+                                    <TextBlock Text="{Binding Name}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            </Grid>
+        </TabItem>
+    </TabControl>
+
 </UserControl>

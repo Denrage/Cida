@@ -78,6 +78,18 @@ namespace Module.HorribleSubs.Cida
                 };
             }
 
+            public override async Task<DownloadedFilesResponse> DownloadedFiles(DownloadedFilesRequest request, ServerCallContext context)
+            {
+                using(var databaseContext = this.getContext())
+                {
+                    var downloads = await databaseContext.Downloads.ToArrayAsync();
+                    return new DownloadedFilesResponse(new DownloadedFilesResponse()
+                    {
+                        Files = { downloads.Select(x => new DownloadedFilesResponse.Types.File() { Filename = x.Name, Filesize = x.Size }).ToArray() },
+                    });
+                }
+            }
+
             public override async Task<DownloadResponse> Download(DownloadRequest request, ServerCallContext context)
             {
                 await this.downloadService.CreateDownloader(request.DownloadRequest_.FromGrpc());

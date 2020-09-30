@@ -9,6 +9,7 @@ service HorribleSubsService {
     rpc DownloadStatus (DownloadStatusRequest) returns (DownloadStatusResponse);
     rpc File (FileRequest) returns (stream FileResponse);
     rpc FileTransferInformation (FileTransferInformationRequest) returns (FileTransferInformationResponse);
+    rpc DownloadedFiles (DownloadedFilesRequest) returns (DownloadedFilesResponse);
 }
 
 message VersionRequest {
@@ -72,6 +73,18 @@ message FileResponse {
     uint64 Position = 1;
     uint64 Length = 2;
     bytes Chunk = 3;
+}
+
+message DownloadedFilesRequest {
+}
+
+message DownloadedFilesResponse {
+    message File {
+     string Filename = 1;
+     uint64 Filesize = 3;
+	}
+
+    repeated File Files = 1;
 }
 
 message FileTransferInformationRequest {

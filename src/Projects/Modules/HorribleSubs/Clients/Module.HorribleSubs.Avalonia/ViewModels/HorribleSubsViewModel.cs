@@ -52,6 +52,8 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
             }
         }
 
+        public AvaloniaList<PackItem> AvailableDownloads { get; } = new AvaloniaList<PackItem>();
+
         public AvaloniaList<PackItem> Packs { get; } = new AvaloniaList<PackItem>();
 
         public HorribleSubsViewModel(HorribleSubsService.HorribleSubsServiceClient client, DownloadStatusService downloadStatusService)
@@ -137,6 +139,20 @@ namespace Module.HorribleSubs.Avalonia.ViewModels
                 }
             }
         }
+
+
+        public async Task RefreshAvailableDownloads()
+        {
+            var files = (await this.client.DownloadedFilesAsync(new DownloadedFilesRequest())).Files;
+            var packItems = files.Select(x => new PackItem(x.Filename, (long)x.Filesize, null));
+
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                this.AvailableDownloads.Clear();
+                this.AvailableDownloads.AddRange(packItems);
+            });
+        }
+
 
         public async Task Search()
         {
