@@ -151,6 +151,9 @@ namespace Module.IrcAnime.Avalonia.ViewModels
                 this.AvailableDownloads.Clear();
                 this.AvailableDownloads.AddRange(packItems);
             });
+
+            var downloadService = new DownloadService(this.client);
+            await downloadService.Download(this.AvailableDownloads[0].Name, default);
         }
 
 
