@@ -17,6 +17,7 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
 
         private IModule selectedModule;
         private readonly CidaConnectionService connectionService;
+        private readonly ISettingsFactory settingsFactory;
 
         public IModule SelectedModule
         {
@@ -38,9 +39,10 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
 
         public ModuleViewModel SelectedViewModel { get; private set; }
 
-        public ModuleSelectScreenViewModel(CidaConnectionService connectionService)
+        public ModuleSelectScreenViewModel(CidaConnectionService connectionService, ISettingsFactory settingsFactory)
         {
             this.connectionService = connectionService;
+            this.settingsFactory = settingsFactory;
         }
 
         public async Task Load()
@@ -52,7 +54,7 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
 
             foreach (var module in modules)
             {
-                await module.LoadAsync(this.connectionService.Channel);
+                await module.LoadAsync(this.connectionService.Channel, this.settingsFactory);
             }
 
             await Dispatcher.UIThread.InvokeAsync(() =>

@@ -20,6 +20,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
     {
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly DownloadStatusService downloadStatusService;
+        private readonly DownloadService downloadService;
         private readonly List<PackItem> relevantUpdatingPacks = new List<PackItem>();
         private readonly SemaphoreSlim packSemaphore = new SemaphoreSlim(1, 1);
         private string searchTerm;
@@ -56,10 +57,11 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         public AvaloniaList<PackItem> Packs { get; } = new AvaloniaList<PackItem>();
 
-        public IrcAnimeViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadStatusService downloadStatusService)
+        public IrcAnimeViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadStatusService downloadStatusService, DownloadService downloadService)
         {
             this.client = client;
             this.downloadStatusService = downloadStatusService;
+            this.downloadService = downloadService;
             this.downloadStatusService.OnStatusUpdate += async () =>
             {
                 await this.packSemaphore.WaitAsync();
@@ -152,8 +154,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
                 this.AvailableDownloads.AddRange(packItems);
             });
 
-            var downloadService = new DownloadService(this.client);
-            await downloadService.Download(this.AvailableDownloads[0].Name, default);
+            await this.downloadService.Download(this.AvailableDownloads[0].Name, default);
         }
 
 

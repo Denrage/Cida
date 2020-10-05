@@ -15,10 +15,11 @@ namespace Module.IrcAnime.Avalonia
 
         public ModuleViewModel ViewModel { get; private set; }
 
-        public async Task LoadAsync(Channel channel)
+        public async Task LoadAsync(Channel channel, ISettingsFactory settingsFactory)
         {
+            var settingsService = settingsFactory.Get(this.Name);
             client = new IrcAnimeService.IrcAnimeServiceClient(channel);
-            ViewModel = new IrcAnimeViewModel(client, new Services.DownloadStatusService(client));
+            ViewModel = new IrcAnimeViewModel(client, new Services.DownloadStatusService(client), new Services.DownloadService(client, settingsService));
             await Task.CompletedTask;
         }
     }

@@ -22,12 +22,12 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
             set => this.RaiseAndSetIfChanged(ref this.content, value);
         }
 
-        public LauncherWindowViewModel(CidaConnectionService connectionService)
+        public LauncherWindowViewModel(CidaConnectionService connectionService, ISettingsFactory settingsFactory)
         {
             this.connectionService = connectionService;
             this.connection = new ConnectionScreenViewModel();
             this.status = new StatusScreenViewModel();
-            this.moduleSelection = new ModuleSelectScreenViewModel(this.connectionService);
+            this.moduleSelection = new ModuleSelectScreenViewModel(this.connectionService, settingsFactory);
             this.Content = this.connection;
             this.ConnectionSuccessfull += LauncherWindowViewModel_ConnectionSuccessfull;
         }

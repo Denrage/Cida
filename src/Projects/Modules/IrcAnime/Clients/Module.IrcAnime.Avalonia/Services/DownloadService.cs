@@ -1,4 +1,5 @@
-﻿using Ircanime;
+﻿using Cida.Client.Avalonia.Api;
+using Ircanime;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,24 +10,34 @@ using System.Threading.Tasks;
 
 namespace Module.IrcAnime.Avalonia.Services
 {
-    class DownloadService
+    public class DownloadService
     {
-        private const string DownloadFolder = @"D:\temp";
-        private readonly IrcAnimeService.IrcAnimeServiceClient client;
+        public class DownloadSettings
+        {
+            public string DownloadFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cida", "Avalonia", "IrcDownloads");
+        }
 
-        public DownloadService(IrcAnimeService.IrcAnimeServiceClient client)
+        private readonly IrcAnimeService.IrcAnimeServiceClient client;
+        private readonly IModuleSettingsService settingsService;
+
+        public DownloadService(IrcAnimeService.IrcAnimeServiceClient client, IModuleSettingsService settingsService)
         {
             this.client = client;
+            this.settingsService = settingsService;
         }
+
+        private async Task<string> GetDownloadFolderAsync() => (await this.settingsService.Get<DownloadSettings>()).DownloadFolder;
 
         public async Task Download(string filename, CancellationToken token)
         {
+            Directory.CreateDirectory((await this.GetDownloadFolderAsync()));
+
             var information = await this.client.FileTransferInformationAsync(new FileTransferInformationRequest() { FileName = filename });
             var chunkSize = information.ChunkSize;
             var size = information.Size;
             var sha256 = information.Sha256;
 
-            using (var filestream = File.Open(Path.Combine(DownloadFolder, filename), FileMode.Append, FileAccess.Write))
+            using (var filestream = File.Open(Path.Combine(await this.GetDownloadFolderAsync(), filename), FileMode.Append, FileAccess.Write))
             {
                 using (var chunkStream = this.client.File(new FileRequest()
                 {
