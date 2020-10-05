@@ -15,92 +15,150 @@ namespace Module.IrcAnime.Cida.Services
 {
     public class SearchService
     {
-        private const string BaseUrl = @"http://xdcc.horriblesubs.info/search.php?t=";
+        private const string BaseUrl = @"https://api.nibl.co.uk/nibl";
+        private const string BotPart = "/bots";
+        private const string SearchPart = "/search?query=";
+        private List<BotData.Bot> Bots;
 
         public async Task<SearchResult[]> SearchAsync(string searchTerm)
         {
+            await this.EnsureBotListAsync();
             var webClient = new WebClient { Proxy = null };
-            var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + searchTerm}")).ConfigureAwait(false);
-            return this.ParseResultPage(page).ToArray();
+            var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + SearchPart + searchTerm}")).ConfigureAwait(false);
+            return this.Parse(page).ToArray();
+        }
+
+        private SearchResult[] Parse(string json)
+        {
+            var data = JsonSerializer.Deserialize<JsonData>(json);
+
+            if (data.Status == "OK")
+            {
+                string getBotName(long id)
+                {
+                    var result = this.Bots.FirstOrDefault(x => x.Id == id);
+                    return result == null ? id.ToString() : result.Name;
+                }
+
+                return data.Episodes.Select(x => new SearchResult()
+                {
+                    BotName = getBotName(x.BotId),
+                    FileName = x.Name,
+                    FileSize = x.Sizekbits,
+                    PackageNumber = x.Number,
+                }).ToArray();
+            }
+            else
+            {
+                return Array.Empty<SearchResult>();
+            }
         }
 
         public SearchResult[] Search(string searchTerm)
         {
+            this.EnsureBotList();
             var webClient = new WebClient { Proxy = null };
-            var page = webClient.DownloadString(new Uri($"{BaseUrl + searchTerm}"));
-            return this.ParseResultPage(page).ToArray();
+            var page = webClient.DownloadString(new Uri($"{BaseUrl + SearchPart + searchTerm}"));
+            return this.Parse(page);
         }
 
-        private IEnumerable<SearchResult> ParseResultPage(string page)
+        private async Task EnsureBotListAsync()
         {
-            var lines = page.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            return lines.Select(
-                x =>
-                {
-                    var line = x.Substring(x.IndexOf('{'), x.IndexOf('}') - x.IndexOf('{') + 1);
-                    var data = this.ParseJavaScriptObject(line);
-                    return new SearchResult()
-                    {
-                        BotName = data.Bot,
-                        FileSize = data.Size,
-                        PackageNumber = data.Number,
-                        FileName = data.File
-                    };
-                });
-        }
-
-        private JsonData ParseJavaScriptObject(string line)
-        {
-            const string bIdentifier = "b:\"";
-            const string nIdentifier = "n:";
-            const string sIdentifier = "s:";
-            const string fIdentifier = "f:\"";
-            var regex = new Regex("((b|n|s|f):\\\"?.*?\\\"?(,|\\}))");
-            var result = new JsonData();
-            foreach (var match in regex.Matches(line))
+            if (this.Bots == null)
             {
-                var stringMatch = match.ToString();
-                stringMatch = stringMatch[0..^1];
-                if (stringMatch.Contains(bIdentifier))
+                var webClient = new WebClient { Proxy = null };
+                var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + BotPart}")).ConfigureAwait(false);
+                var result = JsonSerializer.Deserialize<BotData>(page);
+                this.Bots = new List<BotData.Bot>();
+                if (result.Status == "OK")
                 {
-                    stringMatch = stringMatch.Replace(bIdentifier, string.Empty);
-                    stringMatch = stringMatch[0..^1];
-                    result.Bot = stringMatch;
-                }
-                else if (stringMatch.Contains(nIdentifier))
-                {
-                    stringMatch = stringMatch.Replace(nIdentifier, string.Empty);
-                    result.Number = long.Parse(stringMatch);
-                }
-                else if (stringMatch.Contains(sIdentifier))
-                {
-                    stringMatch = stringMatch.Replace(sIdentifier, string.Empty);
-                    result.Size = long.Parse(stringMatch);
-                }
-                else if (stringMatch.Contains(fIdentifier))
-                {
-                    stringMatch = stringMatch.Replace(fIdentifier, string.Empty);
-                    stringMatch = stringMatch[0..^1];
-                    result.File = stringMatch;
+                    this.Bots.AddRange(result.Bots);
                 }
             }
+        }
 
-            return result;
+        private void EnsureBotList()
+        {
+            if (this.Bots == null)
+            {
+                var webClient = new WebClient { Proxy = null };
+                var page = webClient.DownloadString(new Uri($"{BaseUrl + BotPart}"));
+                var result = JsonSerializer.Deserialize<BotData>(page);
+                this.Bots = new List<BotData.Bot>();
+                if (result.Status == "OK")
+                {
+                    this.Bots.AddRange(result.Bots);
+                }
+            }
+        }
+
+        private class BotData
+        {
+            [JsonPropertyName("status")]
+            public string Status { get; set; }
+
+            [JsonPropertyName("message")]
+            public string Message { get; set; }
+
+            [JsonPropertyName("content")]
+            public Bot[] Bots { get; set; }
+
+            public class Bot
+            {
+                [JsonPropertyName("id")]
+                public long Id { get; set; }
+
+                [JsonPropertyName("name")]
+                public string Name { get; set; }
+
+                [JsonPropertyName("owner")]
+                public string Owner { get; set; }
+
+                [JsonPropertyName("lastProcessed")]
+                public DateTimeOffset LastProcessed { get; set; }
+
+                [JsonPropertyName("batchEnable")]
+                public long BatchEnable { get; set; }
+
+                [JsonPropertyName("packSize")]
+                public long PackSize { get; set; }
+            }
         }
 
         private class JsonData
         {
-            [JsonPropertyName("b")]
-            public string Bot { get; set; }
+            [JsonPropertyName("status")]
+            public string Status { get; set; }
 
-            [JsonPropertyName("n")]
-            public long Number { get; set; }
+            [JsonPropertyName("message")]
+            public string Message { get; set; }
 
-            [JsonPropertyName("s")]
-            public long Size { get; set; }
+            [JsonPropertyName("content")]
+            public Episode[] Episodes { get; set; }
 
-            [JsonPropertyName("f")]
-            public string File { get; set; }
+            public class Episode
+            {
+                [JsonPropertyName("botId")]
+                public long BotId { get; set; }
+
+                [JsonPropertyName("number")]
+                public long Number { get; set; }
+
+                [JsonPropertyName("name")]
+                public string Name { get; set; }
+
+                [JsonPropertyName("size")]
+                public string Size { get; set; }
+
+                [JsonPropertyName("sizekbits")]
+                public long Sizekbits { get; set; }
+
+                [JsonPropertyName("episodeNumber")]
+                public long EpisodeNumber { get; set; }
+
+                [JsonPropertyName("lastModified")]
+                public DateTimeOffset LastModified { get; set; }
+            }
         }
     }
 }
