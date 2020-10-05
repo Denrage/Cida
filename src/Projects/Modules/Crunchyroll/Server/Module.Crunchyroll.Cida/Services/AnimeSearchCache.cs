@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,8 +40,11 @@ namespace Module.Crunchyroll.Cida.Services
 
         public async Task Refresh()
         {
-            using var webClient = new WebClient();
-            var result = webClient.DownloadString(SearchEndpoint);
+            var clearanceHandler = new CloudFlareUtilities.ClearanceHandler();
+            using var httpClient = new HttpClient(clearanceHandler);
+
+            var httpResult = await httpClient.GetAsync(SearchEndpoint);
+            var result = await httpResult.Content.ReadAsStringAsync();
             var prefixLength = "/*-secure-".Length;
             var suffixLength = "*/".Length;
             result = result.Substring(prefixLength, result.Length - prefixLength - suffixLength);

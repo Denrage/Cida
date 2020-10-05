@@ -17,10 +17,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.0.1" />
     <PackageReference Include="System.Text.Json" Version="4.7.0" />
-    <PackageReference Include="CloudFlareUtilities" Version="*"/>
     <ProjectReference Include="..\..\..\..\Cida.Api\Cida.Api.csproj" />
-    <ProjectReference Include="..\..\Module.Crunchyroll.Libs\Module.Crunchyroll.Libs.csproj" />
-    <Protobuf Include="../../../../../protos/Modules/crunchyroll.proto" Link="crunchyroll.proto" />
+    <ProjectReference Include="..\..\..\..\IrcClient\IrcClient.csproj" />
+    <Protobuf Include="..\..\..\..\..\protos\Modules\ircanime.proto" Link="ircanime.proto" />
   </ItemGroup>
 
   <ItemGroup>

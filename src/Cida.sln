@@ -30,6 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{FC2F
 	ProjectSection(SolutionItems) = preProject
 		protos\Modules\crunchyroll.proto = protos\Modules\crunchyroll.proto
 		protos\Modules\hsnr.proto = protos\Modules\hsnr.proto
+		protos\Modules\ircanime.proto = protos\Modules\ircanime.proto
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B046479E-1AA7-422F-B043-30D41633F3FA}"
@@ -56,17 +57,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Avalonia", "Avalonia", "{1C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.Client.Avalonia.Api", "Projects\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj", "{9A6E650D-3A0B-41FE-81A9-2211CA3970FB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HorribleSubs", "HorribleSubs", "{CE68205A-4D16-4CD9-A877-400EBDB4FE62}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IrcAnime", "IrcAnime", "{CE68205A-4D16-4CD9-A877-400EBDB4FE62}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{789E3E07-E05A-46EE-8982-219626BC76DD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.HorribleSubs.Cida", "Projects\Modules\HorribleSubs\Server\Module.HorribleSubs.Cida\Module.HorribleSubs.Cida.csproj", "{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.IrcAnime.Cida", "Projects\Modules\IrcAnime\Server\Module.IrcAnime.Cida\Module.IrcAnime.Cida.csproj", "{F4AAEF31-57AE-4AF1-B18A-692CCB8A1FD8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IrcClient", "Projects\IrcClient\IrcClient.csproj", "{82833DAF-9BA2-4E11-9FBE-738EAD248E66}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{3E93F29D-ACC7-414F-B5E4-DFC0897A5C92}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Module.HorribleSubs.Avalonia", "Projects\Modules\HorribleSubs\Clients\Module.HorribleSubs.Avalonia\Module.HorribleSubs.Avalonia.csproj", "{E68253AF-432C-4B6E-8A6A-EBCD97060C26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Module.IrcAnime.Avalonia", "Projects\Modules\IrcAnime\Clients\Module.IrcAnime.Avalonia\Module.IrcAnime.Avalonia.csproj", "{E68253AF-432C-4B6E-8A6A-EBCD97060C26}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
