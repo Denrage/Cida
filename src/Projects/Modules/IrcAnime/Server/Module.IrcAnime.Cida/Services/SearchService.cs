@@ -115,7 +115,7 @@ namespace Module.IrcAnime.Cida.Services
                 public string Owner { get; set; }
 
                 [JsonPropertyName("lastProcessed")]
-                public DateTimeOffset LastProcessed { get; set; }
+                public string LastProcessed { get; set; }
 
                 [JsonPropertyName("batchEnable")]
                 public long BatchEnable { get; set; }
@@ -157,7 +157,7 @@ namespace Module.IrcAnime.Cida.Services
                 public long EpisodeNumber { get; set; }
 
                 [JsonPropertyName("lastModified")]
-                public DateTimeOffset LastModified { get; set; }
+                public string LastModified { get; set; }
             }
         }
     }
