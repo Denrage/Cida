@@ -1,0 +1,6 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: dotnet restore "src/Cida.sln"
+    command: dotnet start "src/Projects/Server/Cida.Server.Console"
