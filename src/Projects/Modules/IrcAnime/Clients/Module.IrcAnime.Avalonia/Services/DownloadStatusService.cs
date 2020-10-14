@@ -25,6 +25,7 @@ namespace Module.IrcAnime.Avalonia.Services
         {
             this.client = client;
             this.statusThread = new Thread(new ThreadStart(UpdateStatus));
+            this.statusThread.IsBackground = true;
             this.statusThread.Start();
         }
 

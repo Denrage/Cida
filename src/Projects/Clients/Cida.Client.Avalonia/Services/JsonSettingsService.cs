@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -34,12 +35,19 @@ namespace Cida.Client.Avalonia.Services
                 }
             }
 
-
-            module = new Module();
-            this.cache.Modules.Add(moduleName, module);
-            module.ModuleName = moduleName;
             var defaultItem = new T();
-            module.Items.Add(typeof(T).FullName, defaultItem);
+
+            if (module is null)
+            {
+                module = new Module()
+                {
+                    ModuleName = moduleName,
+                };
+            }
+
+            this.cache.Modules.TryAdd(moduleName, module);
+            module.Items.TryAdd(typeof(T).FullName, defaultItem);
+
             await this.SaveSettings(JsonSerializer.Serialize<Settings>(this.cache));
             return defaultItem;
 
@@ -56,9 +64,15 @@ namespace Cida.Client.Avalonia.Services
             else
             {
                 var module = new Module();
-                this.cache.Modules.Add(moduleName, module);
-                module.Items = new Dictionary<string, object>();
-                module.Items[typeof(T).FullName] = item;
+                if (this.cache.Modules.TryAdd(moduleName, module))
+                {
+                    module.Items = new ConcurrentDictionary<string, object>();
+                }
+                else
+                {
+                    this.cache.Modules.TryGetValue(moduleName, out module);
+                    module.Items.TryAdd(typeof(T).FullName, item);
+                }
             }
             await this.SaveSettings(JsonSerializer.Serialize<Settings>(this.cache));
         }
@@ -86,12 +100,12 @@ namespace Cida.Client.Avalonia.Services
         {
             public string ModuleName { get; set; }
 
-            public Dictionary<string, object> Items { get; set; } = new Dictionary<string, object>();
+            public ConcurrentDictionary<string, object> Items { get; set; } = new ConcurrentDictionary<string, object>();
         }
 
         public class Settings
         {
-            public Dictionary<string, Module> Modules { get; set; } = new Dictionary<string, Module>();
+            public ConcurrentDictionary<string, Module> Modules { get; set; } = new ConcurrentDictionary<string, Module>();
         }
     }
 }

@@ -3,6 +3,7 @@ using Cida.Client.Avalonia.Api;
 using Ircanime;
 using Grpc.Core;
 using Module.IrcAnime.Avalonia.ViewModels;
+using Module.IrcAnime.Avalonia.Services;
 
 namespace Module.IrcAnime.Avalonia
 {
@@ -17,9 +18,13 @@ namespace Module.IrcAnime.Avalonia
 
         public async Task LoadAsync(Channel channel, ISettingsFactory settingsFactory)
         {
-            var settingsService = settingsFactory.Get(this.Name);
             client = new IrcAnimeService.IrcAnimeServiceClient(channel);
-            ViewModel = new IrcAnimeViewModel(client, new Services.DownloadStatusService(client), new Services.DownloadService(client, settingsService));
+            var settingsService = settingsFactory.Get(this.Name);
+            var packService = new PackService(settingsService);
+            var downloadStatusService = new DownloadStatusService(client);
+            var downloadContextService = new DownloadContextService(packService, downloadStatusService);
+            
+            ViewModel = new IrcAnimeViewModel(new SearchViewModel(client, downloadContextService), new DownloadsViewModel(client, downloadContextService));
             await Task.CompletedTask;
         }
     }

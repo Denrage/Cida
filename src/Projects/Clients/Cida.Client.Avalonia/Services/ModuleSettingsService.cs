@@ -1,5 +1,6 @@
 ﻿using Cida.Client.Avalonia.Api;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace Cida.Client.Avalonia.Services
     public class ModuleSettingsService : IModuleSettingsService
     {
         private readonly ISettingsService settingsService;
-        private Dictionary<Type, object> settingsCache = new Dictionary<Type, object>();
+        private ConcurrentDictionary<Type, object> settingsCache = new ConcurrentDictionary<Type, object>();
         private readonly string moduleName;
 
 
@@ -30,7 +31,7 @@ namespace Cida.Client.Avalonia.Services
 
             result = await this.settingsService.Get<T>(this.moduleName);
 
-            this.settingsCache[type] = result;
+            this.settingsCache.TryAdd(type, result);
             return (T)result;
         }
 
@@ -38,7 +39,7 @@ namespace Cida.Client.Avalonia.Services
             where T : class
         {
             var type = typeof(T);
-            this.settingsCache[type] = settings;
+            this.settingsCache.TryAdd(type,settings);
             await this.settingsService.Save<T>(this.moduleName, settings);
         }
     }

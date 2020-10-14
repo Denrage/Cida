@@ -18,6 +18,10 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\*" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Views\DownloadsView.xaml" />
+    <None Remove="Views\SearchView.xaml" />
+  </ItemGroup>
 
 
   
@@ -42,6 +46,22 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Update="Views\DownloadsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
+    <AvaloniaResource Update="Views\SearchView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Views\DownloadsView.xaml.cs">
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
+    <Compile Update="Views\SearchView.xaml.cs">
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Update="PackagesInfo.json">
