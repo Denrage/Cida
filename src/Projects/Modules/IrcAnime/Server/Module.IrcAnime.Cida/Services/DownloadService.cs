@@ -67,8 +67,9 @@ namespace Module.IrcAnime.Cida.Services
             if (!this.ircClient.IsConnected)
             {
                 this.ircClient.Connect();
+                this.ircClient.JoinChannel("#nibl");
             }
-
+             
             var createDownloaderContext = new CreateDownloaderContext()
             {
                 Filename = downloadRequest.FileName,
