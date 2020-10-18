@@ -45,7 +45,7 @@ namespace Module.IrcAnime.Avalonia.Services
         {
             var information = await this.ExtractInformation(metadata);
 
-            if (this.packs.TryGetValue(information.Name+information.EpisodeNumber, out var pack))
+            if (this.packs.TryGetValue(information.Name+ (information.EpisodeNumber ?? "unknown"), out var pack))
             {
                 var resolution = pack.Resolutions.FirstOrDefault(x => x.ResolutionType == information.Resolution);
                 if (resolution is null)
@@ -82,7 +82,7 @@ namespace Module.IrcAnime.Avalonia.Services
         {
             var information = await this.ExtractInformation(metadata);
 
-            if (!this.packs.TryGetValue(information.Name+information.EpisodeNumber, out var pack))
+            if (!this.packs.TryGetValue(information.Name+(information.EpisodeNumber ?? "unknown"), out var pack))
             {
                 throw new InvalidOperationException("Pack needs to be in cache in order to update it!");
             }

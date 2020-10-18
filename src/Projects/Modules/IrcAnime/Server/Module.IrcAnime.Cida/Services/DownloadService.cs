@@ -30,6 +30,7 @@ namespace Module.IrcAnime.Cida.Services
         private readonly Func<IrcAnimeDbContext> getContext;
         private readonly IFtpClient ftpClient;
         private readonly Filesystem.Directory downloadDirectory;
+        private readonly SemaphoreSlim ircConnectSemaphore = new SemaphoreSlim(1);
 
         public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -66,10 +67,18 @@ namespace Module.IrcAnime.Cida.Services
 
             if (!this.ircClient.IsConnected)
             {
-                this.ircClient.Connect();
-                this.ircClient.JoinChannel("#nibl");
+                await this.ircConnectSemaphore.WaitAsync();
+                try
+                {
+                    this.ircClient.Connect();
+                    this.ircClient.JoinChannel("#nibl");
+                }
+                finally
+                {
+                    this.ircConnectSemaphore.Release();
+                }
             }
-             
+
             var createDownloaderContext = new CreateDownloaderContext()
             {
                 Filename = downloadRequest.FileName,

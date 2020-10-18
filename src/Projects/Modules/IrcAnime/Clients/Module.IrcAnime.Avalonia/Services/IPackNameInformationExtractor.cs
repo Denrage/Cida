@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Module.IrcAnime.Avalonia.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

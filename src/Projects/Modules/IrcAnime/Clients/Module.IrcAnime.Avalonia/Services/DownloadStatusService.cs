@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Module.IrcAnime.Avalonia.Services
 {
+    //TODO: Interface this
     public class DownloadStatusService
     {
         private const int WaitTime = 3000;

@@ -27,6 +27,7 @@ namespace Module.IrcAnime.Avalonia.Services
             var match = new Regex(this.expressions.Group).Match(result.Name);
             if (match.Success)
             {
+                //TODO: Trim
                 result.Group = match.Value.Replace("[", "").Replace("]", "");
                 result.Name = result.Name.Replace(match.Value, "");
             }

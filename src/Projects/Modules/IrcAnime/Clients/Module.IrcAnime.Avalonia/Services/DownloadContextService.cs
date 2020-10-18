@@ -1,6 +1,7 @@
 ﻿using Module.IrcAnime.Avalonia.Models;
 using Module.IrcAnime.Avalonia.ViewModels;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace Module.IrcAnime.Avalonia.Services
     {
         private readonly PackService packService;
         private readonly DownloadStatusService downloadStatusService;
-        private Dictionary<string, DownloadContext> context = new Dictionary<string, DownloadContext>();
+        private ConcurrentDictionary<string, DownloadContext> context = new ConcurrentDictionary<string, DownloadContext>();
 
         public DownloadContextService(PackService packService, DownloadStatusService downloadStatusService)
         {
@@ -40,7 +41,7 @@ namespace Module.IrcAnime.Avalonia.Services
             if (!this.context.TryGetValue(packMetadata.Name, out var result))
             {
                 result = new DownloadContext(await this.packService.GetAsync(packMetadata));
-                this.context.Add(packMetadata.Name, result);
+                this.context.TryAdd(packMetadata.Name, result);
             }
             else
             {
