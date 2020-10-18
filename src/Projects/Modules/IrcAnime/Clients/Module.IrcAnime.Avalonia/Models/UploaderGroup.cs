@@ -7,6 +7,8 @@ namespace Module.IrcAnime.Avalonia.Models
     {
         public string Name { get; set; }
 
+        public string Filename { get; set; }
+
         public ulong PackageNumber { get; set; }
 
         public static UploaderGroup FromPackInformation(PackNameInformation information, PackMetadata metadata)
@@ -15,6 +17,7 @@ namespace Module.IrcAnime.Avalonia.Models
             {
                 Name = information.Group ?? "unknown",
                 PackageNumber = metadata.Number,
+                Filename = metadata.Name,
             };
         }
 

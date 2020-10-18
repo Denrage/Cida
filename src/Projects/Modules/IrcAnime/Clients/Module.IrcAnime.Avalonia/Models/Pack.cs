@@ -11,8 +11,6 @@ namespace Module.IrcAnime.Avalonia.Models
     {
         public string Name { get; set; }
 
-        public string Filename { get; set; }
-
         public long Size { get; set; }
 
         public string EpisodeNumber { get; set; }
@@ -42,7 +40,6 @@ namespace Module.IrcAnime.Avalonia.Models
             var pack = new Pack()
             {
                 Name = information.Name,
-                Filename = metadata.Name,
                 Size = metadata.Size,
                 EpisodeNumber = information.EpisodeNumber ?? "unknown",
             };

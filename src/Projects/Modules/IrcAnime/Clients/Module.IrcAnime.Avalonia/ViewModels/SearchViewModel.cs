@@ -152,13 +152,14 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
                 if (bot != null)
                 {
+                    var group = item.Pack.Resolutions.FirstOrDefault(x => x.ResolutionType == this.SelectedResolution).Bots.FirstOrDefault(x => x.Name == this.SelectedBot).UploaderGroup.Last();
                     await this.client.DownloadAsync(new DownloadRequest()
                     {
                         DownloadRequest_ = new DownloadRequest.Types.Request()
                         {
                             BotName = this.SelectedBot,
-                            FileName = item.Pack.Filename,
-                            PackageNumber = (long)bot.UploaderGroup.First().PackageNumber,
+                            FileName = group.Filename,
+                            PackageNumber = (long)group.PackageNumber,
                         }
                     });
                 }
