@@ -27,53 +27,34 @@
             <Button Grid.Column="1" Command="{Binding Search}" Content="Search" />
         </Grid>
         <Grid Grid.Row="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0"  SelectedItem="{Binding SelectedBot}" Items="{Binding Bots}"/>
-                    <ComboBox Grid.Column="1" SelectedItem="{Binding SelectedResolution}" Items="{Binding Resolutions}"/>
-                </Grid>
-                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-                    <ItemsControl Items="{Binding FilteredPacks}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="16" />
-                                            <RowDefinition Height="16"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="0.9*" />
-                                            <ColumnDefinition Width="0.1*" />
-                                        </Grid.ColumnDefinitions>
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                <ItemsRepeater Items="{Binding Packs}" >
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0.9*" />
+                                        <ColumnDefinition Width="0.1*" />
+                                    </Grid.ColumnDefinitions>
 
-                                        <TextBlock ZIndex="1"  Grid.Row="0" Grid.Column="0" Text="{Binding Pack.Name}"/>
-                                        <TextBlock ZIndex="1"  Grid.Row="1" Grid.Column="0" Text="{Binding Pack.EpisodeNumber}"/>
-                                        <ProgressBar ZIndex="0"  Background="Transparent" Grid.RowSpan="2" Grid.Column="0"  Value="{Binding Progress}" Minimum="0" Maximum="100">
-                                            <ProgressBar.IsVisible>
-                                                <MultiBinding Converter="{StaticResource MultiValueAndConverter}">
-                                                    <Binding Path="Downloaded"/>
-                                                    <Binding Path="NotDownloaded"/>
-                                                </MultiBinding>
-                                            </ProgressBar.IsVisible>
-                                        </ProgressBar>
-                                        <Button ZIndex="1"  Grid.RowSpan="2" Grid.Column="1" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding !Downloaded}" Command="{Binding Download}" />
-                                        <ContentControl Grid.RowSpan="2" Grid.Column="1" Content="Hello World" ContentTemplate="{StaticResource Checkmark}"  IsVisible="{Binding Downloaded}"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
+                                    <TextBlock ZIndex="1"  Grid.Row="0" Grid.Column="0" Text="{Binding Pack.Name}"/>
+                                    <ProgressBar ZIndex="0"  Background="Transparent" Grid.Column="0"  Value="{Binding Progress}" Minimum="0" Maximum="100">
+                                        <ProgressBar.IsVisible>
+                                            <MultiBinding Converter="{StaticResource MultiValueAndConverter}">
+                                                <Binding Path="Downloaded"/>
+                                                <Binding Path="NotDownloaded"/>
+                                            </MultiBinding>
+                                        </ProgressBar.IsVisible>
+                                    </ProgressBar>
+                                    <Button ZIndex="1"   Grid.Column="1" Content="Download" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="{Binding !Downloaded}" Command="{Binding Download}" />
+                                    <ContentControl  Grid.Column="1" Content="Hello World" ContentTemplate="{StaticResource Checkmark}"  IsVisible="{Binding Downloaded}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>
