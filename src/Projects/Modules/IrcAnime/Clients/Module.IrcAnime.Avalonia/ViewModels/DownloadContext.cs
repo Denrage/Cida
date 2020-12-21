@@ -34,7 +34,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
             !this.NotDownloaded &&
             !this.Downloaded ? (int)Math.Round((double)this.DownloadedBytes * 100.0 / (double)this.Pack.Size) : 0;
 
-        public bool Downloaded => this.DownloadedBytes == this.Pack.Size;
+        public bool Downloaded => this.DownloadedBytes >= 0 ? (ulong)this.DownloadedBytes == this.Pack.Size : false;
 
         public bool NotDownloaded => this.DownloadedBytes == -1;
 

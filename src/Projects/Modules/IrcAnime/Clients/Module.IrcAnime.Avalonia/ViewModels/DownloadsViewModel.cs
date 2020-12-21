@@ -31,12 +31,12 @@ namespace Module.IrcAnime.Avalonia.ViewModels
             var contexts = new List<DownloadContext>();
             foreach (var item in files)
             {
-                var context = await this.downloadContextService.GetContextAsync(new Models.PackMetadata()
+                var context = this.downloadContextService.GetContext(new Models.PackMetadata()
                 {
                     Bot = null,
                     Name = item.Filename,
                     Number = 0,
-                    Size = (long)item.Filesize,
+                    Size = item.Filesize,
                 });
 
                 contexts.Add(context);

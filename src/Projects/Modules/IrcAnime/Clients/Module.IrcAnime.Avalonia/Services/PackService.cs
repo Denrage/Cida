@@ -11,108 +11,39 @@ namespace Module.IrcAnime.Avalonia.Services
     //TODO: Interface this
     public class PackService
     {
-        private readonly IModuleSettingsService settingsService;
         private readonly Dictionary<string, Pack> packs = new Dictionary<string, Pack>();
 
-        public PackService(IModuleSettingsService settingsService)
+        public Pack Get(PackMetadata packMetadata)
         {
-            this.settingsService = settingsService;
-        }
-
-        private async Task<PackNameInformation> ExtractInformation(PackMetadata metadata)
-        {
-            var extractorConfiguration = (await this.settingsService.Get<PackNameInformationExtractors>()).Configurations.FirstOrDefault(x => metadata.Name.Contains(x.Identifier));
-
-            PackNameInformation information;
-            if (extractorConfiguration is null)
+            if (!this.packs.TryGetValue(packMetadata.Name, out var result))
             {
-                // TODO: Log-Warning
-                information = new PackNameInformation()
+                var pack = new Pack()
                 {
-                    Name = metadata.Name,
+                    Name = packMetadata.Name,
+                    Size = packMetadata.Size,
                 };
-            }
-            else
-            {
-                var extractor = new PackNameInformationExtractor(extractorConfiguration.Identifier, extractorConfiguration.Expressions);
-                information = extractor.GetInformation(metadata.Name);
+
+                this.packs[packMetadata.Name] = pack;
+                result = pack;
             }
 
-            return information;
+            if (packMetadata.Bot != null)
+            {
+                result.Packs[packMetadata.Bot] = packMetadata.Number;
+            }
+
+            return result;
         }
 
-        public async Task<Pack> GetAsync(PackMetadata metadata)
+        public void Update(PackMetadata packMetadata)
         {
-            var information = await this.ExtractInformation(metadata);
-
-            if (this.packs.TryGetValue(information.Name+ (information.EpisodeNumber ?? "unknown"), out var pack))
+            if (this.packs.TryGetValue(packMetadata.Name, out var result))
             {
-                var resolution = pack.Resolutions.FirstOrDefault(x => x.ResolutionType == information.Resolution);
-                if (resolution is null)
+                if (packMetadata.Bot != null)
                 {
-                    pack.Resolutions.Add(Resolution.FromPackInformation(information, metadata));
-                }
-                else
-                {
-                    var packBot = resolution.Bots.FirstOrDefault(x => x.Name == metadata.Bot);
-                    if (packBot is null)
-                    {
-                        resolution.Bots.Add(Bot.FromPackInformation(information, metadata));
-                    }
-                    else
-                    {
-                        var group = packBot.UploaderGroup.FirstOrDefault(x => x.Name == information.Group);
-                        if (group is null)
-                        {
-                            packBot.UploaderGroup.Add(UploaderGroup.FromPackInformation(information, metadata));
-                        }
-                    }
+                    result.Packs[packMetadata.Bot] = packMetadata.Number;
                 }
             }
-            else
-            {
-                pack = Pack.FromPackInformation(information, metadata);
-                this.packs.Add(pack.Identifier, pack);
-            }
-
-            return pack;
         }
-
-        public async Task UpdatePack(PackMetadata metadata)
-        {
-            var information = await this.ExtractInformation(metadata);
-
-            if (!this.packs.TryGetValue(information.Name+(information.EpisodeNumber ?? "unknown"), out var pack))
-            {
-                throw new InvalidOperationException("Pack needs to be in cache in order to update it!");
-            }
-
-            pack.Update(metadata, information);
-        }
-    }
-
-    public class PackNameInformationExtractors
-    {
-        public List<PackNameInformationExtractorConfiguration> Configurations { get; set; } = new List<PackNameInformationExtractorConfiguration>()
-        {
-            new PackNameInformationExtractorConfiguration()
-            {
-                Identifier = "DEFAULT",
-                Expressions = new RegularExpressions()
-                {
-                    EpisodeNumber = "DEFAULT EPISODE",
-                    FileExtension = "DEFAULT FileExtension",
-                    Group = "DEFAULT Group",
-                    Resolution = "DEFAULT Resolution",
-                }
-            }
-        };
-    }
-
-    public class PackNameInformationExtractorConfiguration
-    {
-        public string Identifier { get; set; }
-
-        public RegularExpressions Expressions { get; set; }
     }
 }

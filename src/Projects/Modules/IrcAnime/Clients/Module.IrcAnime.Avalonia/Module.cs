@@ -20,7 +20,7 @@ namespace Module.IrcAnime.Avalonia
         {
             client = new IrcAnimeService.IrcAnimeServiceClient(channel);
             var settingsService = settingsFactory.Get(this.Name);
-            var packService = new PackService(settingsService);
+            var packService = new PackService();
             var downloadStatusService = new DownloadStatusService(client);
             var downloadContextService = new DownloadContextService(packService, downloadStatusService);
             

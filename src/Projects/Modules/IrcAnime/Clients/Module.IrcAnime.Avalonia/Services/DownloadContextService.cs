@@ -28,7 +28,7 @@ namespace Module.IrcAnime.Avalonia.Services
         {
             foreach (var item in context.Values.Where(x => !x.Downloaded))
             {
-                var status = await this.downloadStatusService.GetStatus(item.Pack.Identifier);
+                var status = await this.downloadStatusService.GetStatus(item.Pack.Name);
                 if (status != null)
                 {
                     item.DownloadedBytes = !status.Downloaded ? (long)status.DownloadedBytes : (long)status.Filesize;
@@ -36,18 +36,16 @@ namespace Module.IrcAnime.Avalonia.Services
             }
         }
 
-        public async Task<DownloadContext> GetContextAsync(PackMetadata packMetadata)
+        public DownloadContext GetContext(PackMetadata packMetadata)
         {
             if (!this.context.TryGetValue(packMetadata.Name, out var result))
             {
-                result = new DownloadContext(await this.packService.GetAsync(packMetadata));
+                result = new DownloadContext(this.packService.Get(packMetadata));
                 this.context.TryAdd(packMetadata.Name, result);
             }
-            else
-            {
-                // This only works bc the pack instance is never being copied and everyone could change it for everyone else. Probably not desireable
-                await this.packService.UpdatePack(packMetadata);
-            }
+
+            // This only works bc Pack is not be copied and one instance is shared, maybe not desireable
+            this.packService.Update(packMetadata);
 
             return result;
         }
