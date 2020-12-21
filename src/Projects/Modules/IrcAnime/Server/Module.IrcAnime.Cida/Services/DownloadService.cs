@@ -31,6 +31,7 @@ namespace Module.IrcAnime.Cida.Services
         private readonly IFtpClient ftpClient;
         private readonly Filesystem.Directory downloadDirectory;
         private readonly SemaphoreSlim ircConnectSemaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim ircDownloadQueueSemaphore = new SemaphoreSlim(1);
 
         public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -65,56 +66,73 @@ namespace Module.IrcAnime.Cida.Services
                 }
             }
 
-            if (!this.ircClient.IsConnected)
+            await this.ircConnectSemaphore.WaitAsync();
+            try
             {
-                await this.ircConnectSemaphore.WaitAsync();
-                try
+                if (!this.ircClient.IsConnected)
                 {
                     this.ircClient.Connect();
                     this.ircClient.JoinChannel("#nibl");
                 }
-                finally
+            }
+            finally
+            {
+                this.ircConnectSemaphore.Release();
+            }
+
+
+            await this.ircDownloadQueueSemaphore.WaitAsync();
+
+            try
+            {
+                if (this.requestedDownloads.ContainsKey(downloadRequest.FileName))
                 {
-                    this.ircConnectSemaphore.Release();
+                    return;
                 }
-            }
 
-            var createDownloaderContext = new CreateDownloaderContext()
-            {
-                Filename = downloadRequest.FileName,
-            };
-            var dccDownloaderTask = new Task<DccDownloader>(() =>
-            {
-                createDownloaderContext.ManualResetEvent.Wait();
-                return createDownloaderContext.Downloader;
-
-            }, TaskCreationOptions.LongRunning);
-
-            if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
-            {
-                this.ircClient.SendMessage($"xdcc send #{downloadRequest.PackageNumber}", downloadRequest.BotName);
-            }
-            dccDownloaderTask.Start();
-            var downloader = await dccDownloaderTask;
-
-            using (var context = this.getContext())
-            {
-                context.ChangeTracker.AutoDetectChangesEnabled = false;
-                await context.Downloads.AddAsync(new Download()
+                var createDownloaderContext = new CreateDownloaderContext()
                 {
-                    Name = downloader.Filename,
-                    Size = downloader.Filesize,
-                    DownloadStatus = DownloadStatus.Downloading,
-                });
+                    Filename = downloadRequest.FileName,
+                };
+                var dccDownloaderTask = new Task<DccDownloader>(() =>
+                {
+                    createDownloaderContext.ManualResetEvent.Wait();
+                    return createDownloaderContext.Downloader;
 
-                context.ChangeTracker.DetectChanges();
-                await context.SaveChangesAsync();
-            }
+                }, TaskCreationOptions.LongRunning);
+
+                if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
+                {
+                    this.ircClient.SendMessage($"xdcc send #{downloadRequest.PackageNumber}", downloadRequest.BotName);
+                }
+                dccDownloaderTask.Start();
+                var downloader = await dccDownloaderTask;
+
+                using (var context = this.getContext())
+                {
+                    context.ChangeTracker.AutoDetectChangesEnabled = false;
+                    await context.Downloads.AddAsync(new Download()
+                    {
+                        Name = downloader.Filename,
+                        Size = downloader.Filesize,
+                        DownloadStatus = DownloadStatus.Downloading,
+                    });
+
+                    context.ChangeTracker.DetectChanges();
+                    await context.SaveChangesAsync();
+                }
 
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await this.DownloadFile(downloader));
+                Task.Run(async () => await this.DownloadFile(downloader));
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            }
+            finally
+            {
+                this.ircDownloadQueueSemaphore.Release();
+            }
+
+
         }
 
         private async Task DownloadFile(DccDownloader downloader)
