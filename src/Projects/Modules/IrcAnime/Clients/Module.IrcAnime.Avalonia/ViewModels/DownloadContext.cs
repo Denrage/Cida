@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Module.IrcAnime.Avalonia.ViewModels
 {
-    [DebuggerDisplay("{pack.Name}")]
+    [DebuggerDisplay("{Pack.Name}")]
     public class DownloadContext : ViewModelBase
     {
         private long downloadedBytes;
@@ -34,7 +34,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
             !this.NotDownloaded &&
             !this.Downloaded ? (int)Math.Round((double)this.DownloadedBytes * 100.0 / (double)this.Pack.Size) : 0;
 
-        public bool Downloaded => this.DownloadedBytes >= 0 ? (ulong)this.DownloadedBytes == this.Pack.Size : false;
+        public bool Downloaded { get; set; } = false;
 
         public bool NotDownloaded => this.DownloadedBytes == -1;
 
@@ -43,9 +43,6 @@ namespace Module.IrcAnime.Avalonia.ViewModels
             this.Pack = pack;
         }
 
-        public async Task Download()
-        {
-            await Task.Run(() => this.OnDownload.Invoke(this));
-        }
+        public async Task Download() => await Task.Run(() => this.OnDownload.Invoke(this));
     }
 }

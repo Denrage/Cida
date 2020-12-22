@@ -30,17 +30,12 @@ namespace Module.IrcAnime.Avalonia.Services
             this.statusThread.Start();
         }
 
-        public async Task<DownloadStatusResponse.Types.DownloadStatus> GetStatus(string filename)
+        public async Task<Dictionary<string, DownloadStatusResponse.Types.DownloadStatus>> GetStatus()
         {
             await this.semaphore.WaitAsync();
             try
             {
-                if (this.status.TryGetValue(filename, out var value))
-                {
-                    return value;
-                }
-
-                return null;
+                return this.status.ToDictionary(x => x.Key, y => y.Value);
             }
             finally
             {

@@ -22,14 +22,10 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         AvaloniaList<DownloadContext> Packs { get; } = new AvaloniaList<DownloadContext>();
 
-
         public string SearchTerm
         {
             get => this.searchTerm;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref this.searchTerm, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref this.searchTerm, value);
         }
 
         public SearchViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadContextService downloadContextService)

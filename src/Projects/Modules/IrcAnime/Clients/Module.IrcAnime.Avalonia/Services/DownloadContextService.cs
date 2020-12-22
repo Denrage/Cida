@@ -26,12 +26,13 @@ namespace Module.IrcAnime.Avalonia.Services
 
         private async Task DownloadStatusService_OnStatusUpdate()
         {
-            foreach (var item in context.Values.Where(x => !x.Downloaded))
+            var status = await this.downloadStatusService.GetStatus();
+            foreach (var item in context.Values)
             {
-                var status = await this.downloadStatusService.GetStatus(item.Pack.Name);
-                if (status != null)
+                if (status.TryGetValue(item.Pack.Name, out var result))
                 {
-                    item.DownloadedBytes = !status.Downloaded ? (long)status.DownloadedBytes : (long)status.Filesize;
+                    item.DownloadedBytes = !result.Downloaded ? (long)result.DownloadedBytes : (long)result.Filesize;
+                    item.Downloaded = result.Downloaded;
                 }
             }
         }
