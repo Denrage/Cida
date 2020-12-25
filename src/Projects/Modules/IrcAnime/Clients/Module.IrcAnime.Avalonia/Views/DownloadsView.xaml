@@ -3,8 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:converter="clr-namespace:Module.IrcAnime.Avalonia.Converter"
+             xmlns:attached="clr-namespace:Module.IrcAnime.Avalonia.AttachedProperties"
+             xmlns:input="clr-namespace:Avalonia.Input;assembly=Avalonia.Input"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Module.IrcAnime.Avalonia.Views.DownloadsView">
+             x:Class="Module.IrcAnime.Avalonia.Views.DownloadsView" attached:EventToCommand.Command="{Binding FocusCommand}" attached:EventToCommand.EventName="Initialized">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

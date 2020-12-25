@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace Module.IrcAnime.Avalonia.ViewModels
 {
@@ -19,10 +20,13 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         public AvaloniaList<DownloadContext> AvailableDownloads { get; } = new AvaloniaList<DownloadContext>();
 
+        public ICommand FocusCommand { get; }
+
         public DownloadsViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadContextService downloadContextService)
         {
             this.client = client;
             this.downloadContextService = downloadContextService;
+            this.FocusCommand = ReactiveCommand.Create(async () => await RefreshAvailableDownloads());
         }
 
         public async Task RefreshAvailableDownloads()
