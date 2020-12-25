@@ -13,6 +13,9 @@ namespace Module.IrcAnime.Avalonia.Services
     //TODO: Interface this
     public class DownloadService
     {
+        SemaphoreSlim downloadListSemaphore = new SemaphoreSlim(1);
+        private List<string> currentDownloads = new List<string>();
+        
         public class DownloadSettings
         {
             public string DownloadFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cida", "Avalonia", "IrcDownloads");
@@ -31,6 +34,21 @@ namespace Module.IrcAnime.Avalonia.Services
 
         public async Task Download(string filename, CancellationToken token)
         {
+            await this.downloadListSemaphore.WaitAsync();
+            try
+            {
+                if(this.currentDownloads.Contains(filename))
+                {
+                    return;
+                }
+
+                this.currentDownloads.Add(filename);
+            }
+            finally
+            {
+                this.downloadListSemaphore.Release();
+            }
+
             Directory.CreateDirectory((await this.GetDownloadFolderAsync()));
 
             var information = await this.client.FileTransferInformationAsync(new FileTransferInformationRequest() { FileName = filename });

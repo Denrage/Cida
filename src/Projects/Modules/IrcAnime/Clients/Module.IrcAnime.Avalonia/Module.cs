@@ -22,9 +22,9 @@ namespace Module.IrcAnime.Avalonia
             var settingsService = settingsFactory.Get(this.Name);
             var packService = new PackService();
             var downloadStatusService = new DownloadStatusService(client);
-            var downloadContextService = new DownloadContextService(packService, downloadStatusService);
+            var downloadContextService = new DownloadContextService(packService, downloadStatusService, settingsService);
             
-            ViewModel = new IrcAnimeViewModel(new SearchViewModel(client, downloadContextService), new DownloadsViewModel(client, downloadContextService));
+            ViewModel = new IrcAnimeViewModel(new SearchViewModel(client, downloadContextService, new DownloadService(client, settingsService)), new DownloadsViewModel(client, downloadContextService));
             await Task.CompletedTask;
         }
     }

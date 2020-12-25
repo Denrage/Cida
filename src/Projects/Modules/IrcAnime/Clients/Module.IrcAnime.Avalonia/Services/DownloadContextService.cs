@@ -1,4 +1,5 @@
-﻿using Module.IrcAnime.Avalonia.Models;
+﻿using Cida.Client.Avalonia.Api;
+using Module.IrcAnime.Avalonia.Models;
 using Module.IrcAnime.Avalonia.ViewModels;
 using System;
 using System.Collections.Concurrent;
@@ -14,13 +15,14 @@ namespace Module.IrcAnime.Avalonia.Services
     {
         private readonly PackService packService;
         private readonly DownloadStatusService downloadStatusService;
+        private readonly IModuleSettingsService moduleSettingsService;
         private ConcurrentDictionary<string, DownloadContext> context = new ConcurrentDictionary<string, DownloadContext>();
 
-        public DownloadContextService(PackService packService, DownloadStatusService downloadStatusService)
+        public DownloadContextService(PackService packService, DownloadStatusService downloadStatusService, IModuleSettingsService moduleSettingsService)
         {
             this.packService = packService;
             this.downloadStatusService = downloadStatusService;
-
+            this.moduleSettingsService = moduleSettingsService;
             this.downloadStatusService.OnStatusUpdate += async () => await this.DownloadStatusService_OnStatusUpdate();
         }
 
@@ -32,7 +34,17 @@ namespace Module.IrcAnime.Avalonia.Services
                 if (status.TryGetValue(item.Pack.Name, out var result))
                 {
                     item.DownloadedBytes = !result.Downloaded ? (long)result.DownloadedBytes : (long)result.Filesize;
-                    item.Downloaded = result.Downloaded;
+                    if (result.Downloaded)
+                    {
+                        item.SetDownloadedToCida();
+                    }
+                    else
+                    {
+                        if (!item.Status.HasFlag(PackageStatus.Downloading))
+                        {
+                            item.SetDownloading();
+                        }
+                    }
                 }
             }
         }
@@ -41,7 +53,7 @@ namespace Module.IrcAnime.Avalonia.Services
         {
             if (!this.context.TryGetValue(packMetadata.Name, out var result))
             {
-                result = new DownloadContext(this.packService.Get(packMetadata));
+                result = new DownloadContext(this.packService.Get(packMetadata), this.moduleSettingsService);
                 this.context.TryAdd(packMetadata.Name, result);
             }
 

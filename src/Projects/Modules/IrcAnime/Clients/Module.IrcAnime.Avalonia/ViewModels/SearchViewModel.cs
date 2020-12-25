@@ -17,6 +17,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
     {
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly DownloadContextService downloadContextService;
+        private readonly DownloadService downloadService;
         private readonly SemaphoreSlim packSemaphore = new SemaphoreSlim(1, 1);
         private string searchTerm;
 
@@ -28,10 +29,11 @@ namespace Module.IrcAnime.Avalonia.ViewModels
             set => this.RaiseAndSetIfChanged(ref this.searchTerm, value);
         }
 
-        public SearchViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadContextService downloadContextService)
+        public SearchViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadContextService downloadContextService, DownloadService downloadService)
         {
             this.client = client;
             this.downloadContextService = downloadContextService;
+            this.downloadService = downloadService;
         }
 
         public async Task Search()
@@ -58,6 +60,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
                     });
 
                     context.OnDownload += async item => await this.Context_OnDownload(item);
+                    context.OnDownloadLocally += async item => await this.Context_OnDownloadLocally(item);
 
                     if (contexts.FirstOrDefault(x => x.Pack.Name == context.Pack.Name) == null)
                     {
@@ -93,6 +96,12 @@ namespace Module.IrcAnime.Avalonia.ViewModels
                     PackageNumber = (long)item.Pack.Packs.First().Value,
                 }
             });
+        }
+
+        private async Task Context_OnDownloadLocally(DownloadContext item)
+        {
+            await this.downloadService.Download(item.Pack.Name, default);
+            await item.UpdateLocallyAvailable();
         }
     }
 }
