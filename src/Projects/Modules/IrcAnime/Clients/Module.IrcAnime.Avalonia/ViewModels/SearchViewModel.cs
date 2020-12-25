@@ -100,7 +100,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         private async Task Context_OnDownloadLocally(DownloadContext item)
         {
-            await this.downloadService.Download(item.Pack.Name, default);
+            await this.downloadService.Download(item, default);
             await item.UpdateLocallyAvailable();
         }
     }

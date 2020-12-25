@@ -16,14 +16,23 @@ namespace Module.IrcAnime.Avalonia.Services
         private readonly PackService packService;
         private readonly DownloadStatusService downloadStatusService;
         private readonly IModuleSettingsService moduleSettingsService;
+        private readonly DownloadService downloadService;
         private ConcurrentDictionary<string, DownloadContext> context = new ConcurrentDictionary<string, DownloadContext>();
 
-        public DownloadContextService(PackService packService, DownloadStatusService downloadStatusService, IModuleSettingsService moduleSettingsService)
+        public DownloadContextService(PackService packService, DownloadStatusService downloadStatusService, IModuleSettingsService moduleSettingsService, DownloadService downloadService)
         {
             this.packService = packService;
             this.downloadStatusService = downloadStatusService;
             this.moduleSettingsService = moduleSettingsService;
+            this.downloadService = downloadService;
             this.downloadStatusService.OnStatusUpdate += async () => await this.DownloadStatusService_OnStatusUpdate();
+            this.downloadService.OnBytesDownloaded += this.DownloadService_OnBytesDownloaded;
+            this.downloadService.OnDownloadFinished += this.DownloadService_OnDownloadFinished;
+        }
+
+        private void DownloadService_OnDownloadFinished(DownloadContext context)
+        {
+            context.SetDownloadedLocally();
         }
 
         private async Task DownloadStatusService_OnStatusUpdate()
@@ -46,6 +55,15 @@ namespace Module.IrcAnime.Avalonia.Services
                         }
                     }
                 }
+            }
+        }
+
+        private void DownloadService_OnBytesDownloaded(DownloadContext context, long receivedBytes)
+        {
+            context.DownloadedBytes = receivedBytes;
+            if (!context.Status.HasFlag(PackageStatus.Downloading))
+            {
+                context.SetDownloading();
             }
         }
 

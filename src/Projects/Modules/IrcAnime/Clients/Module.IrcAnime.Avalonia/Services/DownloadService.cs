@@ -1,5 +1,6 @@
 ﻿using Cida.Client.Avalonia.Api;
 using Ircanime;
+using Module.IrcAnime.Avalonia.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,7 +16,10 @@ namespace Module.IrcAnime.Avalonia.Services
     {
         SemaphoreSlim downloadListSemaphore = new SemaphoreSlim(1);
         private List<string> currentDownloads = new List<string>();
-        
+
+        public event Action<DownloadContext, long> OnBytesDownloaded;
+        public event Action<DownloadContext> OnDownloadFinished;
+
         public class DownloadSettings
         {
             public string DownloadFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cida", "Avalonia", "IrcDownloads");
@@ -32,8 +36,9 @@ namespace Module.IrcAnime.Avalonia.Services
 
         private async Task<string> GetDownloadFolderAsync() => (await this.settingsService.Get<DownloadSettings>()).DownloadFolder;
 
-        public async Task Download(string filename, CancellationToken token)
+        public async Task Download(DownloadContext context, CancellationToken token)
         {
+            var filename = context.Pack.Name;
             await this.downloadListSemaphore.WaitAsync();
             try
             {
@@ -72,8 +77,11 @@ namespace Module.IrcAnime.Avalonia.Services
                         chunkStream.ResponseStream.Current.Chunk.CopyTo(buffer, 0);
                         await filestream.WriteAsync(buffer, 0, (int)chunkStream.ResponseStream.Current.Length, token);
                         filestream.Seek((long)chunkStream.ResponseStream.Current.Position, SeekOrigin.Begin);
+                        Task.Run(() => this.OnBytesDownloaded?.Invoke(context, filestream.Position));
                     }
                 }
+
+                await Task.Run(() => this.OnDownloadFinished?.Invoke(context));
             }
 
         }
