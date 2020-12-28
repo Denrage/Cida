@@ -1,4 +1,5 @@
 ﻿using Cida.Client.Avalonia.Api;
+using Ircanime;
 using Module.IrcAnime.Avalonia.Models;
 using Module.IrcAnime.Avalonia.ViewModels;
 using System;
@@ -17,14 +18,16 @@ namespace Module.IrcAnime.Avalonia.Services
         private readonly DownloadStatusService downloadStatusService;
         private readonly IModuleSettingsService moduleSettingsService;
         private readonly DownloadService downloadService;
+        private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private ConcurrentDictionary<string, DownloadContext> context = new ConcurrentDictionary<string, DownloadContext>();
 
-        public DownloadContextService(PackService packService, DownloadStatusService downloadStatusService, IModuleSettingsService moduleSettingsService, DownloadService downloadService)
+        public DownloadContextService(PackService packService, DownloadStatusService downloadStatusService, IModuleSettingsService moduleSettingsService, DownloadService downloadService, IrcAnimeService.IrcAnimeServiceClient client)
         {
             this.packService = packService;
             this.downloadStatusService = downloadStatusService;
             this.moduleSettingsService = moduleSettingsService;
             this.downloadService = downloadService;
+            this.client = client;
             this.downloadStatusService.OnStatusUpdate += async () => await this.DownloadStatusService_OnStatusUpdate();
             this.downloadService.OnBytesDownloaded += this.DownloadService_OnBytesDownloaded;
             this.downloadService.OnDownloadFinished += this.DownloadService_OnDownloadFinished;
@@ -72,6 +75,8 @@ namespace Module.IrcAnime.Avalonia.Services
             if (!this.context.TryGetValue(packMetadata.Name, out var result))
             {
                 result = new DownloadContext(this.packService.Get(packMetadata), this.moduleSettingsService);
+                result.OnDownload += async item => await this.Context_OnDownload(item);
+                result.OnDownloadLocally += async item => await this.Context_OnDownloadLocally(item);
                 this.context.TryAdd(packMetadata.Name, result);
             }
 
@@ -79,6 +84,26 @@ namespace Module.IrcAnime.Avalonia.Services
             this.packService.Update(packMetadata);
 
             return result;
+        }
+
+
+        private async Task Context_OnDownload(DownloadContext item)
+        {
+            await this.client.DownloadAsync(new DownloadRequest()
+            {
+                DownloadRequest_ = new DownloadRequest.Types.Request()
+                {
+                    BotName = item.Pack.Packs.First().Key,
+                    FileName = item.Pack.Name,
+                    PackageNumber = (long)item.Pack.Packs.First().Value,
+                }
+            });
+        }
+
+        private async Task Context_OnDownloadLocally(DownloadContext item)
+        {
+            await this.downloadService.Download(item, default);
+            await item.UpdateLocallyAvailable();
         }
     }
 }

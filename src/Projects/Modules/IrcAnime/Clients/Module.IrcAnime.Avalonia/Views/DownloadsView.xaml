@@ -4,32 +4,55 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:converter="clr-namespace:Module.IrcAnime.Avalonia.Converter"
              xmlns:attached="clr-namespace:Module.IrcAnime.Avalonia.AttachedProperties"
+             xmlns:viewmodels="clr-namespace:Module.IrcAnime.Avalonia.ViewModels"
              xmlns:input="clr-namespace:Avalonia.Input;assembly=Avalonia.Input"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.IrcAnime.Avalonia.Views.DownloadsView" attached:EventToCommand.Command="{Binding FocusCommand}" attached:EventToCommand.EventName="Initialized">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converter:DownloadStatusToBooleanConverter x:Key="DownloadStatusToBooleanConverter"/>
+            <converter:InverseDownloadStatusToBooleanConverter x:Key="InverseDownloadStatusToBooleanConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Button Content="Refresh" Command="{Binding RefreshAvailableDownloads}"/>
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl Items="{Binding AvailableDownloads}">
-                <ItemsControl.ItemTemplate>
+        <TextBox x:Name="Filter" Text="{Binding Filter}" />
+        <ScrollViewer  Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <ItemsRepeater Items="{Binding FilteredDownloads}" >
+                <ItemsRepeater.ItemTemplate>
                     <DataTemplate>
                         <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0"  Text="{Binding Pack.Name}"/>
-                                <TextBlock Grid.Row="1" Text="{Binding Pack.EpisodeNumber}"/>
+                            <Grid Height="48">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0.9*" />
+                                    <ColumnDefinition Width="0.1*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock ZIndex="1"  Grid.Row="0" Grid.Column="0" Text="{Binding Pack.Name}"/>
+                                <ProgressBar ZIndex="0"  Background="Transparent" Grid.Column="0"  Value="{Binding Progress}" Minimum="0" Maximum="100" IsVisible="{Binding Status, Converter={StaticResource DownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.Downloading}}"/>
+
+                                <Button ZIndex="1" BorderBrush="Transparent" Padding="0"  Background="Transparent"  Grid.Column="1" IsVisible="{Binding Status, Converter={StaticResource InverseDownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.Locally}}" Command="{Binding DownloadLocally}">
+                                    <Panel>
+                                        <Image Width="46" Height="46"  Source="avares://Module.IrcAnime.Avalonia/Assets/download.png"/>
+                                    </Panel>
+                                </Button>
+                                <Button IsEnabled="false"  ZIndex="1" BorderBrush="Transparent" Padding="0"  Background="Transparent" Grid.Column="1" IsVisible="{Binding Status, Converter={StaticResource DownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.Locally}}">
+                                    <Panel>
+                                        <Image Width="46" Height="46"  Source="avares://Module.IrcAnime.Avalonia/Assets/checkmark.png"/>
+                                    </Panel>
+                                </Button>
                             </Grid>
                         </Border>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
         </ScrollViewer>
+        <Button Grid.Row="2"  Content="Refresh" Command="{Binding RefreshAvailableDownloads}"/>
+        <Button Grid.Row="3" Content="Open Downloads Folder" Command="{Binding OpenDownloadsFolder}"/>
     </Grid>
 </UserControl>

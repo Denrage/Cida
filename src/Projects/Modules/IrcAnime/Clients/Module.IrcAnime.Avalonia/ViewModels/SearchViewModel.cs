@@ -59,9 +59,6 @@ namespace Module.IrcAnime.Avalonia.ViewModels
                         Size = (ulong)item.FileSize,
                     });
 
-                    context.OnDownload += async item => await this.Context_OnDownload(item);
-                    context.OnDownloadLocally += async item => await this.Context_OnDownloadLocally(item);
-
                     if (contexts.FirstOrDefault(x => x.Pack.Name == context.Pack.Name) == null)
                     {
                         contexts.Add(context);
@@ -83,25 +80,6 @@ namespace Module.IrcAnime.Avalonia.ViewModels
                 });
 
             }
-        }
-
-        private async Task Context_OnDownload(DownloadContext item)
-        {
-            await this.client.DownloadAsync(new DownloadRequest()
-            {
-                DownloadRequest_ = new DownloadRequest.Types.Request()
-                {
-                    BotName = item.Pack.Packs.First().Key,
-                    FileName = item.Pack.Name,
-                    PackageNumber = (long)item.Pack.Packs.First().Value,
-                }
-            });
-        }
-
-        private async Task Context_OnDownloadLocally(DownloadContext item)
-        {
-            await this.downloadService.Download(item, default);
-            await item.UpdateLocallyAvailable();
         }
     }
 }

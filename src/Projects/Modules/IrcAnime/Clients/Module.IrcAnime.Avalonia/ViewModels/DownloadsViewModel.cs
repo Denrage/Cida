@@ -6,6 +6,7 @@ using Module.IrcAnime.Avalonia.Services;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,15 +18,32 @@ namespace Module.IrcAnime.Avalonia.ViewModels
     {
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly DownloadContextService downloadContextService;
+        private readonly IModuleSettingsService moduleSettingsService;
 
         public AvaloniaList<DownloadContext> AvailableDownloads { get; } = new AvaloniaList<DownloadContext>();
 
+        public IEnumerable<DownloadContext> FilteredDownloads => string.IsNullOrEmpty(this.Filter) ? this.AvailableDownloads : this.AvailableDownloads.Where(x => x.Pack.Name.ToLower().Contains(this.Filter));
+
+        private string filter;
+
+        public string Filter
+        {
+            get => filter;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref this.filter, value);
+                this.RaisePropertyChanged(nameof(this.FilteredDownloads));
+            }
+        }
+
+
         public ICommand FocusCommand { get; }
 
-        public DownloadsViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadContextService downloadContextService)
+        public DownloadsViewModel(IrcAnimeService.IrcAnimeServiceClient client, DownloadContextService downloadContextService, IModuleSettingsService moduleSettingsService)
         {
             this.client = client;
             this.downloadContextService = downloadContextService;
+            this.moduleSettingsService = moduleSettingsService;
             this.FocusCommand = ReactiveCommand.Create(async () => await RefreshAvailableDownloads());
         }
 
@@ -54,6 +72,13 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
             //TODO: Reminder for future use
             //await this.downloadService.Download(this.AvailableDownloads[0].Name, default);
+        }
+
+        public async Task OpenDownloadsFolder()
+        {
+            // TODO: Only make this usable on windows or find a way for cross platform
+            var settingsFolder = await this.moduleSettingsService.Get<DownloadService.DownloadSettings>();
+            Process.Start("explorer.exe", settingsFolder.DownloadFolder);
         }
     }
 }

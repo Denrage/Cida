@@ -14,7 +14,6 @@ namespace Module.IrcAnime.Avalonia.ViewModels
     public class DownloadContext : ViewModelBase
     {
         private long downloadedBytes;
-        private bool locallyAvailable;
         private PackageStatus status = PackageStatus.NotAvailable;
         private readonly IModuleSettingsService moduleSettingsService;
 
@@ -55,9 +54,9 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         private async Task<string> GetDownloadFolderAsync() => (await this.moduleSettingsService.Get<DownloadService.DownloadSettings>()).DownloadFolder;
 
-        public async Task Download() => await Task.Run(() => this.OnDownload.Invoke(this));
+        public async Task Download() => await Task.Run(() => this.OnDownload?.Invoke(this));
 
-        public async Task DownloadLocally() => await Task.Run(() => this.OnDownloadLocally.Invoke(this));
+        public async Task DownloadLocally() => await Task.Run(() => this.OnDownloadLocally?.Invoke(this));
 
         public async Task UpdateLocallyAvailable()
         {

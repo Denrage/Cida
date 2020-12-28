@@ -34,18 +34,14 @@
                             </ItemsPresenter>
                         </ScrollViewer>
                         <ContentControl Content="{TemplateBinding Tag}" HorizontalContentAlignment="Right" DockPanel.Dock="Bottom"/>
-                        <ScrollViewer
-                            HorizontalScrollBarVisibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SelectedItem.(ScrollViewer.HorizontalScrollBarVisibility)}"
-                            VerticalScrollBarVisibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SelectedItem.(ScrollViewer.VerticalScrollBarVisibility)}">
-                            <ContentPresenter
+                        <ContentPresenter
                                     Name="PART_SelectedContentHost"
                                     Margin="{TemplateBinding Padding}"                           
                                     HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                     VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                                     Content="{TemplateBinding SelectedContent}"
                                     ContentTemplate="{TemplateBinding SelectedContentTemplate}">
-                            </ContentPresenter>
-                        </ScrollViewer>
+                        </ContentPresenter>
                     </DockPanel>
                 </Border>
             </ControlTemplate>
