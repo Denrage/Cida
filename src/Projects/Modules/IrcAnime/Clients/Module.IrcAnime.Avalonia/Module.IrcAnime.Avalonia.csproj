@@ -21,6 +21,7 @@
   <ItemGroup>
     <None Remove="Views\DownloadsView.xaml" />
     <None Remove="Views\SearchView.xaml" />
+    <None Remove="Views\SettingsView.xaml" />
   </ItemGroup>
 
 
@@ -48,6 +49,9 @@
     <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <AvaloniaResource Update="Views\SettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
     <AvaloniaResource Update="Views\DownloadsView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaResource>
@@ -56,6 +60,9 @@
     </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\SettingsView.xaml.cs">
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
     <Compile Update="Views\DownloadsView.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>

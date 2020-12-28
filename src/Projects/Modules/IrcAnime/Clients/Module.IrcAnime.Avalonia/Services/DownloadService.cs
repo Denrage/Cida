@@ -20,9 +20,11 @@ namespace Module.IrcAnime.Avalonia.Services
         public event Action<DownloadContext, long> OnBytesDownloaded;
         public event Action<DownloadContext> OnDownloadFinished;
 
-        public class DownloadSettings
+        public class DownloadSettings : ICloneable
         {
             public string DownloadFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cida", "Avalonia", "IrcDownloads");
+
+            public object Clone() => this.MemberwiseClone();
         }
 
         private readonly IrcAnimeService.IrcAnimeServiceClient client;

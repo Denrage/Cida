@@ -8,9 +8,9 @@ namespace Cida.Client.Avalonia.Api
     public interface IModuleSettingsService
     {
         Task Save<T>(T settings)
-            where T: class;
+            where T : class, ICloneable;
 
         Task<T> Get<T>()
-            where T : class, new();
+            where T : class, ICloneable, new();
     }
 }

@@ -21,7 +21,7 @@ namespace Cida.Client.Avalonia.Services
         }
 
         public async Task<T> Get<T>() 
-            where T : class, new()
+            where T : class, ICloneable, new()
         {
             var type = typeof(T);
             if (this.settingsCache.TryGetValue(type, out var result))
@@ -32,11 +32,11 @@ namespace Cida.Client.Avalonia.Services
             result = await this.settingsService.Get<T>(this.moduleName);
 
             this.settingsCache.TryAdd(type, result);
-            return (T)result;
+            return (T)((T)result).Clone();
         }
 
         public async Task Save<T>(T settings) 
-            where T : class
+            where T : class, ICloneable
         {
             var type = typeof(T);
             this.settingsCache.TryAdd(type,settings);

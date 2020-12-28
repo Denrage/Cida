@@ -23,6 +23,9 @@
         <TabItem Header="Available Downloads">
             <ContentControl Content="{Binding Downloads}"/>
         </TabItem>
+        <TabItem Header="Settings">
+            <ContentControl Content="{Binding Settings}"/>
+        </TabItem>
     </TabControl>
 
 </UserControl>
