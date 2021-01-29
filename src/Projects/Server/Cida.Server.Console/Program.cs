@@ -34,7 +34,10 @@ namespace Cida.Server.Console
 
             var program = new Program(nodeName);
             program.Start();
-            System.Console.ReadKey();
+            while (true)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
         }
 
         public Program(string nodeName = "")
