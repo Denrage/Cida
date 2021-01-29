@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using IrcClient.Clients;
+using NLog;
 
 namespace IrcClient.Downloaders
 {
@@ -30,7 +31,7 @@ namespace IrcClient.Downloaders
 
         public string TempFolder { get; }
 
-        public static bool TryCreateFromSendMessage(string message, string tempFolder, out DccDownloader downloader)
+        public static bool TryCreateFromSendMessage(string message, string tempFolder, out DccDownloader downloader, ILogger logger = null)
         {
             try
             {
@@ -39,7 +40,7 @@ namespace IrcClient.Downloaders
                 string host = ParseHost(ref processedMessage);
                 int port = ParsePort(ref processedMessage);
 
-                DccClient client = new DccClient(host, port, 64 * 1024);
+                DccClient client = new DccClient(host, port, logger, 64 * 1024);
 
                 if (ulong.TryParse(processedMessage, out ulong filesize))
                 {

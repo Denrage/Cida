@@ -17,6 +17,7 @@ using Cida.Api;
 using System.Security.Cryptography;
 using System.Linq;
 using System.Collections.Immutable;
+using NLog;
 
 namespace Module.IrcAnime.Cida.Services
 {
@@ -35,12 +36,12 @@ namespace Module.IrcAnime.Cida.Services
 
         public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-        public DownloadService(string host, int port, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Filesystem.Directory downloadDirectory)
+        public DownloadService(string host, int port, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Filesystem.Directory downloadDirectory, ILogger logger = null)
         {
             string name = "ad_" + Guid.NewGuid();
             this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
             this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
-            this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder);
+            this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder, logger);
             this.downloadDirectory = downloadDirectory;
 
             this.ircClient.DownloadRequested += downloader =>

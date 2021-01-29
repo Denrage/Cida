@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using NLog;
 
 namespace IrcClient.Connections
 {
@@ -9,8 +10,8 @@ namespace IrcClient.Connections
         private ConcurrentQueue<(byte[], int)> buffers; 
         private AutoResetEvent bufferEvent;
 
-        public DccConnection(int bufferSize = 1024)
-            : base(bufferSize)
+        public DccConnection(ILogger logger = null, int bufferSize = 1024)
+            : base(logger, bufferSize)
         {
             this.buffers = new ConcurrentQueue<(byte[], int)>();
             this.bufferEvent = new AutoResetEvent(false);

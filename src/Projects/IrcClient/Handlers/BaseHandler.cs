@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using IrcClient.Models;
+using NLog;
 
 namespace IrcClient.Handlers
 {
     internal abstract class BaseHandler<T>
         where T : struct
     {
-        protected BaseHandler()
+        private readonly ILogger logger;
+
+        protected BaseHandler(ILogger logger = null)
         {
+            this.logger = logger;
             Handler = new Dictionary<T, Action<IrcMessage>>();
         }
 
@@ -32,6 +36,7 @@ namespace IrcClient.Handlers
 
         protected virtual void OnMessageReceived(IrcMessage message)
         {
+            logger?.Log(LogLevel.Debug, $"Received \"{message.Message}\" from {message.Sender}");
             if (this.TryParseCommand(message.Message, out T? command, out string parameter))
             {
                 if (command != null)

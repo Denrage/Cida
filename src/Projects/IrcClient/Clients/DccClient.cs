@@ -1,4 +1,5 @@
 ﻿using IrcClient.Connections;
+using NLog;
 using System;
 using System.Net;
 
@@ -8,12 +9,12 @@ namespace IrcClient.Clients
     {
         private readonly DccConnection connection;
 
-        public DccClient(string host, int port, int bufferSize = 1024)
+        public DccClient(string host, int port, ILogger logger = null, int bufferSize = 1024)
         {
             Host = host;
             Port = port;
 
-            connection = new DccConnection(bufferSize);
+            connection = new DccConnection(logger, bufferSize);
         }
 
         public string Host { get; private set; }

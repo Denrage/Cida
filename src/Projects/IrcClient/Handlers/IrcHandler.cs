@@ -4,6 +4,7 @@ using IrcClient.Commands;
 using IrcClient.Commands.Helpers;
 using IrcClient.Connections;
 using IrcClient.Models;
+using NLog;
 
 namespace IrcClient.Handlers
 {
@@ -12,7 +13,8 @@ namespace IrcClient.Handlers
         private readonly IrcConnection connection;
         private readonly CtcpHandler ctcpHandler;
 
-        public IrcHandler()
+        public IrcHandler(ILogger logger = null)
+            :base(logger)
         {
             connection = new IrcConnection();
             ctcpHandler = new CtcpHandler();
