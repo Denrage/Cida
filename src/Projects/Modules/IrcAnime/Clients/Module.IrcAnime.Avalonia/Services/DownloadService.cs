@@ -79,7 +79,9 @@ namespace Module.IrcAnime.Avalonia.Services
                         chunkStream.ResponseStream.Current.Chunk.CopyTo(buffer, 0);
                         await filestream.WriteAsync(buffer, 0, (int)chunkStream.ResponseStream.Current.Length, token);
                         filestream.Seek((long)chunkStream.ResponseStream.Current.Position, SeekOrigin.Begin);
+#pragma warning disable CS4014 // That's exactly what we want
                         Task.Run(() => this.OnBytesDownloaded?.Invoke(context, filestream.Position));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     }
                 }
 

@@ -15,7 +15,7 @@ namespace Cida.Server.Console
     internal class Program
     {
         private readonly string currentWorkingDirectory = Path
-            .GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase)
+            .GetDirectoryName(Assembly.GetExecutingAssembly().Location)
             .Replace("file:", string.Empty).TrimStart('\\');
 
         private readonly IContainer container;

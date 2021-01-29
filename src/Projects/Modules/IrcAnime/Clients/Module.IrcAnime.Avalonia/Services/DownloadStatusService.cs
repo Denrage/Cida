@@ -1,6 +1,4 @@
 ﻿using Ircanime;
-using SharpDX.Direct2D1.Effects;
-using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
