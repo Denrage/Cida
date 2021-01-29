@@ -95,7 +95,7 @@ namespace IrcClient.Clients
             {
                 while (!namesReceived)
                 {
-                    Task.Delay(100);
+                    System.Threading.Thread.Sleep(100);
                 }
 
                 namesReceived = false;
@@ -103,7 +103,7 @@ namespace IrcClient.Clients
 
                 while (!namesReceived)
                 {
-                    Task.Delay(100);
+                    System.Threading.Thread.Sleep(100);
                 }
             }
 
@@ -155,6 +155,8 @@ namespace IrcClient.Clients
             {
                 namesReceived = true;
             }
+
+            Console.WriteLine(message.Message);
         }
 
         private void ErrorReceivedHandler(IrcMessage message)
