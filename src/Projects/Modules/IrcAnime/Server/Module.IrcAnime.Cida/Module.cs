@@ -29,7 +29,7 @@ namespace Module.IrcAnime.Cida
 
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
-        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient, Directory moduleDirectory)
+        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient, Directory moduleDirectory, IModuleLogger moduleLogger)
         {
             this.connectionString =
                 await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
@@ -46,7 +46,9 @@ namespace Module.IrcAnime.Cida
             this.downloadService = new DownloadService("irc.rizon.net", 6667, this.GetContext, ftpClient, downloadDirectory);
 
             this.GrpcServices = new[] { IrcAnimeService.BindService(new IrcAnimeImplementation(this.searchService, this.downloadService, this.GetContext, ftpClient, downloadDirectory)), };
-            Console.WriteLine("Loaded IrcAnime");
+
+            moduleLogger.Log(NLog.LogLevel.Info, "IrcAnime loaded successfully");
+            moduleLogger.CreateSubLogger("IrcClient").Info("IrcClientMessage");
         }
 
         private IrcAnimeDbContext GetContext() => new IrcAnimeDbContext(this.connectionString);

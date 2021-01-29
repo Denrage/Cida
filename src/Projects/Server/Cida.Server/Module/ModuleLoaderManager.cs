@@ -32,14 +32,24 @@ namespace Cida.Server.Module
         private readonly ILogger logger;
         private readonly GlobalConfigurationService globalConfigurationService;
         private readonly IModuleFtpClientFactory moduleFtpClientFactory;
+        private readonly IModuleLoggerFactory moduleLoggerFactory;
         private readonly ConcurrentDictionary<Guid, CidaModule> modules;
         private readonly ConcurrentBag<Guid> unpackedModules;
 
         public IEnumerable<Guid> Modules
             => this.modules.Select(x => x.Key);
 
-        public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar, Infrastructure.IFtpClient ftpClient,
-            CidaContext databaseContext, IDatabaseConnector databaseConnector, ILogger logger, GlobalConfigurationService globalConfigurationService, IModuleFtpClientFactory moduleFtpClientFactory, IEnumerable<string> unpackedModuleDirectories = null)
+        public ModuleLoaderManager(
+            string moduleDirectory,
+            IGrpcRegistrar grpcRegistrar,
+            Infrastructure.IFtpClient ftpClient,
+            CidaContext databaseContext,
+            IDatabaseConnector databaseConnector,
+            ILogger logger,
+            GlobalConfigurationService globalConfigurationService,
+            IModuleFtpClientFactory moduleFtpClientFactory,
+            IModuleLoggerFactory moduleLoggerFactory,
+            IEnumerable<string> unpackedModuleDirectories = null)
         {
             this.moduleDirectory = moduleDirectory;
             this.unpackedModuleDirectories = unpackedModuleDirectories ?? Array.Empty<string>();
@@ -50,6 +60,7 @@ namespace Cida.Server.Module
             this.logger = logger;
             this.globalConfigurationService = globalConfigurationService;
             this.moduleFtpClientFactory = moduleFtpClientFactory;
+            this.moduleLoggerFactory = moduleLoggerFactory;
             this.modules = new ConcurrentDictionary<Guid, CidaModule>();
             this.unpackedModules = new ConcurrentBag<Guid>();
 
@@ -279,7 +290,7 @@ namespace Cida.Server.Module
                 {
                     var rootDirectory = new Cida.Api.Models.Filesystem.Directory("ModuleFiles", null);
                     var moduleDirectory = new Cida.Api.Models.Filesystem.Directory(module.Metadata.Id.ToString(), rootDirectory);
-                    return await module.Load(this.databaseConnector, this.moduleFtpClientFactory.Create(moduleDirectory), moduleDirectory);
+                    return await module.Load(this.databaseConnector, this.moduleFtpClientFactory.Create(moduleDirectory), moduleDirectory, this.moduleLoggerFactory.Create(module.Metadata.Name));
                 }
             }
             catch (Exception ex)

@@ -39,6 +39,7 @@ namespace Cida.Server
                 this.logger,
                 this.globalConfigurationService,
                 new ModuleFtpClientFactory(ftpClient),
+                new ModuleLoggerFactory(NLog.LogManager.LogFactory),
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
 
             this.interNodeConnectionManager = new InterNodeConnectionManager(
