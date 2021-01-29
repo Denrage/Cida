@@ -155,8 +155,6 @@ namespace IrcClient.Clients
             {
                 namesReceived = true;
             }
-
-            Console.WriteLine(message.Message);
         }
 
         private void ErrorReceivedHandler(IrcMessage message)
