@@ -230,7 +230,9 @@ namespace Cida.Server.Module
                 using var requestedFile = new Cida.Api.Models.Filesystem.File(Path.GetFileName(path), this.ModuleDirectory, null);
                 using var file = await this.ftpClient.GetFileAsync(requestedFile);
                 await using var stream = await file.GetStreamAsync();
-                var loadedModule = await this.LoadPacked(stream.ToArray());
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                var loadedModule = await this.LoadPacked(memoryStream.ToArray());
                 if (loadedModule != null)
                 {
                     services.AddRange(loadedModule.GrpcServices);
@@ -257,11 +259,13 @@ namespace Cida.Server.Module
                 .Where(x => !this.unpackedModules.Contains(x.Key)))
             {
                 this.logger.Info($"Uploading module {module.Value.Metadata.Name}({module.Value.Metadata.Id})");
-                var zippedModule = await module.Value.ToArchiveStream();
+
+                async Task<Stream> getStream()
+                    => await module.Value.ToArchiveStream();
 
                 try
                 {
-                    using var file = new Cida.Api.Models.Filesystem.File($"{module.Value.Metadata.IdToString()}.{ModuleFileExtension}", this.ModuleDirectory, zippedModule);
+                    using var file = new Cida.Api.Models.Filesystem.File($"{module.Value.Metadata.IdToString()}.{ModuleFileExtension}", this.ModuleDirectory, getStream);
                     await this.ftpClient.SaveFileAsync(file);
 
 

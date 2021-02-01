@@ -56,11 +56,13 @@ namespace Cida.Server.Infrastructure
             if (responseStream != null)
             {
                 System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
-                var fileStream = new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.Create);
-                await responseStream.CopyToAsync(fileStream);
-                fileStream.Seek(0, SeekOrigin.Begin);
+                
+                async Task<Stream> getStream() 
+                    => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.Create));
+                
+                await responseStream.CopyToAsync(await getStream());
                 this.logger.Info("Downloaded File: {value1}", file.FullPath());
-                return file.ReplaceContent(fileStream);
+                return file.ReplaceContent(getStream);
             }
 
             return null;
@@ -107,7 +109,7 @@ namespace Cida.Server.Infrastructure
 
             var request = this.CreateRequest(file.FullPath(Separator));
             request.Method = WebRequestMethods.Ftp.UploadFile;
-
+            
             await using var stream = await request.GetRequestStreamAsync();
             await using var fileStream = await file.GetStreamAsync();
             await fileStream.CopyToAsync(stream);
