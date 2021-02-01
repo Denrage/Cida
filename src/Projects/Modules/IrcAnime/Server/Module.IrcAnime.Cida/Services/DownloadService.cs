@@ -33,19 +33,22 @@ namespace Module.IrcAnime.Cida.Services
         private readonly Filesystem.Directory downloadDirectory;
         private readonly SemaphoreSlim ircConnectSemaphore = new SemaphoreSlim(1);
         private readonly SemaphoreSlim ircDownloadQueueSemaphore = new SemaphoreSlim(1);
+        private readonly ILogger logger;
 
         public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-        public DownloadService(string host, int port, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Filesystem.Directory downloadDirectory, ILogger logger = null)
+        public DownloadService(string host, int port, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Filesystem.Directory downloadDirectory, IModuleLogger moduleLogger)
         {
+            this.logger = moduleLogger;
             string name = "ad_" + Guid.NewGuid();
             this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
             this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
-            this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder, logger);
+            this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder, moduleLogger.CreateSubLogger("IRC-Client"));
             this.downloadDirectory = downloadDirectory;
 
             this.ircClient.DownloadRequested += downloader =>
             {
+                this.logger.Info($"Received incoming filedownload '{downloader.Filename}'");
                 if (this.requestedDownloads.TryGetValue(downloader.Filename, out var context))
                 {
                     context.Downloader = downloader;
@@ -59,10 +62,12 @@ namespace Module.IrcAnime.Cida.Services
 
         public async Task CreateDownloader(DownloadRequest downloadRequest)
         {
+            this.logger.Info($"Incoming download request. Name: '{downloadRequest.FileName}' Bot: '{downloadRequest.BotName}' PackageNumber: '{downloadRequest.PackageNumber}'");
             using (var context = this.getContext())
             {
                 if ((await context.Downloads.FindAsync(downloadRequest.FileName)) != null)
                 {
+                    this.logger.Info($"Already downloaded '{downloadRequest.FileName}'");
                     return;
                 }
             }
@@ -72,6 +77,7 @@ namespace Module.IrcAnime.Cida.Services
             {
                 if (!this.ircClient.IsConnected)
                 {
+                    this.logger.Info("Connecting to IRC-Server");
                     this.ircClient.Connect();
                     this.ircClient.JoinChannel("#nibl");
                 }
@@ -82,56 +88,65 @@ namespace Module.IrcAnime.Cida.Services
             }
 
 
-            await this.ircDownloadQueueSemaphore.WaitAsync();
+
+
+            var createDownloaderContext = new CreateDownloaderContext()
+            {
+                Filename = downloadRequest.FileName,
+            };
+            var dccDownloaderTask = new Task<DccDownloader>(() =>
+            {
+                createDownloaderContext.ManualResetEvent.Wait();
+                return createDownloaderContext.Downloader;
+
+            }, TaskCreationOptions.LongRunning);
+
+            if (!await this.ircDownloadQueueSemaphore.WaitAsync(TimeSpan.FromSeconds(10)))
+            {
+                this.logger.Warn("Download Lock took longer than 10seconds to free!");
+            }
 
             try
             {
                 if (this.requestedDownloads.ContainsKey(downloadRequest.FileName))
                 {
+                    this.logger.Info($"Already downloading '{downloadRequest.FileName}'");
                     return;
                 }
-
-                var createDownloaderContext = new CreateDownloaderContext()
-                {
-                    Filename = downloadRequest.FileName,
-                };
-                var dccDownloaderTask = new Task<DccDownloader>(() =>
-                {
-                    createDownloaderContext.ManualResetEvent.Wait();
-                    return createDownloaderContext.Downloader;
-
-                }, TaskCreationOptions.LongRunning);
-
                 if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
                 {
                     this.ircClient.SendMessage($"xdcc send #{downloadRequest.PackageNumber}", downloadRequest.BotName);
                 }
-                dccDownloaderTask.Start();
-                var downloader = await dccDownloaderTask;
-
-                using (var context = this.getContext())
-                {
-                    context.ChangeTracker.AutoDetectChangesEnabled = false;
-                    await context.Downloads.AddAsync(new Download()
-                    {
-                        Name = downloader.Filename,
-                        Size = downloader.Filesize,
-                        DownloadStatus = DownloadStatus.Downloading,
-                    });
-
-                    context.ChangeTracker.DetectChanges();
-                    await context.SaveChangesAsync();
-                }
-
-
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                Task.Run(async () => await this.DownloadFile(downloader));
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
             finally
             {
                 this.ircDownloadQueueSemaphore.Release();
             }
+
+            this.logger.Info($"Starting download '{downloadRequest.FileName}'");
+            dccDownloaderTask.Start();
+            var downloader = await dccDownloaderTask;
+
+
+            using (var context = this.getContext())
+            {
+                context.ChangeTracker.AutoDetectChangesEnabled = false;
+                await context.Downloads.AddAsync(new Download()
+                {
+                    Name = downloader.Filename,
+                    Size = downloader.Filesize,
+                    DownloadStatus = DownloadStatus.Downloading,
+                });
+
+                context.ChangeTracker.DetectChanges();
+                await context.SaveChangesAsync();
+            }
+
+
+            this.logger.Info($"Download preparations complete. Initiate download '{downloadRequest.FileName}'");
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(async () => await this.DownloadFile(downloader));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
 
         }
@@ -140,16 +155,29 @@ namespace Module.IrcAnime.Cida.Services
         {
             if (this.downloadStatus.TryAdd(downloader.Filename, new DownloadProgress() { Size = downloader.Filesize }))
             {
-                downloader.ProgressChanged += (downloadedBytes, size) => UpdateProgress(downloader, downloadedBytes);
+                downloader.ProgressChanged += (downloadedBytes, size) =>
+                {
+                    var percent = Math.Round((double)downloadedBytes / (double)size, 4) * 100;
+                    if (percent % 5 == 0)
+                    {
+                        this.logger.Info($"{downloader.Filename}: {percent}%");
+                    }
+                    UpdateProgress(downloader, downloadedBytes);
+                };
 
+                this.logger.Info($"Start download '{downloader.Filename}'");
                 await downloader.StartDownload();
+                this.logger.Info($"Download finished '{downloader.Filename}'");
 
                 this.downloadStatus.TryRemove(downloader.Filename, out _);
+
+                async Task<Stream> getStream()
+                    => await Task.FromResult(new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
 
                 using var file = new Filesystem.File(
                     downloader.Filename,
                     this.downloadDirectory,
-                    new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
+                    getStream);
 
                 using (var context = this.getContext())
                 {
@@ -165,6 +193,7 @@ namespace Module.IrcAnime.Cida.Services
                         databaseDownloadEntry.Date = DateTime.Now;
                         databaseDownloadEntry.FtpPath = file.FullPath(Separator);
 
+                        this.logger.Info($"Uploading '{downloader.Filename}' to FTP");
                         await this.ftpClient.UploadFileAsync(file);
                         databaseDownloadEntry.DownloadStatus = DownloadStatus.Available;
 
@@ -172,6 +201,8 @@ namespace Module.IrcAnime.Cida.Services
                         await context.SaveChangesAsync();
                     }
                 }
+
+                this.logger.Info($"Download completed '{downloader.Filename}'");
             }
         }
 

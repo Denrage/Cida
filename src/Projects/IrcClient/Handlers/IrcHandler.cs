@@ -17,10 +17,10 @@ namespace IrcClient.Handlers
             :base(logger)
         {
             connection = new IrcConnection();
-            ctcpHandler = new CtcpHandler();
+            ctcpHandler = new CtcpHandler(logger);
 
             connection.DataReceived += OnMessageReceived;
-            AddHandler(IrcCommand.PrivMsg, HandleCtcpMessage);
+            AddHandler(IrcCommand.PrivMsg, HandlePrivateCtcpMessage);
             AddHandler(IrcCommand.CPrivMsg, HandleCtcpMessage);
             AddHandler(IrcCommand.Notice, HandleCtcpMessage);
             AddHandler(IrcCommand.CNotice, HandleCtcpMessage);
@@ -81,6 +81,12 @@ namespace IrcClient.Handlers
             }
 
             ctcpHandler.HandleCtcp(new IrcMessage(processedMessage, message.Sender));
+        }
+
+        private void HandlePrivateCtcpMessage(IrcMessage message)
+        {
+            this.Logger?.Log(LogLevel.Debug, $"{message.Sender}: \"{message.Message}\"");
+            this.HandleCtcpMessage(message);
         }
     }
 }

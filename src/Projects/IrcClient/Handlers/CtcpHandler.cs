@@ -3,6 +3,7 @@ using System.Linq;
 using IrcClient.Commands;
 using IrcClient.Commands.Helpers;
 using IrcClient.Models;
+using NLog;
 
 namespace IrcClient.Handlers
 {
@@ -10,9 +11,10 @@ namespace IrcClient.Handlers
     {
         private readonly DccHandler dccHandler;
 
-        public CtcpHandler()
+        public CtcpHandler(ILogger logger)
+            : base(logger)
         {
-            dccHandler = new DccHandler();
+            dccHandler = new DccHandler(logger);
 
             AddHandler(IrcCommand.Dcc, HandleDcc);
         }

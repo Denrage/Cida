@@ -43,12 +43,11 @@ namespace Module.IrcAnime.Cida
             }
 
             this.searchService = new SearchService();
-            this.downloadService = new DownloadService("irc.rizon.net", 6667, this.GetContext, ftpClient, downloadDirectory);
+            this.downloadService = new DownloadService("irc.rizon.net", 6667, this.GetContext, ftpClient, downloadDirectory, moduleLogger);
 
             this.GrpcServices = new[] { IrcAnimeService.BindService(new IrcAnimeImplementation(this.searchService, this.downloadService, this.GetContext, ftpClient, downloadDirectory)), };
 
             moduleLogger.Log(NLog.LogLevel.Info, "IrcAnime loaded successfully");
-            moduleLogger.CreateSubLogger("IrcClient").Info("IrcClientMessage");
         }
 
         private IrcAnimeDbContext GetContext() => new IrcAnimeDbContext(this.connectionString);

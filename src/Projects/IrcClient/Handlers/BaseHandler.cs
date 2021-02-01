@@ -8,11 +8,11 @@ namespace IrcClient.Handlers
     internal abstract class BaseHandler<T>
         where T : struct
     {
-        private readonly ILogger logger;
+        internal ILogger Logger { get; private set; }
 
-        protected BaseHandler(ILogger logger = null)
+        protected BaseHandler(ILogger logger)
         {
-            this.logger = logger;
+            this.Logger = logger;
             Handler = new Dictionary<T, Action<IrcMessage>>();
         }
 
@@ -36,7 +36,6 @@ namespace IrcClient.Handlers
 
         protected virtual void OnMessageReceived(IrcMessage message)
         {
-            logger?.Log(LogLevel.Debug, $"Received \"{message.Message}\" from {message.Sender}");
             if (this.TryParseCommand(message.Message, out T? command, out string parameter))
             {
                 if (command != null)
