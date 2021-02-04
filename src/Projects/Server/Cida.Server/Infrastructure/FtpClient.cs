@@ -60,9 +60,17 @@ namespace Cida.Server.Infrastructure
                 async Task<Stream> getStream() 
                     => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.Create));
                 
+                void onDispose()
+                {
+                    if (File.Exists(Path.Combine(this.tempFolder, file.Name)))
+                    {
+                        File.Delete(Path.Combine(this.tempFolder, file.Name));
+                    }
+                }
+
                 await responseStream.CopyToAsync(await getStream());
                 this.logger.Info("Downloaded File: {value1}", file.FullPath());
-                return file.ReplaceContent(getStream);
+                return file.ReplaceContent(getStream, onDispose);
             }
 
             return null;

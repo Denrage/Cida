@@ -8,20 +8,20 @@ namespace Cida.Api.Models.Filesystem
     {
         private Func<Task<Stream>> getStream;
 
-        public File(string name, Directory directory, Func<Task<Stream>> getStream)
-            : base(name, directory)
+        public File(string name, Directory directory, Func<Task<Stream>> getStream, Action onDispose = null)
+            : base(name, directory, onDispose)
         {
             this.getStream = getStream;
         }
 
-        public File ReplaceContent(Func<Task<Stream>> getStream)
+        public File ReplaceContent(Func<Task<Stream>> getStream, Action onDispose = null)
         {
             if (this.Disposed)
             {
                 throw new InvalidOperationException("This file is already disposed");
             }
             
-            var file = new File(this.Name, this.Directory, getStream);
+            var file = new File(this.Name, this.Directory, getStream, onDispose);
             this.Dispose();
             return file;
         }

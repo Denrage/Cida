@@ -174,10 +174,19 @@ namespace Module.IrcAnime.Cida.Services
                 async Task<Stream> getStream()
                     => await Task.FromResult(new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
 
+                void onDispose()
+                {
+                    if (File.Exists(Path.Combine(downloader.TempFolder, downloader.Filename)))
+                    {
+                        File.Delete(Path.Combine(downloader.TempFolder, downloader.Filename));
+                    }
+                }
+
                 using var file = new Filesystem.File(
                     downloader.Filename,
                     this.downloadDirectory,
-                    getStream);
+                    getStream,
+                    onDispose);
 
                 using (var context = this.getContext())
                 {
@@ -201,7 +210,6 @@ namespace Module.IrcAnime.Cida.Services
                         await context.SaveChangesAsync();
                     }
                 }
-
                 this.logger.Info($"Download completed '{downloader.Filename}'");
             }
         }
