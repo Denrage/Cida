@@ -81,7 +81,7 @@ namespace Module.IrcAnime.Cida
 
             public override async Task<DownloadedFilesResponse> DownloadedFiles(DownloadedFilesRequest request, ServerCallContext context)
             {
-                using(var databaseContext = this.getContext())
+                using (var databaseContext = this.getContext())
                 {
                     var downloads = await databaseContext.Downloads.ToArrayAsync();
                     return new DownloadedFilesResponse(new DownloadedFilesResponse()
@@ -155,9 +155,9 @@ namespace Module.IrcAnime.Cida
                 {
                     using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), this.downloadDirectory, null);
                     using var downloadedFile = await this.ftpClient.DownloadFileAsync(file);
+                    
                     using var fileStream = await downloadedFile.GetStreamAsync();
                     fileStream.Seek((long)request.Position, System.IO.SeekOrigin.Begin);
-
                     while (fileStream.Position != fileStream.Length)
                     {
                         var buffer = new byte[ChunkSize];
@@ -171,6 +171,7 @@ namespace Module.IrcAnime.Cida
                             Position = (ulong)fileStream.Position,
                         });
                     }
+
                 }
             }
         }

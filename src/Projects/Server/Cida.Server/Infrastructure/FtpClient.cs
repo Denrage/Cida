@@ -22,6 +22,12 @@ namespace Cida.Server.Infrastructure
             this.logger = logger;
             globalConfiguration.ConfigurationChanged +=
                 () => this.settings = globalConfiguration.ConfigurationManager.Ftp;
+
+            logger.Info($"Clearing ftp temp folder : '{tempFolder}'");
+            foreach (var file in System.IO.Directory.GetFiles(tempFolder))
+            {
+                File.Delete(file);
+            }
         }
 
         public async Task<IEnumerable<string>> GetFilesAsync(Directory directory)
@@ -38,7 +44,7 @@ namespace Cida.Server.Infrastructure
                 using var streamReader = new StreamReader(responseStream);
 
                 return (await streamReader.ReadToEndAsync().ConfigureAwait(false))
-                    .Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+                    .Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             }
 
             return Array.Empty<string>();
@@ -56,10 +62,10 @@ namespace Cida.Server.Infrastructure
             if (responseStream != null)
             {
                 System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
-                
-                async Task<Stream> getStream() 
-                    => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.Create));
-                
+
+                async Task<Stream> getStream()
+                    => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.OpenOrCreate));
+
                 void onDispose()
                 {
                     if (File.Exists(Path.Combine(this.tempFolder, file.Name)))
@@ -67,8 +73,11 @@ namespace Cida.Server.Infrastructure
                         File.Delete(Path.Combine(this.tempFolder, file.Name));
                     }
                 }
+                using (var stream = await getStream())
+                {
+                    await responseStream.CopyToAsync(stream);
+                }
 
-                await responseStream.CopyToAsync(await getStream());
                 this.logger.Info("Downloaded File: {value1}", file.FullPath());
                 return file.ReplaceContent(getStream, onDispose);
             }
@@ -117,7 +126,7 @@ namespace Cida.Server.Infrastructure
 
             var request = this.CreateRequest(file.FullPath(Separator));
             request.Method = WebRequestMethods.Ftp.UploadFile;
-            
+
             await using var stream = await request.GetRequestStreamAsync();
             await using var fileStream = await file.GetStreamAsync();
             await fileStream.CopyToAsync(stream);
@@ -128,7 +137,7 @@ namespace Cida.Server.Infrastructure
 
         private FtpWebRequest CreateRequest(string path)
         {
-            var result = (FtpWebRequest) WebRequest.Create(
+            var result = (FtpWebRequest)WebRequest.Create(
                 $"ftp://{this.settings.Host}:{this.settings.Port}{Separator}{path}");
             result.Credentials = new NetworkCredential(this.settings.Username, this.settings.Password);
             return result;
@@ -148,10 +157,10 @@ namespace Cida.Server.Infrastructure
         {
             try
             {
-                var result = (FtpWebRequest) WebRequest.Create($"ftp://{ftpConnection.Host}:{ftpConnection.Port}");
+                var result = (FtpWebRequest)WebRequest.Create($"ftp://{ftpConnection.Host}:{ftpConnection.Port}");
                 result.Credentials = new NetworkCredential(ftpConnection.Username, ftpConnection.Password);
                 result.Method = WebRequestMethods.Ftp.ListDirectory;
-                using var response = (FtpWebResponse) result.GetResponse();
+                using var response = (FtpWebResponse)result.GetResponse();
 
                 // Maybe response will not be disposed correctly?
                 if (response.StatusCode != FtpStatusCode.OpeningData &&
