@@ -49,7 +49,7 @@
                                             <ColumnDefinition/>
                                         </Grid.ColumnDefinitions>
 
-                                        <Button ZIndex="1" BorderBrush="Transparent" Padding="0"  Background="Transparent"  Grid.Column="0" IsVisible="{Binding Status, Converter={StaticResource DownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.NotAvailable}}" Command="{Binding Download}">
+                                        <Button ZIndex="1" BorderBrush="Transparent" Padding="0"  Background="Transparent" IsEnabled="{Binding Status, Converter={StaticResource InverseDownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.Downloading}}"  Grid.Column="0" IsVisible="{Binding Status, Converter={StaticResource DownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.NotAvailable}}" Command="{Binding Download}">
                                             <Panel>
                                                 <Image Width="46" Height="46"  Source="avares://Module.IrcAnime.Avalonia/Assets/cloud.png"/>
                                             </Panel>
@@ -60,7 +60,7 @@
                                             </Panel>
                                         </Button>
 
-                                        <Button ZIndex="1" BorderBrush="Transparent" Padding="0"  Background="Transparent"  Grid.Column="1" IsVisible="{Binding Status, Converter={StaticResource InverseDownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.Locally}}" Command="{Binding DownloadLocally}">
+                                        <Button ZIndex="1" BorderBrush="Transparent" Padding="0"  Background="Transparent" IsEnabled="{Binding Status, Converter={StaticResource InverseDownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.Downloading}}"  Grid.Column="1" IsVisible="{Binding Status, Converter={StaticResource InverseDownloadStatusToBooleanConverter}, ConverterParameter={x:Static viewmodels:PackageStatus.Locally}}" Command="{Binding DownloadLocally}">
                                             <Panel>
                                                 <Image Width="46" Height="46"  Source="avares://Module.IrcAnime.Avalonia/Assets/download.png"/>
                                             </Panel>
