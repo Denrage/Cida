@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Module.IrcAnime.Cida.Services
@@ -28,11 +29,12 @@ namespace Module.IrcAnime.Cida.Services
             this.logger = logger;
         }
 
-        public async Task<SearchResult[]> SearchAsync(string searchTerm)
+        public async Task<SearchResult[]> SearchAsync(string searchTerm, CancellationToken cancellationToken)
         {
             this.logger.Info($"Searching on nibl for '{searchTerm}'");
-            await this.EnsureBotListAsync();
+            await this.EnsureBotListAsync(cancellationToken);
             var webClient = new WebClient { Proxy = null };
+            cancellationToken.Register(() => webClient.CancelAsync());
             var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + SearchPart + searchTerm}")).ConfigureAwait(false);
             var result = this.Parse(page).ToArray();
             this.logger.Info($"Found {result.Length} items for '{searchTerm}");
@@ -77,13 +79,14 @@ namespace Module.IrcAnime.Cida.Services
             return result;
         }
 
-        private async Task EnsureBotListAsync()
+        private async Task EnsureBotListAsync(CancellationToken cancellationToken)
         {
             this.logger.Info("Ensuring botlist");
             if (this.Bots == null)
             {
                 this.logger.Info("bot list out of date, refreshing");
                 var webClient = new WebClient { Proxy = null };
+                cancellationToken.Register(() => webClient.CancelAsync());
                 var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + BotPart}")).ConfigureAwait(false);
                 var result = JsonSerializer.Deserialize<BotData>(page);
                 this.Bots = new List<BotData.Bot>();

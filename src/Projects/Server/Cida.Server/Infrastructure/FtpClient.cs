@@ -7,6 +7,7 @@ using System.Net;
 using System.Threading.Tasks;
 using NLog;
 using Directory = Cida.Api.Models.Filesystem.Directory;
+using System.Threading;
 
 namespace Cida.Server.Infrastructure
 {
@@ -30,11 +31,12 @@ namespace Cida.Server.Infrastructure
             }
         }
 
-        public async Task<IEnumerable<string>> GetFilesAsync(Directory directory)
+        public async Task<IEnumerable<string>> GetFilesAsync(Directory directory, CancellationToken cancellationToken)
         {
             this.logger.Info("Getting files for path: {value1}", directory.FullPath(Separator));
             var request = this.CreateRequest(directory.FullPath(Separator));
             request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
+            using var cancellationRegister = cancellationToken.Register(() => request.Abort());
 
             using var response = await request.GetResponseAsync();
             await using var responseStream = response.GetResponseStream();
@@ -50,11 +52,13 @@ namespace Cida.Server.Infrastructure
             return Array.Empty<string>();
         }
 
-        public async Task<Filesystem.File> GetFileAsync(Filesystem.File file)
+        public async Task<Filesystem.File> GetFileAsync(Filesystem.File file, CancellationToken cancellationToken)
         {
             this.logger.Info("Downloading File: {value1}", file.FullPath(Separator));
             var request = this.CreateRequest(file.FullPath(Separator));
             request.Method = WebRequestMethods.Ftp.DownloadFile;
+            using var cancellationRegister = cancellationToken.Register(() => request.Abort());
+
 
             using var response = await request.GetResponseAsync();
             await using var responseStream = response.GetResponseStream();
@@ -63,7 +67,7 @@ namespace Cida.Server.Infrastructure
             {
                 System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
 
-                async Task<Stream> getStream()
+                async Task<Stream> getStream(CancellationToken cancellationToken)
                     => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.OpenOrCreate));
 
                 void onDispose()
@@ -73,9 +77,9 @@ namespace Cida.Server.Infrastructure
                         File.Delete(Path.Combine(this.tempFolder, file.Name));
                     }
                 }
-                using (var stream = await getStream())
+                using (var stream = await getStream(cancellationToken))
                 {
-                    await responseStream.CopyToAsync(stream);
+                    await responseStream.CopyToAsync(stream, cancellationToken);
                 }
 
                 this.logger.Info("Downloaded File: {value1}", file.FullPath());
@@ -85,7 +89,7 @@ namespace Cida.Server.Infrastructure
             return null;
         }
 
-        public async Task SaveFileAsync(Filesystem.File file)
+        public async Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken)
         {
             this.logger.Info("Uploading file: {value1}", file.FullPath(Separator));
 
@@ -103,6 +107,7 @@ namespace Cida.Server.Infrastructure
             {
                 var createDirectoryRequest = this.CreateRequest(directory.FullPath((Separator)));
                 createDirectoryRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
+                using var createDirectoryRegister = cancellationToken.Register(() => createDirectoryRequest.Abort());
                 try
                 {
                     using var createDirectoryResponse = await createDirectoryRequest.GetResponseAsync();
@@ -126,10 +131,11 @@ namespace Cida.Server.Infrastructure
 
             var request = this.CreateRequest(file.FullPath(Separator));
             request.Method = WebRequestMethods.Ftp.UploadFile;
+            using var cancellationRegister = cancellationToken.Register(() => request.Abort());
 
             await using var stream = await request.GetRequestStreamAsync();
-            await using var fileStream = await file.GetStreamAsync();
-            await fileStream.CopyToAsync(stream);
+            await using var fileStream = await file.GetStreamAsync(cancellationToken);
+            await fileStream.CopyToAsync(stream, cancellationToken);
             using var response = await request.GetResponseAsync();
             this.logger.Info("Uploaded file: {value1}", file.FullPath(Separator));
         }
@@ -185,10 +191,10 @@ namespace Cida.Server.Infrastructure
     // TODO: Move out
     public interface IFtpClient
     {
-        Task<IEnumerable<string>> GetFilesAsync(Directory directory);
+        Task<IEnumerable<string>> GetFilesAsync(Directory directory, CancellationToken cancellationToken);
 
-        Task<Filesystem.File> GetFileAsync(Filesystem.File file);
+        Task<Filesystem.File> GetFileAsync(Filesystem.File file, CancellationToken cancellationToken);
 
-        Task SaveFileAsync(Filesystem.File file);
+        Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken);
     }
 }

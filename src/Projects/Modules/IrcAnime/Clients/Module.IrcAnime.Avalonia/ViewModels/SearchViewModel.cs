@@ -40,10 +40,11 @@ namespace Module.IrcAnime.Avalonia.ViewModels
         {
             if (!string.IsNullOrEmpty(this.SearchTerm))
             {
+                // TODO: ADD CANCEL
                 var result = await this.client.SearchAsync(new SearchRequest()
                 {
                     SearchTerm = this.SearchTerm
-                });
+                }, cancellationToken: default);
 
                 var contexts = new List<DownloadContext>();
                 var bots = new List<string>();

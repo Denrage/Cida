@@ -79,7 +79,7 @@ namespace Module.IrcAnime.Cida
                 this.logger.Info($"Initiate search-request from {context.Peer}");
                 return new SearchResponse()
                 {
-                    SearchResults = { (await this.searchService.SearchAsync(request.SearchTerm)).Select(x => x.ToGrpc()).ToArray() }
+                    SearchResults = { (await this.searchService.SearchAsync(request.SearchTerm, context.CancellationToken)).Select(x => x.ToGrpc()).ToArray() }
                 };
             }
 
@@ -87,7 +87,7 @@ namespace Module.IrcAnime.Cida
             {
                 using (var databaseContext = this.getContext())
                 {
-                    var downloads = await databaseContext.Downloads.ToArrayAsync();
+                    var downloads = await databaseContext.Downloads.ToArrayAsync(context.CancellationToken);
                     return new DownloadedFilesResponse(new DownloadedFilesResponse()
                     {
                         Files = { downloads.Select(x => new DownloadedFilesResponse.Types.File() { Filename = x.Name, Filesize = x.Size }).ToArray() },
@@ -98,7 +98,7 @@ namespace Module.IrcAnime.Cida
             public override async Task<DownloadResponse> Download(DownloadRequest request, ServerCallContext context)
             {
                 this.logger.Info($"Incoming downloadrequest from {context.Peer}");
-                await this.downloadService.CreateDownloader(request.DownloadRequest_.FromGrpc());
+                await this.downloadService.CreateDownloader(request.DownloadRequest_.FromGrpc(), context.CancellationToken);
                 return new DownloadResponse();
             }
 
@@ -114,7 +114,7 @@ namespace Module.IrcAnime.Cida
 
                 using (var databaseContext = this.getContext())
                 {
-                    currentDownloads.AddRange((await databaseContext.Downloads.Where(x => x.DownloadStatus == Models.Database.DownloadStatus.Available).ToArrayAsync()).Select(x => new DownloadStatusResponse.Types.DownloadStatus()
+                    currentDownloads.AddRange((await databaseContext.Downloads.Where(x => x.DownloadStatus == Models.Database.DownloadStatus.Available).ToArrayAsync(context.CancellationToken)).Select(x => new DownloadStatusResponse.Types.DownloadStatus()
                     {
                         Downloaded = true,
                         DownloadedBytes = 0,
@@ -134,7 +134,7 @@ namespace Module.IrcAnime.Cida
             public override async Task<FileTransferInformationResponse> FileTransferInformation(FileTransferInformationRequest request, ServerCallContext context)
             {
                 using var databaseContext = this.getContext();
-                var downloadItem = await databaseContext.Downloads.FindAsync(request.FileName);
+                var downloadItem = await databaseContext.Downloads.FindAsync(new[] { request.FileName }, cancellationToken: context.CancellationToken);
                 ulong fileSize = 0;
                 var sha = string.Empty;
 
@@ -156,13 +156,13 @@ namespace Module.IrcAnime.Cida
             {
                 this.logger.Info($"Incoming download to client request from {context.Peer}");
                 using var databaseContext = this.getContext();
-                var databaseFile = await databaseContext.Downloads.FindAsync(request.FileName);
+                var databaseFile = await databaseContext.Downloads.FindAsync(new[] { request.FileName }, cancellationToken:context.CancellationToken);
                 if (databaseFile != null)
                 {
                     using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), this.downloadDirectory, null);
-                    using var downloadedFile = await this.ftpClient.DownloadFileAsync(file);
+                    using var downloadedFile = await this.ftpClient.DownloadFileAsync(file, context.CancellationToken);
                     
-                    using var fileStream = await downloadedFile.GetStreamAsync();
+                    using var fileStream = await downloadedFile.GetStreamAsync(context.CancellationToken);
                     fileStream.Seek((long)request.Position, System.IO.SeekOrigin.Begin);
                     while (fileStream.Position != fileStream.Length)
                     {

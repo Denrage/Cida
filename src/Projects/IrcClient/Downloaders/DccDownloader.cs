@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using IrcClient.Clients;
 using NLog;
@@ -60,10 +61,10 @@ namespace IrcClient.Downloaders
             }
         }
 
-        public async Task StartDownload()
-            => await StartDownload(Path.Combine(TempFolder, Filename));
+        public async Task StartDownload(CancellationToken cancellationToken)
+            => await StartDownload(Path.Combine(TempFolder, Filename), cancellationToken);
 
-        public async Task StartDownload(string outputPath)
+        public async Task StartDownload(string outputPath, CancellationToken cancellationToken)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? throw new InvalidOperationException());
 
@@ -77,13 +78,14 @@ namespace IrcClient.Downloaders
                 // TODO Find a better way to check for finished downloads (which works on clients not sending filesize)
                 while ((downloadedBytes < Filesize && client.IsConnected) || client.IsDataAvailable)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     (byte[] buffer, int count) = this.client.GetBuffer();
                     stream.Write(buffer, 0, count);
                     downloadedBytes += (ulong)count;
 
-                    Task.Run(() => ProgressChanged?.Invoke(downloadedBytes, Filesize));
+                    Task.Run(() => ProgressChanged?.Invoke(downloadedBytes, Filesize), cancellationToken);
                 }
-            }).ContinueWith(_ =>
+            }, cancellationToken).ContinueWith(_ =>
             {
                 stream.Close();
                 this.client.Disconnect();

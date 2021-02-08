@@ -48,7 +48,8 @@ namespace Module.IrcAnime.Avalonia.Services
             {
                 try
                 {
-                    var result = this.client.DownloadStatus(new DownloadStatusRequest());
+                    // TODO: ADD CANCEL
+                    var result = this.client.DownloadStatus(new DownloadStatusRequest(), cancellationToken: default);
                     this.semaphore.Wait();
                     try
                     {

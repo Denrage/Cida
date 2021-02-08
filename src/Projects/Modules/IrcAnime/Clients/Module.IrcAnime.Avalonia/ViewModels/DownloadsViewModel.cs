@@ -49,7 +49,8 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         public async Task RefreshAvailableDownloads()
         {
-            var files = (await this.client.DownloadedFilesAsync(new DownloadedFilesRequest())).Files;
+            // TODO: ADD CANCEL
+            var files = (await this.client.DownloadedFilesAsync(new DownloadedFilesRequest(), cancellationToken: default)).Files;
             var contexts = new List<DownloadContext>();
             foreach (var item in files)
             {

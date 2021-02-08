@@ -89,6 +89,7 @@ namespace Module.IrcAnime.Avalonia.Services
 
         private async Task Context_OnDownload(DownloadContext item)
         {
+            // TODO: ADD CANCEL
             await this.client.DownloadAsync(new DownloadRequest()
             {
                 DownloadRequest_ = new DownloadRequest.Types.Request()
@@ -97,11 +98,12 @@ namespace Module.IrcAnime.Avalonia.Services
                     FileName = item.Pack.Name,
                     PackageNumber = (long)item.Pack.Packs.First().Value,
                 }
-            });
+            }, cancellationToken: default);
         }
 
         private async Task Context_OnDownloadLocally(DownloadContext item)
         {
+            // TODO: Add cancel
             await this.downloadService.Download(item, default);
             await item.UpdateLocallyAvailable();
         }

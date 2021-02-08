@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,7 +59,7 @@ namespace Module.IrcAnime.Avalonia.Services
 
             Directory.CreateDirectory((await this.GetDownloadFolderAsync()));
 
-            var information = await this.client.FileTransferInformationAsync(new FileTransferInformationRequest() { FileName = filename });
+            var information = await this.client.FileTransferInformationAsync(new FileTransferInformationRequest() { FileName = filename }, cancellationToken: token);
             var chunkSize = information.ChunkSize;
             var size = information.Size;
             var sha256 = information.Sha256;
@@ -83,6 +84,15 @@ namespace Module.IrcAnime.Avalonia.Services
                         Task.Run(() => this.OnBytesDownloaded?.Invoke(context, filestream.Position));
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     }
+                }
+
+                using var hash = SHA256.Create();
+                filestream.Seek(0, SeekOrigin.Begin);
+                var hashString = BitConverter.ToString(hash.ComputeHash(filestream)).Replace("-", "");
+
+                if (hashString != sha256)
+                {
+                    // TODO: DO SOMETHING HERE
                 }
 
                 await Task.Run(() => this.OnDownloadFinished?.Invoke(context));
