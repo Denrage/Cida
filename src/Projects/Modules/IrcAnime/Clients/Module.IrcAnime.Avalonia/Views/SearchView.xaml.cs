@@ -11,7 +11,7 @@ using ReactiveUI;
 
 namespace Module.IrcAnime.Avalonia.Views
 {
-    public class SearchView : ReactiveUserControl<IrcAnimeViewModel>
+    public class SearchView : ReactiveUserControl<SearchViewModel>
     {
         public SearchView()
         {

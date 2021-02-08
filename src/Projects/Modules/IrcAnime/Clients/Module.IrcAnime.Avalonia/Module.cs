@@ -25,7 +25,7 @@ namespace Module.IrcAnime.Avalonia
             var downloadStatusService = new DownloadStatusService(client);
             var downloadContextService = new DownloadContextService(packService, downloadStatusService, settingsService, downloadService, client);
             
-            ViewModel = new IrcAnimeViewModel(new SearchViewModel(client, downloadContextService, downloadService), new DownloadsViewModel(client, downloadContextService, settingsService), new SettingsViewModel(settingsService));
+            ViewModel = new IrcAnimeViewModel(new SearchViewModel(client, downloadContextService, downloadService), new DownloadsViewModel(client, downloadContextService, settingsService), new SettingsViewModel(settingsService), new SchedulingViewModel());
             await Task.CompletedTask;
         }
     }

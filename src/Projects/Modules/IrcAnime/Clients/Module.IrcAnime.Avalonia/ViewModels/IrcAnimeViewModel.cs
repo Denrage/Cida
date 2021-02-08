@@ -11,13 +11,16 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         public SettingsViewModel Settings { get; }
 
+        public SchedulingViewModel Scheduling { get; }
+
         public override string Name { get; } = "IRC Anime";
         
-        public IrcAnimeViewModel(SearchViewModel search, DownloadsViewModel downloads, SettingsViewModel settings)
+        public IrcAnimeViewModel(SearchViewModel search, DownloadsViewModel downloads, SettingsViewModel settings, SchedulingViewModel scheduling)
         {
             this.Search = search;
             this.Downloads = downloads;
             this.Settings = settings;
+            this.Scheduling = scheduling;
         }
 
         public override async Task LoadAsync()

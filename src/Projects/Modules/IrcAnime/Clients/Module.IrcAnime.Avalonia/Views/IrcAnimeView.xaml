@@ -8,14 +8,14 @@
     <UserControl.Styles>
         <StyleInclude Source="avares://Module.IrcAnime.Avalonia/Assets/SideBar.xaml"/>
     </UserControl.Styles>
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <converter:MultiValueAndConverter x:Key="MultiValueAndConverter"/>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude  Source="avares://Module.IrcAnime.Avalonia/Icons/Icons.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <converter:MultiValueAndConverter x:Key="MultiValueAndConverter"/>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude  Source="avares://Module.IrcAnime.Avalonia/Icons/Icons.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
     <TabControl Classes="sidebar" Name="Sidebar" Grid.Column="0">
         <TabItem Header="Search">
             <ContentControl Content="{Binding Search}"/>
@@ -25,6 +25,9 @@
         </TabItem>
         <TabItem Header="Settings">
             <ContentControl Content="{Binding Settings}"/>
+        </TabItem>
+        <TabItem Header="Scheduling">
+            <ContentControl Content="{Binding Scheduling}"/>
         </TabItem>
     </TabControl>
 

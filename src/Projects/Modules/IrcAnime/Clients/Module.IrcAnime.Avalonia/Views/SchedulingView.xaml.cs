@@ -11,9 +11,9 @@ using ReactiveUI;
 
 namespace Module.IrcAnime.Avalonia.Views
 {
-    public class DownloadsView : ReactiveUserControl<DownloadsViewModel>
+    public class SchedulingView : ReactiveUserControl<IrcAnimeViewModel>
     {
-        public DownloadsView()
+        public SchedulingView()
         {
             InitializeComponent();
         }
