@@ -39,7 +39,7 @@ namespace Module.IrcAnime.Cida.Services
 
         public DownloadService(string host, int port, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Filesystem.Directory downloadDirectory, IModuleLogger moduleLogger)
         {
-            this.logger = moduleLogger;
+            this.logger = moduleLogger.CreateSubLogger("Download-Service");
             string name = "ad_" + Guid.NewGuid();
             this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
             this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
@@ -109,7 +109,7 @@ namespace Module.IrcAnime.Cida.Services
 
             if (!await this.ircDownloadQueueSemaphore.WaitAsync(TimeSpan.FromSeconds(10)))
             {
-                this.logger.Warn("Download Lock took longer than 10seconds to free!");
+                this.logger.Warn("Download Lock took longer than 10 seconds to free!");
             }
 
             try
@@ -161,17 +161,22 @@ namespace Module.IrcAnime.Cida.Services
         {
             if (this.downloadStatus.TryAdd(downloader.Filename, new DownloadProgress() { Size = downloader.Filesize }))
             {
+                var previousPercent = 0.0;
+                DateTime start = default;
                 downloader.ProgressChanged += (downloadedBytes, size) =>
                 {
-                    var percent = Math.Round((double)downloadedBytes / (double)size, 4) * 100;
-                    if (percent % 5 == 0)
+                    var percent = Math.Round((double)downloadedBytes / (double)size, 4) * 100.0;
+                    if (percent % 2 == 0 && previousPercent != percent)
                     {
-                        this.logger.Info($"{downloader.Filename}: {percent}%");
+                        previousPercent = percent;
+                        var speed = (downloadedBytes / 1024) / (DateTime.Now - start).TotalSeconds;
+                        this.logger.Info($"{downloader.Filename}: {Math.Round(percent, 2)}% {string.Format("{0:n}", speed)} KB/s");
                     }
                     UpdateProgress(downloader, downloadedBytes);
                 };
 
                 this.logger.Info($"Start download '{downloader.Filename}'");
+                start = DateTime.Now;
                 await downloader.StartDownload();
                 this.logger.Info($"Download finished '{downloader.Filename}'");
 
@@ -184,6 +189,7 @@ namespace Module.IrcAnime.Cida.Services
                 {
                     if (File.Exists(Path.Combine(downloader.TempFolder, downloader.Filename)))
                     {
+                        this.logger.Info($"deleting temporary file '{downloader.Filename}'");
                         File.Delete(Path.Combine(downloader.TempFolder, downloader.Filename));
                     }
                 }

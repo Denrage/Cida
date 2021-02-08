@@ -1,4 +1,5 @@
 ﻿using Module.IrcAnime.Cida.Models;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,14 +19,24 @@ namespace Module.IrcAnime.Cida.Services
         private const string BaseUrl = @"https://api.nibl.co.uk/nibl";
         private const string BotPart = "/bots";
         private const string SearchPart = "/search?query=";
+        private readonly ILogger logger;
+        private DateTime lastBotUpdate;
         private List<BotData.Bot> Bots;
+
+        public SearchService(ILogger logger)
+        {
+            this.logger = logger;
+        }
 
         public async Task<SearchResult[]> SearchAsync(string searchTerm)
         {
+            this.logger.Info($"Searching on nibl for '{searchTerm}'");
             await this.EnsureBotListAsync();
             var webClient = new WebClient { Proxy = null };
             var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + SearchPart + searchTerm}")).ConfigureAwait(false);
-            return this.Parse(page).ToArray();
+            var result = this.Parse(page).ToArray();
+            this.logger.Info($"Found {result.Length} items for '{searchTerm}");
+            return result;
         }
 
         private SearchResult[] Parse(string json)
@@ -50,22 +61,28 @@ namespace Module.IrcAnime.Cida.Services
             }
             else
             {
+                this.logger.Error($"couldn't parse search results. Status Code: {data.Status}");
                 return Array.Empty<SearchResult>();
             }
         }
 
         public SearchResult[] Search(string searchTerm)
         {
+            this.logger.Info($"Searching on nibl for '{searchTerm}'");
             this.EnsureBotList();
             var webClient = new WebClient { Proxy = null };
             var page = webClient.DownloadString(new Uri($"{BaseUrl + SearchPart + searchTerm}"));
-            return this.Parse(page);
+            var result = this.Parse(page).ToArray();
+            this.logger.Info($"Found {result.Length} items for '{searchTerm}");
+            return result;
         }
 
         private async Task EnsureBotListAsync()
         {
+            this.logger.Info("Ensuring botlist");
             if (this.Bots == null)
             {
+                this.logger.Info("bot list out of date, refreshing");
                 var webClient = new WebClient { Proxy = null };
                 var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + BotPart}")).ConfigureAwait(false);
                 var result = JsonSerializer.Deserialize<BotData>(page);
@@ -73,14 +90,21 @@ namespace Module.IrcAnime.Cida.Services
                 if (result.Status == "OK")
                 {
                     this.Bots.AddRange(result.Bots);
+                    this.logger.Info($"found {this.Bots.Count} bots");
+                }
+                else
+                {
+                    this.logger.Error($"Error on refreshing botlist. Result Code: {result.Status}");
                 }
             }
         }
 
         private void EnsureBotList()
         {
+            this.logger.Info("Ensuring botlist");
             if (this.Bots == null)
             {
+                this.logger.Info("bot list out of date, refreshing");
                 var webClient = new WebClient { Proxy = null };
                 var page = webClient.DownloadString(new Uri($"{BaseUrl + BotPart}"));
                 var result = JsonSerializer.Deserialize<BotData>(page);
@@ -88,6 +112,11 @@ namespace Module.IrcAnime.Cida.Services
                 if (result.Status == "OK")
                 {
                     this.Bots.AddRange(result.Bots);
+                    this.logger.Info($"found {this.Bots.Count} bots");
+                }
+                else
+                {
+                    this.logger.Error($"Error on refreshing botlist. Result Code: {result.Status}");
                 }
             }
         }

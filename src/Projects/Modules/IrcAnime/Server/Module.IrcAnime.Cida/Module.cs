@@ -13,6 +13,7 @@ using Ircanime;
 using Microsoft.EntityFrameworkCore;
 using Module.Crunchyroll.Cida.Extensions;
 using Module.IrcAnime.Cida.Services;
+using NLog;
 
 namespace Module.IrcAnime.Cida
 {
@@ -42,10 +43,10 @@ namespace Module.IrcAnime.Cida
                 await context.Database.EnsureCreatedAsync();
             }
 
-            this.searchService = new SearchService();
+            this.searchService = new SearchService(moduleLogger.CreateSubLogger("Search-Service"));
             this.downloadService = new DownloadService("irc.rizon.net", 6667, this.GetContext, ftpClient, downloadDirectory, moduleLogger);
 
-            this.GrpcServices = new[] { IrcAnimeService.BindService(new IrcAnimeImplementation(this.searchService, this.downloadService, this.GetContext, ftpClient, downloadDirectory)), };
+            this.GrpcServices = new[] { IrcAnimeService.BindService(new IrcAnimeImplementation(this.searchService, this.downloadService, this.GetContext, ftpClient, downloadDirectory, moduleLogger.CreateSubLogger("GRPC-Implementation"))), };
 
             moduleLogger.Log(NLog.LogLevel.Info, "IrcAnime loaded successfully");
         }
@@ -61,18 +62,21 @@ namespace Module.IrcAnime.Cida
             private readonly Func<IrcAnimeDbContext> getContext;
             private readonly IFtpClient ftpClient;
             private readonly Directory downloadDirectory;
+            private readonly ILogger logger;
 
-            public IrcAnimeImplementation(SearchService searchService, DownloadService downloadService, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Directory downloadDirectory)
+            public IrcAnimeImplementation(SearchService searchService, DownloadService downloadService, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Directory downloadDirectory, ILogger logger)
             {
                 this.searchService = searchService;
                 this.downloadService = downloadService;
                 this.getContext = getContext;
                 this.ftpClient = ftpClient;
                 this.downloadDirectory = downloadDirectory;
+                this.logger = logger;
             }
 
             public override async Task<SearchResponse> Search(SearchRequest request, ServerCallContext context)
             {
+                this.logger.Info($"Initiate search-request from {context.Peer}");
                 return new SearchResponse()
                 {
                     SearchResults = { (await this.searchService.SearchAsync(request.SearchTerm)).Select(x => x.ToGrpc()).ToArray() }
@@ -93,6 +97,7 @@ namespace Module.IrcAnime.Cida
 
             public override async Task<DownloadResponse> Download(DownloadRequest request, ServerCallContext context)
             {
+                this.logger.Info($"Incoming downloadrequest from {context.Peer}");
                 await this.downloadService.CreateDownloader(request.DownloadRequest_.FromGrpc());
                 return new DownloadResponse();
             }
@@ -149,6 +154,7 @@ namespace Module.IrcAnime.Cida
 
             public override async Task File(FileRequest request, IServerStreamWriter<FileResponse> responseStream, ServerCallContext context)
             {
+                this.logger.Info($"Incoming download to client request from {context.Peer}");
                 using var databaseContext = this.getContext();
                 var databaseFile = await databaseContext.Downloads.FindAsync(request.FileName);
                 if (databaseFile != null)

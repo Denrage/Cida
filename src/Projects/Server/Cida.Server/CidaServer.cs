@@ -78,7 +78,7 @@ namespace Cida.Server
 
 
             await this.grpcManager.AddServicesAsync(new[]
-                {CidaApiService.BindService(new GrpcManager.CidaApiService(this.moduleLoader))});
+                {CidaApiService.BindService(new GrpcManager.CidaApiService(this.moduleLoader, this.logger))});
             await this.moduleLoader.Start();
         }
 

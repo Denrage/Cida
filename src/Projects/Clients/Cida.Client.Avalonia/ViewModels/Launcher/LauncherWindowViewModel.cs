@@ -39,6 +39,8 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
 
         private async void LauncherWindowViewModel_ConnectionSuccessfull()
         {
+            var client = new CidaApiService.CidaApiServiceClient(this.connectionService.Channel);
+            await client.VersionAsync(new VersionRequest());
             await this.moduleSelection.Load();
             this.Content = this.moduleSelection;
         }
