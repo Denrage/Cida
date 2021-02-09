@@ -1,0 +1,7 @@
+{
+  "id": "32527EDA-48D9-4B38-B320-946FEDB56A05",
+  "name": "Anime Schedule",
+  "assemblyFile": "Module.AnimeSchedule.Cida.dll",
+  "entryType": "Module.AnimeSchedule.Cida.Module",
+  "clients": {}
+}
