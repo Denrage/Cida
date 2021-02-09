@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package animeschedule;
+
+service AnimeScheduleService {
+    rpc Version (VersionRequest) returns (VersionResponse);
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+    int32 Version = 1;
+}

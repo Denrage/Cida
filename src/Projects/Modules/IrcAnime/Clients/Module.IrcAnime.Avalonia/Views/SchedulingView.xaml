@@ -8,30 +8,51 @@
              xmlns:input="clr-namespace:Avalonia.Input;assembly=Avalonia.Input"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.IrcAnime.Avalonia.Views.SchedulingView">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0">
-          <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition Height="Auto"/>
-          </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled">
-                <ItemsRepeater Items="{Binding Packs}" >
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate>
-                            <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-                                <Grid Height="48">
-                                    
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-            </ScrollViewer>
-          <Button Grid.Row="1" Content="Add"/>
-        </Grid>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition/>
+      <ColumnDefinition/>
+    </Grid.ColumnDefinitions>
+    <Grid Grid.Column="0">
+      <Grid.RowDefinitions>
+        <RowDefinition/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled">
+        <ListBox SelectedItem="{Binding SelectedItem}" Items="{Binding Schedules}" >
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                <Grid Height="48">
+                  <Label Content="{Binding Name}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </ScrollViewer>
+      <Button Grid.Row="1" Content="Add" Command="{Binding AddSchedule}"/>
     </Grid>
+    <ContentControl Grid.Column="1" Content="{Binding SelectedItem}">
+      <ContentControl.ContentTemplate>
+        <DataTemplate>
+          <StackPanel>
+            <TextBox Watermark="Name" Text="{Binding Name}" UseFloatingWatermark="True"/>
+            <StackPanel>
+              <Label Content="Schedule"/>
+              <TextBox Text="{Binding Schedule}"/>
+              <ComboBox>
+                <ComboBoxItem Content="Minutes"/>
+                <ComboBoxItem Content="Hours"/>
+                <ComboBoxItem Content="Days"/>
+                <ComboBoxItem Content="Weeks"/>
+              </ComboBox>
+              <Label Content="Start Date"/>
+              <DatePicker SelectedDate="{Binding StartDate}"/>
+            </StackPanel>
+          </StackPanel>
+        </DataTemplate>
+      </ContentControl.ContentTemplate>
+    </ContentControl>
+  </Grid>
 </UserControl>
