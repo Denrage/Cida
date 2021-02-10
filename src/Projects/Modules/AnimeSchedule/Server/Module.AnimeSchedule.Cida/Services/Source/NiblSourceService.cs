@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -21,7 +20,6 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         private readonly SemaphoreSlim cacheSemaphore = new SemaphoreSlim(1);
         private readonly ILogger logger;
         private DateTime lastCacheRefresh = DateTime.MinValue;
-
 
         public NiblSourceService(ILogger logger)
         {
@@ -50,7 +48,6 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                             this.cache.Add(item);
                         }
 
-
                         this.logger.Info("Cache refreshed");
                     }
                     else
@@ -71,16 +68,6 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         {
             if (context is NiblAnimeInfoContext niblAnimeInfoContext)
             {
-                return new[] {
-                    new NiblAnimeInfo()
-                    {
-                        DestinationFolderName = "One Piece",
-                        Name = "[HorribleSubs] One Piece - 799 [720p].mkv",
-                        EpisodeNumber = 799,
-                        PackageNumber = 6464,
-                    } 
-                };
-
                 await this.RefreshCache();
                 this.logger.Info($"Checking for new episodes for '{context.Identifier}'");
                 var temp = new List<NiblAnimeInfo>();
@@ -92,14 +79,15 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                         {
                             EpisodeNumber = item.EpisodeNumber,
                             Name = item.Name,
-                            PackageNumber = item.Number,
+                            PackageNumber = (ulong)item.Number,
                             DestinationFolderName = niblAnimeInfoContext.FolderName,
+                            MyAnimeListId = context.MyAnimeListId,
                         });
                     }
                 }
 
-                var newEpisodes = temp.Where(x => !context.Episodes.Select(y => y.EpisodeNumber).Contains(x.EpisodeNumber) && x.Name.Contains(context.Filter));
-                this.logger.Info($"'{newEpisodes.Count()}' new episodes found for '{context.Identifier}'");
+                var newEpisodes = temp.Where(x => !context.Episodes.Select(y => y.EpisodeNumber).Contains(x.EpisodeNumber) && x.Name.Contains(context.Filter)).ToArray();
+                this.logger.Info($"'{newEpisodes.Length}' new episodes found for '{context.Identifier}'");
 
                 return newEpisodes;
             }

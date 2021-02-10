@@ -22,14 +22,16 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
 
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly ILogger logger;
+        private readonly ISettingsService settingsService;
 
-        public PlexActionService(Ircanime.IrcAnimeService.IrcAnimeServiceClient client, ILogger logger)
+        public PlexActionService(Ircanime.IrcAnimeService.IrcAnimeServiceClient client, ILogger logger, ISettingsService settingsService)
         {
             this.client = client;
             this.logger = logger;
+            this.settingsService = settingsService;
         }
 
-        public async Task Execute(IAnimeInfo animeInfo, CancellationToken cancellationToken)
+        public async Task Execute(AnimeInfoContext animeContext, IAnimeInfo animeInfo, CancellationToken cancellationToken)
         {
             if (animeInfo is NiblAnimeInfo niblAnimeInfo)
             {
@@ -40,7 +42,7 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                     {
                         BotName = "Ginpachi-Sensei",
                         FileName = animeInfo.Name,
-                        PackageNumber = niblAnimeInfo.PackageNumber,
+                        PackageNumber = (long)niblAnimeInfo.PackageNumber,
                     }
                 }, cancellationToken: cancellationToken);
 
@@ -50,7 +52,6 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var status = await this.client.DownloadStatusAsync(new DownloadStatusRequest(), cancellationToken: cancellationToken);
-
 
                     foreach (var statusElement in status.Status)
                     {
@@ -77,7 +78,7 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
 
         private async Task RefreshLibrary(CancellationToken cancellationToken)
         {
-            var request = WebRequest.Create(PlexRefreshLibrary);
+            var request = WebRequest.Create(await this.PlexRefreshLibrary(cancellationToken));
             request.Method = "GET";
 
             using var requestRegistry = cancellationToken.Register(() => request.Abort());
@@ -89,18 +90,17 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             }
         }
 
-        private string PlexRefreshLibrary =>
-            PlexRefreshLibraryUrl + "?X-Plex-Token=" + PlexToken;
+        private async Task<string> PlexRefreshLibrary(CancellationToken cancellationToken) =>
+            (await this.settingsService.Get(cancellationToken)).PlexAnimeLibraryUrl + "?X-Plex-Token=" + (await this.settingsService.Get(cancellationToken)).PlexWebToken;
 
-
-        private async Task Download(NiblAnimeInfo animeInfo, CancellationToken token)
+        private async Task Download(NiblAnimeInfo animeInfo, CancellationToken cancellationToken)
         {
             var filename = animeInfo.Name;
-            var directory = Path.Combine(PlexAnimeFolder, animeInfo.DestinationFolderName);
+            var directory = Path.Combine((await this.settingsService.Get(cancellationToken)).PlexMediaFolder, animeInfo.DestinationFolderName);
 
             Directory.CreateDirectory(directory);
 
-            var information = await this.client.FileTransferInformationAsync(new FileTransferInformationRequest() { FileName = filename }, cancellationToken: token);
+            var information = await this.client.FileTransferInformationAsync(new FileTransferInformationRequest() { FileName = filename }, cancellationToken: cancellationToken);
             var chunkSize = information.ChunkSize;
             var size = information.Size;
             var sha256 = information.Sha256;
@@ -111,15 +111,14 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             {
                 FileName = filename,
                 Position = (ulong)filestream.Position
-            }, cancellationToken: token))
+            }, cancellationToken: cancellationToken))
             {
-                while (await chunkStream.ResponseStream.MoveNext(token))
+                while (await chunkStream.ResponseStream.MoveNext(cancellationToken))
                 {
-
-                    token.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
                     var buffer = new byte[chunkSize];
                     chunkStream.ResponseStream.Current.Chunk.CopyTo(buffer, 0);
-                    await filestream.WriteAsync(buffer, 0, (int)chunkStream.ResponseStream.Current.Length, token);
+                    await filestream.WriteAsync(buffer, 0, (int)chunkStream.ResponseStream.Current.Length, cancellationToken);
                     filestream.Seek((long)chunkStream.ResponseStream.Current.Position, SeekOrigin.Begin);
                 }
             }
@@ -133,7 +132,6 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                 // TODO: DO SOMETHING HERE
                 this.logger.Warn($"File '{animeInfo.Name}' has not a correct hash and can be incomplete/altered");
             }
-
         }
     }
 }

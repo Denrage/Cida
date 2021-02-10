@@ -96,9 +96,6 @@ namespace Module.IrcAnime.Cida.Services
                 this.ircConnectSemaphore.Release();
             }
 
-
-
-
             var createDownloaderContext = new CreateDownloaderContext()
             {
                 Filename = downloadRequest.FileName,

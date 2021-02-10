@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel.Syndication;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -20,7 +19,6 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         private readonly ILogger logger;
         private DateTime lastCacheRefresh = DateTime.MinValue;
 
-
         public CrunchyrollSourceService(ILogger logger)
         {
             this.logger = logger;
@@ -36,7 +34,6 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                     this.logger.Info("Cache not up to date. Refreshing ...");
                     using var reader = XmlReader.Create(CrunchyrollRssUrl);
                     var feed = SyndicationFeed.Load(reader);
-
 
                     this.cache.Clear();
 
@@ -69,12 +66,13 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                     {
                         EpisodeNumber = item.ElementExtensions.FirstOrDefault(x => x.OuterName == "episodeNumber").GetObject<double>(),
                         Name = item.Title.Text,
+                        MyAnimeListId = context.MyAnimeListId,
                     });
                 }
             }
 
-            var newEpisodes = temp.Where(x => !context.Episodes.Select(y => y.EpisodeNumber).Contains(x.EpisodeNumber));
-            this.logger.Info($"'{newEpisodes.Count()}' new episodes found for '{context.Identifier}'");
+            var newEpisodes = temp.Where(x => !context.Episodes.Select(y => y.EpisodeNumber).Contains(x.EpisodeNumber)).ToArray();
+            this.logger.Info($"'{newEpisodes.Length}' new episodes found for '{context.Identifier}'");
 
             return newEpisodes;
         }
