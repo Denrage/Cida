@@ -5,6 +5,7 @@ using Animeschedule;
 using Cida.Api;
 using Cida.Api.Models.Filesystem;
 using Grpc.Core;
+using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Services;
 using Module.AnimeSchedule.Cida.Services.Actions;
 using Module.AnimeSchedule.Cida.Services.Source;
@@ -16,6 +17,7 @@ namespace Module.AnimeSchedule.Cida
     {
         // Hack: Remove this asap
         private const string DatabasePassword = "AnimeSchedule";
+
         private const string Id = "32527EDA-48D9-4B38-B320-946FEDB56A05";
         private string connectionString;
 
@@ -38,34 +40,17 @@ namespace Module.AnimeSchedule.Cida
             var ircAnimeClient = new Ircanime.IrcAnimeService.IrcAnimeServiceClient(new Channel("127.0.0.1", 31564, ChannelCredentials.Insecure, new[] { new ChannelOption(ChannelOptions.MaxSendMessageLength, -1), new ChannelOption(ChannelOptions.MaxReceiveMessageLength, -1) }));
             var crunchyrollSourceService = new CrunchyrollSourceService(moduleLogger.CreateSubLogger("Crunchyroll-Source"));
             var nibleSourceService = new NiblSourceService(moduleLogger.CreateSubLogger("Nibl-Source"));
-            var scheduleService = new ScheduleService(
-                new IActionService[] 
-                { 
-                    new DiscordNotificationActionService(moduleLogger.CreateSubLogger("Discord-Action")),
-                    new PlexActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Plex-Action")), 
-                });
-
-            var testSchedule = new Schedule
+            var settingsService = new SettingsService(this.GetContext);
             {
-                Animes = new List<AnimeInfoContext>()
+            var scheduleService = new ScheduleService(
+                new IActionService[]
                 {
-                    new CrunchyrollAnimeInfoContext(crunchyrollSourceService)
-                    {
-                        Identifier = "That Time I Got Reincarnated as a Slime Season 2 -",
-                        MyAnimeListId = 39551,
-                    },
-                    new NiblAnimeInfoContext(nibleSourceService)
-                    {
-                        Identifier = "Log Horizon S3",
-                        MyAnimeListId = 39535,
-                        Filter = "1080",
-                    },
-                },
-                Interval = TimeSpan.FromSeconds(10),
-                StartDate = DateTime.Now
-            };
+                    new DiscordNotificationActionService(moduleLogger.CreateSubLogger("Discord-Action"), settingsService),
+                    new PlexActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Plex-Action"), settingsService),
+                    new DatabaseActionService(this.GetContext),
+                }, this.GetContext);
 
-            scheduleService.StartSchedule(testSchedule);
+            await scheduleService.Initialize(default, crunchyrollSourceService, nibleSourceService);
         }
 
         private AnimeScheduleDbContext GetContext() => new AnimeScheduleDbContext(this.connectionString);
