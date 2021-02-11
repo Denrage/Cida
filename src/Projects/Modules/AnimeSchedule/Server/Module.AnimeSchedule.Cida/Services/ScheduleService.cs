@@ -5,19 +5,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Services.Source;
+using NLog;
 
 namespace Module.AnimeSchedule.Cida.Services
 {
     public class ScheduleService
     {
         private readonly Func<AnimeScheduleDbContext> getContext;
+        private readonly ILogger logger;
         private List<IActionService> actionServices;
         private List<(Schedule schedule, Task task)> schedules = new List<(Schedule, Task)>();
 
-        public ScheduleService(IEnumerable<IActionService> actionServices, Func<AnimeScheduleDbContext> getContext)
+        public ScheduleService(IEnumerable<IActionService> actionServices, Func<AnimeScheduleDbContext> getContext, ILogger logger)
         {
             this.actionServices = new List<IActionService>(actionServices);
             this.getContext = getContext;
+            this.logger = logger;
         }
 
         public async Task Initialize(CancellationToken cancellationToken, CrunchyrollSourceService crunchyrollSourceService, NiblSourceService niblSourceService)
@@ -40,12 +43,15 @@ namespace Module.AnimeSchedule.Cida.Services
 
         private async Task Schedule(Schedule schedule)
         {
+            this.logger.Info($"Starting Schedule '{schedule.Name}'");
             while (true)
             {
                 schedule.CancellationTokenSource.Token.ThrowIfCancellationRequested();
 
                 if (DateTime.Now > schedule.StartDate)
                 {
+                    this.logger.Info($"Run Schedule '{schedule.Name}'");
+                    
                     foreach (var item in schedule.Animes)
                     {
                         var newEpisodes = await item.NewEpisodesAvailable();
@@ -67,6 +73,8 @@ namespace Module.AnimeSchedule.Cida.Services
 
     public class Schedule
     {
+        public string Name { get; set; }
+
         public DateTime StartDate { get; set; }
 
         public List<AnimeInfoContext> Animes { get; set; }
@@ -84,6 +92,7 @@ namespace Module.AnimeSchedule.Cida.Services
                 CancellationTokenSource = cancellationTokenSource,
                 Interval = schedule.Interval,
                 StartDate = schedule.StartDate,
+                Name = schedule.Name,
             };
         }
     }

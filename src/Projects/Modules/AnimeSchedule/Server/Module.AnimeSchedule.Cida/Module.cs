@@ -41,14 +41,13 @@ namespace Module.AnimeSchedule.Cida
             var crunchyrollSourceService = new CrunchyrollSourceService(moduleLogger.CreateSubLogger("Crunchyroll-Source"));
             var nibleSourceService = new NiblSourceService(moduleLogger.CreateSubLogger("Nibl-Source"));
             var settingsService = new SettingsService(this.GetContext);
-            {
             var scheduleService = new ScheduleService(
                 new IActionService[]
                 {
                     new DiscordNotificationActionService(moduleLogger.CreateSubLogger("Discord-Action"), settingsService),
                     new PlexActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Plex-Action"), settingsService),
                     new DatabaseActionService(this.GetContext),
-                }, this.GetContext);
+                }, this.GetContext, moduleLogger.CreateSubLogger("Schedule-Service"));
 
             await scheduleService.Initialize(default, crunchyrollSourceService, nibleSourceService);
         }
