@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -14,7 +17,8 @@ namespace Module.AnimeSchedule.Cida.Services.Source
     public class NiblSourceService : ISourceService
     {
         private const long GinpachiId = 21;
-        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/latest?size=100000";
+        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/latest?size=500";
+        //private const string NiblApiUrl = "https://nibl.co.uk";
         private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(10);
         private readonly ConcurrentBag<NiblAnimeResult> cache = new ConcurrentBag<NiblAnimeResult>();
         private readonly SemaphoreSlim cacheSemaphore = new SemaphoreSlim(1);
@@ -26,7 +30,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
             this.logger = logger;
         }
 
-        private async Task RefreshCache()
+        private async Task<bool> RefreshCache()
         {
             await this.cacheSemaphore.WaitAsync();
             try
@@ -34,41 +38,55 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                 if (DateTime.Now - this.lastCacheRefresh > this.cacheDuration)
                 {
                     this.logger.Info("Cache not up to date. Refreshing ...");
-                    var webClient = new WebClient { Proxy = null };
-
-                    var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl)).ConfigureAwait(false);
-                    var result = JsonSerializer.Deserialize<RequestResult>(page);
-
-                    if (result.Status.ToUpper() == "OK")
+                    try
                     {
-                        this.cache.Clear();
+                        var webClient = new WebClient { Proxy = null };
+                        var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl)).ConfigureAwait(false);
+                        var result = JsonSerializer.Deserialize<RequestResult>(page);
 
-                        foreach (var item in result.Content.Where(x => x.BotId == GinpachiId))
+                        if (result.Status.ToUpper() == "OK")
                         {
-                            this.cache.Add(item);
+                            this.cache.Clear();
+
+                            foreach (var item in result.Content.Where(x => x.BotId == GinpachiId))
+                            {
+                                this.cache.Add(item);
+                            }
+
+                            this.logger.Info("Cache refreshed");
+                        }
+                        else
+                        {
+                            this.logger.Warn($"Error on refreshing cache. Status code is '{result.Status}'");
+                            return false;
                         }
 
-                        this.logger.Info("Cache refreshed");
+                        this.lastCacheRefresh = DateTime.Now;
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        this.logger.Warn($"Error on refreshing cache. Status code is '{result.Status}'");
+                       this.logger.Fatal(ex, "Exception occured on refreshing cache");
+                        return false;
                     }
-
-                    this.lastCacheRefresh = DateTime.Now;
                 }
             }
             finally
             {
                 this.cacheSemaphore.Release();
             }
+
+            return true;
         }
 
         public async Task<IEnumerable<IAnimeInfo>> GetNewEpisodes(AnimeInfoContext context)
         {
             if (context is NiblAnimeInfoContext niblAnimeInfoContext)
             {
-                await this.RefreshCache();
+                if (!(await this.RefreshCache()))
+                {
+                    return Enumerable.Empty<IAnimeInfo>();
+                }
+
                 this.logger.Info($"Checking for new episodes for '{context.Identifier}'");
                 var temp = new List<NiblAnimeInfo>();
                 foreach (var item in this.cache)
