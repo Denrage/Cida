@@ -59,10 +59,13 @@ namespace Module.IrcAnime.Cida.Services
             this.getContext = getContext;
             this.ftpClient = ftpClient;
 
-            logger.Info($"Clearing irc temp folder : '{tempFolder}'");
-            foreach (var file in System.IO.Directory.GetFiles(tempFolder))
+            if (System.IO.Directory.Exists(tempFolder))
             {
-                File.Delete(file);
+                logger.Info($"Clearing irc temp folder : '{tempFolder}'");
+                foreach (var file in System.IO.Directory.GetFiles(tempFolder))
+                {
+                    File.Delete(file);
+                }
             }
         }
 

@@ -24,10 +24,13 @@ namespace Cida.Server.Infrastructure
             globalConfiguration.ConfigurationChanged +=
                 () => this.settings = globalConfiguration.ConfigurationManager.Ftp;
 
-            logger.Info($"Clearing ftp temp folder : '{tempFolder}'");
-            foreach (var file in System.IO.Directory.GetFiles(tempFolder))
+            if (System.IO.Directory.Exists(tempFolder))
             {
-                File.Delete(file);
+                logger.Info($"Clearing ftp temp folder : '{tempFolder}'");
+                foreach (var file in System.IO.Directory.GetFiles(tempFolder))
+                {
+                    File.Delete(file);
+                }
             }
         }
 
