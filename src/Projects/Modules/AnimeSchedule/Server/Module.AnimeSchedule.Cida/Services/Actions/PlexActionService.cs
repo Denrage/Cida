@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Ircanime;
@@ -13,13 +12,6 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
 {
     public class PlexActionService : IActionService
     {
-        // TODO: Get this from outside
-        //const string PlexAnimeFolder = @"";
-        const string PlexAnimeFolder = @"";
-        const string PlexToken = "";
-        const string PlexRefreshLibraryUrl = "https://plex.gaia.local/library/sections/3/refresh";
-
-
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly ILogger logger;
         private readonly ISettingsService settingsService;
@@ -81,6 +73,14 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             var request = WebRequest.Create(await this.PlexRefreshLibrary(cancellationToken));
             request.Method = "GET";
 
+            var oldCallback = ServicePointManager.ServerCertificateValidationCallback;
+
+            ServicePointManager.ServerCertificateValidationCallback =
+               new RemoteCertificateValidationCallback(
+                    delegate
+                    { return true; }
+                );
+
             using var requestRegistry = cancellationToken.Register(() => request.Abort());
             using var response = (HttpWebResponse)await request.GetResponseAsync();
 
@@ -88,6 +88,8 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             {
                 this.logger.Warn("$Failed to refresh Plex library. Statuscode is '{response.StatusCode}'");
             }
+
+            ServicePointManager.ServerCertificateValidationCallback = oldCallback;
         }
 
         private async Task<string> PlexRefreshLibrary(CancellationToken cancellationToken) =>
