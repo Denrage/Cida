@@ -16,9 +16,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
 {
     public class NiblSourceService : ISourceService
     {
-        private const long GinpachiId = 21;
-        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/latest?size=500";
-        //private const string NiblApiUrl = "https://nibl.co.uk";
+        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/packs/21/page?size=50&sort=number&direction=DESC&page=";
         private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(10);
         private readonly ConcurrentBag<NiblAnimeResult> cache = new ConcurrentBag<NiblAnimeResult>();
         private readonly SemaphoreSlim cacheSemaphore = new SemaphoreSlim(1);
@@ -28,6 +26,24 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         public NiblSourceService(ILogger logger)
         {
             this.logger = logger;
+        }
+
+        private async Task<IEnumerable<NiblAnimeResult>> GetPage(int pageNumber)
+        {
+            var webClient = new WebClient { Proxy = null };
+            var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl + pageNumber)).ConfigureAwait(false);
+            var result = JsonSerializer.Deserialize<RequestResult>(page);
+
+            if (result.Status.ToUpper() == "OK")
+            {
+                return result.Content;
+            }
+            else
+            {
+                this.logger.Warn($"Error on getting page. Status code is '{result.Status}'");
+            }
+
+            return Enumerable.Empty<NiblAnimeResult>();
         }
 
         private async Task<bool> RefreshCache()
@@ -40,32 +56,27 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                     this.logger.Info("Cache not up to date. Refreshing ...");
                     try
                     {
-                        var webClient = new WebClient { Proxy = null };
-                        var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl)).ConfigureAwait(false);
-                        var result = JsonSerializer.Deserialize<RequestResult>(page);
+                        var result = await this.GetPage(0);
+                        result = result.Concat(await this.GetPage(1));
 
-                        if (result.Status.ToUpper() == "OK")
-                        {
+                        if (result.Any())
+                        { 
                             this.cache.Clear();
 
-                            foreach (var item in result.Content.Where(x => x.BotId == GinpachiId))
+                            foreach (var item in result)
                             {
                                 this.cache.Add(item);
                             }
 
                             this.logger.Info("Cache refreshed");
                         }
-                        else
-                        {
-                            this.logger.Warn($"Error on refreshing cache. Status code is '{result.Status}'");
-                            return false;
-                        }
+
 
                         this.lastCacheRefresh = DateTime.Now;
                     }
                     catch (Exception ex)
                     {
-                       this.logger.Fatal(ex, "Exception occured on refreshing cache");
+                        this.logger.Fatal(ex, "Exception occured on refreshing cache");
                         return false;
                     }
                 }
@@ -114,36 +125,45 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         }
     }
 
-    public partial class RequestResult
+
+    public class RequestResult
     {
         [JsonPropertyName("status")]
         public string Status { get; set; }
-
         [JsonPropertyName("message")]
         public string Message { get; set; }
-
         [JsonPropertyName("content")]
         public NiblAnimeResult[] Content { get; set; }
+        [JsonPropertyName("offset")]
+        public int Offset { get; set; }
+        [JsonPropertyName("max")]
+        public int Max { get; set; }
+        [JsonPropertyName("total")]
+        public int Total { get; set; }
+        [JsonPropertyName("previous")]
+        public string Previous { get; set; }
+        [JsonPropertyName("current")]
+        public string Current { get; set; }
+        [JsonPropertyName("next")]
+        public string Next { get; set; }
     }
 
-    public partial class NiblAnimeResult
+    public class NiblAnimeResult
     {
         [JsonPropertyName("botId")]
-        public long BotId { get; set; }
-
+        public int BotId { get; set; }
         [JsonPropertyName("number")]
-        public long Number { get; set; }
-
+        public int Number { get; set; }
         [JsonPropertyName("name")]
         public string Name { get; set; }
-
         [JsonPropertyName("size")]
         public string Size { get; set; }
-
         [JsonPropertyName("sizekbits")]
-        public long Sizekbits { get; set; }
-
+        public int Sizekbits { get; set; }
         [JsonPropertyName("episodeNumber")]
-        public double EpisodeNumber { get; set; }
+        public int EpisodeNumber { get; set; }
+        [JsonPropertyName("lastModified")]
+        public string LastModified { get; set; }
     }
+
 }
