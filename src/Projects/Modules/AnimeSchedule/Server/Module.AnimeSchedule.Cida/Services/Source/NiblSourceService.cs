@@ -14,90 +14,48 @@ namespace Module.AnimeSchedule.Cida.Services.Source
 {
     public class NiblSourceService : ISourceService
     {
-        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/packs/21/page?size=50&sort=number&direction=DESC&page=";
-        private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(10);
-        private readonly ConcurrentBag<NiblAnimeResult> cache = new ConcurrentBag<NiblAnimeResult>();
-        private readonly SemaphoreSlim cacheSemaphore = new SemaphoreSlim(1);
+        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/search/21?query=";
         private readonly ILogger logger;
-        private DateTime lastCacheRefresh = DateTime.MinValue;
 
         public NiblSourceService(ILogger logger)
         {
             this.logger = logger;
         }
 
-        private async Task<IEnumerable<NiblAnimeResult>> GetPage(int pageNumber)
+        private async Task<IEnumerable<NiblAnimeResult>> Search(string searchTerm)
         {
-            var webClient = new WebClient { Proxy = null };
-            var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl + pageNumber)).ConfigureAwait(false);
-            var result = JsonSerializer.Deserialize<RequestResult>(page);
+            try
+            {
+                var webClient = new WebClient { Proxy = null };
+                var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl + searchTerm)).ConfigureAwait(false);
+                var result = JsonSerializer.Deserialize<RequestResult>(page);
 
-            if (result.Status.ToUpper() == "OK")
-            {
-                return result.Content;
+                if (result.Status.ToUpper() == "OK")
+                {
+                    return result.Content;
+                }
+                else
+                {
+                    this.logger.Warn($"Error on getting search results. Status code is '{result.Status}'");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                this.logger.Warn($"Error on getting page. Status code is '{result.Status}'");
+                this.logger.Fatal(ex, $"Exception occured searching for '{searchTerm}':");
             }
 
             return Enumerable.Empty<NiblAnimeResult>();
-        }
-
-        private async Task<bool> RefreshCache()
-        {
-            await this.cacheSemaphore.WaitAsync();
-            try
-            {
-                if (DateTime.Now - this.lastCacheRefresh > this.cacheDuration)
-                {
-                    this.logger.Info("Cache not up to date. Refreshing ...");
-                    try
-                    {
-                        var result = await this.GetPage(0);
-                        result = result.Concat(await this.GetPage(1));
-
-                        if (result.Any())
-                        {
-                            this.cache.Clear();
-
-                            foreach (var item in result)
-                            {
-                                this.cache.Add(item);
-                            }
-
-                            this.logger.Info("Cache refreshed");
-                        }
-
-                        this.lastCacheRefresh = DateTime.Now;
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.Fatal(ex, "Exception occured on refreshing cache");
-                        return false;
-                    }
-                }
-            }
-            finally
-            {
-                this.cacheSemaphore.Release();
-            }
-
-            return true;
         }
 
         public async Task<IEnumerable<IAnimeInfo>> GetNewEpisodes(AnimeInfoContext context)
         {
             if (context is NiblAnimeInfoContext niblAnimeInfoContext)
             {
-                if (!(await this.RefreshCache()))
-                {
-                    return Enumerable.Empty<IAnimeInfo>();
-                }
+                var items = await this.Search(context.Identifier);
 
                 this.logger.Info($"Checking for new episodes for '{context.Identifier}'");
                 var temp = new List<NiblAnimeInfo>();
-                foreach (var item in this.cache)
+                foreach (var item in items)
                 {
                     if (item.Name.ToUpper().Contains(context.Identifier.ToUpper()))
                     {
