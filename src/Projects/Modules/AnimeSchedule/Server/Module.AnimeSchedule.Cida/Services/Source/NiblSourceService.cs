@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Schedule;
 using NLog;
 
 namespace Module.AnimeSchedule.Cida.Services.Source
@@ -119,59 +120,5 @@ namespace Module.AnimeSchedule.Cida.Services.Source
 
             return Enumerable.Empty<IAnimeInfo>();
         }
-    }
-
-    public class RequestResult
-    {
-        [JsonPropertyName("status")]
-        public string Status { get; set; }
-
-        [JsonPropertyName("message")]
-        public string Message { get; set; }
-
-        [JsonPropertyName("content")]
-        public NiblAnimeResult[] Content { get; set; }
-
-        [JsonPropertyName("offset")]
-        public int Offset { get; set; }
-
-        [JsonPropertyName("max")]
-        public int Max { get; set; }
-
-        [JsonPropertyName("total")]
-        public int Total { get; set; }
-
-        [JsonPropertyName("previous")]
-        public string Previous { get; set; }
-
-        [JsonPropertyName("current")]
-        public string Current { get; set; }
-
-        [JsonPropertyName("next")]
-        public string Next { get; set; }
-    }
-
-    public class NiblAnimeResult
-    {
-        [JsonPropertyName("botId")]
-        public int BotId { get; set; }
-
-        [JsonPropertyName("number")]
-        public int Number { get; set; }
-
-        [JsonPropertyName("name")]
-        public string Name { get; set; }
-
-        [JsonPropertyName("size")]
-        public string Size { get; set; }
-
-        [JsonPropertyName("sizekbits")]
-        public int Sizekbits { get; set; }
-
-        [JsonPropertyName("episodeNumber")]
-        public int EpisodeNumber { get; set; }
-
-        [JsonPropertyName("lastModified")]
-        public string LastModified { get; set; }
     }
 }

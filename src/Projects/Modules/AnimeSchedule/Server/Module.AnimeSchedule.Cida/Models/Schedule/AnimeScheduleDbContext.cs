@@ -1,15 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace Module.AnimeSchedule.Cida.Services
+namespace Module.AnimeSchedule.Cida.Models.Schedule
 {
     public class AnimeScheduleDbContext : DbContext
     {
         private readonly string connectionString;
 
         public DbSet<Models.Database.Settings> Settings { get; set; }
+
         public DbSet<Models.Database.Schedule> Schedules { get; set; }
+
         public DbSet<Models.Database.AnimeContext> AnimeContexts { get; set; }
+
         public DbSet<Models.Database.Episode> Episodes { get; set; }
+
         public DbSet<Models.Database.PackageNumber> PackageNumbers { get; set; }
 
         public AnimeScheduleDbContext(string connectionString)
