@@ -5,7 +5,6 @@ using Animeschedule;
 using Cida.Api;
 using Cida.Api.Models.Filesystem;
 using Grpc.Core;
-using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Services;
 using Module.AnimeSchedule.Cida.Services.Actions;
 using Module.AnimeSchedule.Cida.Services.Source;

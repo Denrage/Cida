@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -60,7 +57,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                         result = result.Concat(await this.GetPage(1));
 
                         if (result.Any())
-                        { 
+                        {
                             this.cache.Clear();
 
                             foreach (var item in result)
@@ -70,7 +67,6 @@ namespace Module.AnimeSchedule.Cida.Services.Source
 
                             this.logger.Info("Cache refreshed");
                         }
-
 
                         this.lastCacheRefresh = DateTime.Now;
                     }
@@ -125,25 +121,32 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         }
     }
 
-
     public class RequestResult
     {
         [JsonPropertyName("status")]
         public string Status { get; set; }
+
         [JsonPropertyName("message")]
         public string Message { get; set; }
+
         [JsonPropertyName("content")]
         public NiblAnimeResult[] Content { get; set; }
+
         [JsonPropertyName("offset")]
         public int Offset { get; set; }
+
         [JsonPropertyName("max")]
         public int Max { get; set; }
+
         [JsonPropertyName("total")]
         public int Total { get; set; }
+
         [JsonPropertyName("previous")]
         public string Previous { get; set; }
+
         [JsonPropertyName("current")]
         public string Current { get; set; }
+
         [JsonPropertyName("next")]
         public string Next { get; set; }
     }
@@ -152,18 +155,23 @@ namespace Module.AnimeSchedule.Cida.Services.Source
     {
         [JsonPropertyName("botId")]
         public int BotId { get; set; }
+
         [JsonPropertyName("number")]
         public int Number { get; set; }
+
         [JsonPropertyName("name")]
         public string Name { get; set; }
+
         [JsonPropertyName("size")]
         public string Size { get; set; }
+
         [JsonPropertyName("sizekbits")]
         public int Sizekbits { get; set; }
+
         [JsonPropertyName("episodeNumber")]
         public int EpisodeNumber { get; set; }
+
         [JsonPropertyName("lastModified")]
         public string LastModified { get; set; }
     }
-
 }

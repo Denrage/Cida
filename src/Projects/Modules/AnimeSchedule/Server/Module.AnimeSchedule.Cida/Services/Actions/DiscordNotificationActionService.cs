@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Webhook;
@@ -53,19 +52,20 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                 case CrunchyrollAnimeInfo crunchyrollAnimeInfo:
                     embed = await CreateCrunchyrollEmbed(crunchyrollAnimeInfo, cancellationToken);
                     break;
+
                 case NiblAnimeInfo niblAnimeInfo:
                     embed = await CreateNiblEmbed(niblAnimeInfo, cancellationToken);
                     break;
+
                 default:
                     this.logger.Warn($"Unexpected IAnimeInfo type '{animeInfo.GetType().FullName}'");
                     return;
             }
 
             await this.webhookClient.SendMessageAsync(embeds: new[] { embed });
-
         }
 
-        async Task<Embed> CreateCrunchyrollEmbed(CrunchyrollAnimeInfo anime, CancellationToken cancellationToken)
+        private async Task<Embed> CreateCrunchyrollEmbed(CrunchyrollAnimeInfo anime, CancellationToken cancellationToken)
         {
             this.logger.Info($"Creating Crunchyroll embed of '{anime.Name}'");
             var myAnimelistInfo = await this.jikan.GetAnime((long)anime.MyAnimeListId);
@@ -79,7 +79,7 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             return embedBuilder.Build();
         }
 
-        async Task<Embed> CreateNiblEmbed(NiblAnimeInfo anime, CancellationToken cancellationToken)
+        private async Task<Embed> CreateNiblEmbed(NiblAnimeInfo anime, CancellationToken cancellationToken)
         {
             this.logger.Info($"Creating Nibl embed of '{anime.Name}'");
             var myAnimelistInfo = await this.jikan.GetAnime((long)anime.MyAnimeListId);

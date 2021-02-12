@@ -51,7 +51,7 @@ namespace Module.AnimeSchedule.Cida.Services
                 if (DateTime.Now > schedule.StartDate)
                 {
                     this.logger.Info($"Run Schedule '{schedule.Name}'");
-                    
+
                     foreach (var item in schedule.Animes)
                     {
                         var newEpisodes = await item.NewEpisodesAvailable();
@@ -131,6 +131,7 @@ namespace Module.AnimeSchedule.Cida.Services
                         MyAnimeListId = context.MyAnimeListId,
                     };
                     break;
+
                 case Models.Database.AnimeContextType.Nibl:
                     result = new NiblAnimeInfoContext(niblSourceService)
                     {
@@ -141,6 +142,7 @@ namespace Module.AnimeSchedule.Cida.Services
                         FolderName = context.FolderName,
                     };
                     break;
+
                 default:
                     break;
             }
@@ -222,6 +224,7 @@ namespace Module.AnimeSchedule.Cida.Services
                         Name = animeInfo.Name,
                     };
                     break;
+
                 case Models.Database.AnimeContextType.Nibl:
                     result = new NiblAnimeInfo()
                     {
@@ -232,6 +235,7 @@ namespace Module.AnimeSchedule.Cida.Services
                         PackageNumber = animeInfo.PackageNumber.Number
                     };
                     break;
+
                 default:
                     break;
             }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Module.AnimeSchedule.Cida.Models.Database
+﻿namespace Module.AnimeSchedule.Cida.Models.Database
 {
     public class Episode
     {

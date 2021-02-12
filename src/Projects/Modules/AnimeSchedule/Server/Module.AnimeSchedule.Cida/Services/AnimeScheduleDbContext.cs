@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Module.AnimeSchedule.Cida.Services
 {
@@ -13,8 +11,6 @@ namespace Module.AnimeSchedule.Cida.Services
         public DbSet<Models.Database.AnimeContext> AnimeContexts { get; set; }
         public DbSet<Models.Database.Episode> Episodes { get; set; }
         public DbSet<Models.Database.PackageNumber> PackageNumbers { get; set; }
-
-
 
         public AnimeScheduleDbContext(string connectionString)
         {
@@ -31,11 +27,10 @@ namespace Module.AnimeSchedule.Cida.Services
             modelBuilder.Entity<Models.Database.AnimeContext>().HasKey(x => x.MyAnimeListId);
             modelBuilder.Entity<Models.Database.AnimeContext>().HasMany(x => x.Episodes).WithOne(x => x.AnimeContext);
 
-
             modelBuilder.Entity<Models.Database.Episode>().HasKey(x => x.Name);
             modelBuilder.Entity<Models.Database.Episode>().HasOne(x => x.PackageNumber).WithOne(x => x.Episode).HasForeignKey<Models.Database.PackageNumber>(x => x.Name);
 
-            modelBuilder.Entity<Models.Database.PackageNumber>().HasKey(x => new { x.Number, x.Name});
+            modelBuilder.Entity<Models.Database.PackageNumber>().HasKey(x => new { x.Number, x.Name });
             modelBuilder.Entity<Models.Database.PackageNumber>().HasOne(x => x.Episode).WithOne(x => x.PackageNumber);
 
             base.OnModelCreating(modelBuilder);
