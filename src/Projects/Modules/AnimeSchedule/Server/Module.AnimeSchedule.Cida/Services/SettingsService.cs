@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +13,6 @@ namespace Module.AnimeSchedule.Cida.Services
         private Settings cache;
 
         public event Action OnSettingsChanged;
-
 
         public SettingsService(Func<AnimeScheduleDbContext> getContext)
         {
@@ -63,8 +61,6 @@ namespace Module.AnimeSchedule.Cida.Services
         public string PlexAnimeLibraryUrl { get; set; }
 
         public string PlexMediaFolder { get; set; }
-
-
 
         internal static Settings FromDb(IEnumerable<Models.Database.Settings> settings)
         {
