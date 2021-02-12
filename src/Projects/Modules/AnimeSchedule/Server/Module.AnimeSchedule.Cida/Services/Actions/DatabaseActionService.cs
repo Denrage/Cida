@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Schedule;
 
 namespace Module.AnimeSchedule.Cida.Services.Actions
 {

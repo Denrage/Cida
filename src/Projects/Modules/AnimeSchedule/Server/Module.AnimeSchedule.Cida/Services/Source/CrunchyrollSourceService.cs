@@ -6,6 +6,8 @@ using System.ServiceModel.Syndication;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Schedule;
 using NLog;
 
 namespace Module.AnimeSchedule.Cida.Services.Source

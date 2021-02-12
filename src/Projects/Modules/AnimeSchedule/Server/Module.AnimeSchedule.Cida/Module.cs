@@ -5,6 +5,8 @@ using Animeschedule;
 using Cida.Api;
 using Cida.Api.Models.Filesystem;
 using Grpc.Core;
+using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Schedule;
 using Module.AnimeSchedule.Cida.Services;
 using Module.AnimeSchedule.Cida.Services.Actions;
 using Module.AnimeSchedule.Cida.Services.Source;

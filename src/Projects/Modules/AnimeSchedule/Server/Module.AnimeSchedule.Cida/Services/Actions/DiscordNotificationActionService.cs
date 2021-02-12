@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Webhook;
 using JikanDotNet;
+using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Schedule;
 using NLog;
 
 namespace Module.AnimeSchedule.Cida.Services.Actions

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Schedule;
 
 namespace Module.AnimeSchedule.Cida.Services
 {
@@ -92,14 +94,5 @@ namespace Module.AnimeSchedule.Cida.Services
 
             return result;
         }
-    }
-
-    public interface ISettingsService
-    {
-        Task<Settings> Get(CancellationToken cancellationToken);
-
-        Task Set(Settings settings, CancellationToken cancellationToken);
-
-        event Action OnSettingsChanged;
     }
 }
