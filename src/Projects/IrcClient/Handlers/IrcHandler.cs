@@ -13,10 +13,10 @@ namespace IrcClient.Handlers
         private readonly IrcConnection connection;
         private readonly CtcpHandler ctcpHandler;
 
-        public IrcHandler(ILogger logger = null)
-            :base(logger)
+        public IrcHandler(ILogger logger)
+            : base(logger)
         {
-            connection = new IrcConnection();
+            connection = new IrcConnection(logger);
             ctcpHandler = new CtcpHandler(logger);
 
             connection.DataReceived += OnMessageReceived;
@@ -29,6 +29,7 @@ namespace IrcClient.Handlers
         public new Action<IrcMessage> MessageReceived
         {
             get => base.MessageReceived;
+
             set
             {
                 ctcpHandler.MessageReceived = value;
@@ -72,6 +73,7 @@ namespace IrcClient.Handlers
 
         private void HandleCtcpMessage(IrcMessage message)
         {
+            this.Logger?.Info($"{message.Sender}: \"{message.Message}\"");
             const char ctcpChar = '\x01';
             string processedMessage = message.Message;
             if (processedMessage.Contains(ctcpChar))
@@ -85,7 +87,6 @@ namespace IrcClient.Handlers
 
         private void HandlePrivateCtcpMessage(IrcMessage message)
         {
-            this.Logger?.Log(LogLevel.Debug, $"{message.Sender}: \"{message.Message}\"");
             this.HandleCtcpMessage(message);
         }
     }

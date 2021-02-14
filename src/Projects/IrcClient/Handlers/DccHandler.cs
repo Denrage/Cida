@@ -11,13 +11,12 @@ namespace IrcClient.Handlers
         public DccHandler(ILogger logger)
             : base(logger)
         {
-
         }
 
-        public Action<IrcMessage> HandleDccReceived => 
-            message => 
+        public Action<IrcMessage> HandleDccReceived =>
+            message =>
             {
-                this.Logger?.Log(LogLevel.Debug, $"Received DCC from {message.Sender}: \"{message.Message}\"");
+                this.Logger?.Info($"Received DCC from '{message.Sender}': \"{message.Message}\"");
                 OnMessageReceived(message);
             };
 

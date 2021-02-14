@@ -17,7 +17,7 @@ namespace IrcClient.Connections
         private CancellationTokenSource cancellationTokenSource;
         private Task readTask;
 
-        protected NetworkConnection(ILogger logger = null, int bufferSize = 1024)
+        protected NetworkConnection(ILogger logger, int bufferSize = 1024)
         {
             this.bufferSize = bufferSize;
             this.logger = logger;
@@ -30,24 +30,24 @@ namespace IrcClient.Connections
 
         public void Connect(string host, int port)
         {
-            logger?.Log(LogLevel.Debug, $"Connecting to {host}:{port}");
+            logger.Info($"Connecting to '{host}:{port}'");
             cancellationTokenSource = new CancellationTokenSource();
             socket.Connect(host, port);
             stream = new NetworkStream(socket);
             readTask = Task.Run(new Action(BeginReceiving), cancellationTokenSource.Token);
-            logger?.Log(LogLevel.Debug, "Connected");
+            logger.Info("Connected");
         }
 
         public void Disconnect()
         {
             if (IsConnected)
             {
-                logger?.Log(LogLevel.Debug, "Disconnecting");
+                logger.Info("Disconnecting");
                 cancellationTokenSource.Cancel();
                 socket.Shutdown(SocketShutdown.Both);
                 readTask.Wait();
                 socket.Disconnect(true);
-                logger?.Log(LogLevel.Debug, "Disconnected");
+                logger.Info("Disconnected");
             }
         }
 
@@ -62,8 +62,13 @@ namespace IrcClient.Connections
         {
             if (IsConnected)
             {
+                this.logger.Info($"Sending message: '{message}'");
                 var data = Encoding.UTF8.GetBytes(message + Environment.NewLine);
                 stream.BeginWrite(data, 0, data.Length, (x) => stream.EndWrite(x), null);
+            }
+            else
+            {
+                this.logger.Info($"Not connected anymore. Message will not be sent. '{message}'");
             }
         }
 

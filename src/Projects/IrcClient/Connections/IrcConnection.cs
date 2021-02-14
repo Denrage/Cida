@@ -1,6 +1,7 @@
 ﻿using IrcClient.Commands;
 using IrcClient.Commands.Helpers;
 using IrcClient.Models;
+using NLog;
 using System;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,11 @@ namespace IrcClient.Connections
     public class IrcConnection : NetworkConnection
     {
         private string lastMessage;
+
+        public IrcConnection(ILogger logger)
+            : base(logger)
+        {
+        }
 
         public event Action<IrcMessage> DataReceived;
 
