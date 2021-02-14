@@ -21,10 +21,11 @@ namespace IrcClient.Clients
         private readonly string tempFolder;
         private bool motdReceived;
         private bool namesReceived;
-        private ILogger logger;
+        private readonly ILogger logger;
 
-        public IrcClient(string host, int port, string userName, string realName, string nickName, string tempFolder, ILogger logger = null)
+        public IrcClient(string host, int port, string userName, string realName, string nickName, string tempFolder, ILogger logger)
         {
+            this.logger = logger;
             Host = host;
             Port = port;
             UserName = userName;
@@ -33,7 +34,6 @@ namespace IrcClient.Clients
             handler = new IrcHandler(logger);
             channels = new List<string>();
             errors = new ConcurrentBag<IrcMessage>();
-            this.logger = logger;
             this.tempFolder = tempFolder;
 
             handler.MessageReceived += MessageReceived;
@@ -91,12 +91,13 @@ namespace IrcClient.Clients
         {
             if (channels.Contains(channel))
             {
-                // If the channel was already joined remove the entry so it will be readded as the last entry => current channel
+                // If the channel was already joined remove the entry so it will
+                // be readded as the last entry => current channel
                 channels.Remove(channel);
             }
             else
             {
-                logger.Log(LogLevel.Debug, $"Joining channel {channel}");
+                logger.Info($"Joining channel '{channel}'");
                 while (!namesReceived)
                 {
                     System.Threading.Thread.Sleep(100);
@@ -109,7 +110,7 @@ namespace IrcClient.Clients
                 {
                     System.Threading.Thread.Sleep(100);
                 }
-                logger.Log(LogLevel.Debug, $"Channel {channel} joined");
+                logger.Info($"Channel '{channel}' joined");
             }
 
             channels.Add(channel);

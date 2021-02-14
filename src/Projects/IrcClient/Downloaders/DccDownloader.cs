@@ -32,7 +32,7 @@ namespace IrcClient.Downloaders
 
         public string TempFolder { get; }
 
-        public static bool TryCreateFromSendMessage(string message, string tempFolder, out DccDownloader downloader, ILogger logger = null)
+        public static bool TryCreateFromSendMessage(string message, string tempFolder, out DccDownloader downloader, ILogger logger)
         {
             try
             {
@@ -75,7 +75,8 @@ namespace IrcClient.Downloaders
 
             await Task.Run(() =>
             {
-                // TODO Find a better way to check for finished downloads (which works on clients not sending filesize)
+                // TODO Find a better way to check for finished downloads (which
+                // works on clients not sending filesize)
                 while ((downloadedBytes < Filesize && client.IsConnected) || client.IsDataAvailable)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -90,8 +91,6 @@ namespace IrcClient.Downloaders
                 stream.Close();
                 this.client.Disconnect();
             });
-
-
         }
 
         public void Dispose()

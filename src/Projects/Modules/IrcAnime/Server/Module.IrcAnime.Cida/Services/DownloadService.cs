@@ -102,6 +102,7 @@ namespace Module.IrcAnime.Cida.Services
             };
             var dccDownloaderTask = new Task<DccDownloader>(() =>
             {
+                this.logger.Info("Waiting for receiving dcc message");
                 createDownloaderContext.ManualResetEvent.Wait(cancellationToken);
                 return createDownloaderContext.Downloader;
             }, TaskCreationOptions.LongRunning);
@@ -120,6 +121,7 @@ namespace Module.IrcAnime.Cida.Services
                 }
                 if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
                 {
+                    this.logger.Info("Sending DCC message to bot");
                     this.ircClient.SendMessage($"xdcc send #{downloadRequest.PackageNumber}", downloadRequest.BotName);
                 }
             }
