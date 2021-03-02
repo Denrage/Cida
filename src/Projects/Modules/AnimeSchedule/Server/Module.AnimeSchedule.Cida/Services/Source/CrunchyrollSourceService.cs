@@ -26,7 +26,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
             this.logger = logger;
         }
 
-        private async Task RefreshCache()
+        private async Task<bool> RefreshCache()
         {
             await this.cacheSemaphore.WaitAsync();
             try
@@ -49,15 +49,24 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                     this.logger.Info("Cache refreshed");
                 }
             }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Failed to refresh cache!");
+                return false;
+            }
             finally
             {
                 this.cacheSemaphore.Release();
             }
+            return true;
         }
 
         public async Task<IEnumerable<IAnimeInfo>> GetNewEpisodes(AnimeInfoContext context)
         {
-            await this.RefreshCache();
+            if (!await this.RefreshCache())
+            {
+                this.logger.Warn("Couldn't refresh cache, retrying in the next cycle");
+            }
             this.logger.Info($"Checking for new episodes for '{context.Identifier}'");
             var temp = new List<CrunchyrollAnimeInfo>();
             foreach (var item in this.cache)
