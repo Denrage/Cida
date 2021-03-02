@@ -10,17 +10,18 @@ namespace IrcClient.Connections
     public abstract class NetworkConnection : IDisposable
     {
         private readonly int bufferSize;
-        private readonly ILogger logger;
 
         private Socket socket;
         private NetworkStream stream;
         private CancellationTokenSource cancellationTokenSource;
         private Task readTask;
 
+        protected ILogger Logger { get; }
+
         protected NetworkConnection(ILogger logger, int bufferSize = 1024)
         {
             this.bufferSize = bufferSize;
-            this.logger = logger;
+            this.Logger = logger;
             InitializeSocket();
         }
 
@@ -30,24 +31,24 @@ namespace IrcClient.Connections
 
         public void Connect(string host, int port)
         {
-            logger.Info($"Connecting to '{host}:{port}'");
+            Logger.Info($"Connecting to '{host}:{port}'");
             cancellationTokenSource = new CancellationTokenSource();
             socket.Connect(host, port);
             stream = new NetworkStream(socket);
             readTask = Task.Run(new Action(BeginReceiving), cancellationTokenSource.Token);
-            logger.Info("Connected");
+            Logger.Info("Connected");
         }
 
         public void Disconnect()
         {
             if (IsConnected)
             {
-                logger.Info("Disconnecting");
+                Logger.Info("Disconnecting");
                 cancellationTokenSource.Cancel();
                 socket.Shutdown(SocketShutdown.Both);
                 readTask.Wait();
                 socket.Disconnect(true);
-                logger.Info("Disconnected");
+                Logger.Info("Disconnected");
             }
         }
 
@@ -62,13 +63,13 @@ namespace IrcClient.Connections
         {
             if (IsConnected)
             {
-                this.logger.Info($"Sending message: '{message}'");
+                this.Logger.Info($"Sending message: '{message}'");
                 var data = Encoding.UTF8.GetBytes(message + Environment.NewLine);
                 stream.BeginWrite(data, 0, data.Length, (x) => stream.EndWrite(x), null);
             }
             else
             {
-                this.logger.Info($"Not connected anymore. Message will not be sent. '{message}'");
+                this.Logger.Info($"Not connected anymore. Message will not be sent. '{message}'");
             }
         }
 
