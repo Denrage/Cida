@@ -67,6 +67,8 @@ namespace IrcClient.Connections
                     parsableMessage = parsableMessage.Substring(indexOfSpace + 1);
                 }
 
+                this.Logger.Info($"Raw message received| {sender}: {parsableMessage}");
+
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 Task.Run(() => DataReceived?.Invoke(new IrcMessage(parsableMessage, sender))).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
