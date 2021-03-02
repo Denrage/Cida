@@ -15,10 +15,11 @@ namespace Module.IrcAnime.Avalonia.Services
     //TODO: Interface this
     public class DownloadService
     {
-        SemaphoreSlim downloadListSemaphore = new SemaphoreSlim(1);
+        private SemaphoreSlim downloadListSemaphore = new SemaphoreSlim(1);
         private List<string> currentDownloads = new List<string>();
 
         public event Action<DownloadContext, long> OnBytesDownloaded;
+
         public event Action<DownloadContext> OnDownloadFinished;
 
         public class DownloadSettings : ICloneable
@@ -45,7 +46,7 @@ namespace Module.IrcAnime.Avalonia.Services
             await this.downloadListSemaphore.WaitAsync();
             try
             {
-                if(this.currentDownloads.Contains(filename))
+                if (this.currentDownloads.Contains(filename))
                 {
                     return;
                 }
@@ -64,7 +65,7 @@ namespace Module.IrcAnime.Avalonia.Services
             var size = information.Size;
             var sha256 = information.Sha256;
 
-            using (var filestream = File.Open(Path.Combine(await this.GetDownloadFolderAsync(), filename), FileMode.Append, FileAccess.Write))
+            using (var filestream = File.Open(Path.Combine(await this.GetDownloadFolderAsync(), filename), FileMode.Append, FileAccess.ReadWrite))
             {
                 using (var chunkStream = this.client.File(new FileRequest()
                 {
@@ -74,7 +75,6 @@ namespace Module.IrcAnime.Avalonia.Services
                 {
                     while (await chunkStream.ResponseStream.MoveNext(token))
                     {
-
                         token.ThrowIfCancellationRequested();
                         var buffer = new byte[chunkSize];
                         chunkStream.ResponseStream.Current.Chunk.CopyTo(buffer, 0);
@@ -97,7 +97,6 @@ namespace Module.IrcAnime.Avalonia.Services
 
                 await Task.Run(() => this.OnDownloadFinished?.Invoke(context));
             }
-
         }
     }
 }
