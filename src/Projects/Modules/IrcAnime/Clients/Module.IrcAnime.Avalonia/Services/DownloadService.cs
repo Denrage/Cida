@@ -65,7 +65,7 @@ namespace Module.IrcAnime.Avalonia.Services
             var size = information.Size;
             var sha256 = information.Sha256;
 
-            using (var filestream = File.Open(Path.Combine(await this.GetDownloadFolderAsync(), filename), FileMode.Append, FileAccess.Write))
+            using (var filestream = File.Open(Path.Combine(await this.GetDownloadFolderAsync(), filename), FileMode.Append, FileAccess.ReadWrite))
             {
                 using (var chunkStream = this.client.File(new FileRequest()
                 {
