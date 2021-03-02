@@ -220,6 +220,22 @@ namespace Module.IrcAnime.Cida.Services
                     }
                 }
                 this.logger.Info($"Download completed '{downloader.Filename}'");
+
+                await this.ircConnectSemaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    if (this.downloadStatus.Count == 0)
+                    {
+                        if (this.ircClient.IsConnected)
+                        {
+                            this.ircClient.Disconnect();
+                        }
+                    }
+                }
+                finally
+                {
+                    this.ircConnectSemaphore.Release();
+                }
             }
         }
 
