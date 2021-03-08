@@ -100,39 +100,25 @@ namespace Module.IrcAnime.Cida.Services
             {
                 Filename = downloadRequest.FileName,
             };
-            var dccDownloaderTask = new Task<DccDownloader>(() =>
-            {
-                this.logger.Info("Waiting for receiving dcc message");
-                createDownloaderContext.ManualResetEvent.Wait(cancellationToken);
-                return createDownloaderContext.Downloader;
-            }, TaskCreationOptions.LongRunning);
 
-            if (!await this.ircDownloadQueueSemaphore.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken))
-            {
-                this.logger.Warn("Download Lock took longer than 10 seconds to free!");
-            }
+            var downloader = await this.GetDownloader(downloadRequest, createDownloaderContext, cancellationToken);
 
-            try
+            if (downloader is null)
             {
-                if (this.requestedDownloads.ContainsKey(downloadRequest.FileName))
+                this.logger.Warn("Couldn't get downloader! Cancelling download");
+                try
                 {
-                    this.logger.Info($"Already downloading '{downloadRequest.FileName}'");
-                    return;
+                    if (this.ircClient.IsConnected)
+                    {
+                        this.ircClient.Disconnect();
+                    }
                 }
-                if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
+                finally
                 {
-                    this.logger.Info("Sending DCC message to bot");
-                    this.ircClient.SendMessage($"xdcc send #{downloadRequest.PackageNumber}", downloadRequest.BotName);
+                    this.ircConnectSemaphore.Release();
                 }
+                return;
             }
-            finally
-            {
-                this.ircDownloadQueueSemaphore.Release();
-            }
-
-            this.logger.Info($"Starting download '{downloadRequest.FileName}'");
-            dccDownloaderTask.Start();
-            var downloader = await dccDownloaderTask;
 
             using (var context = this.getContext())
             {
@@ -152,6 +138,75 @@ namespace Module.IrcAnime.Cida.Services
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(async () => await this.DownloadFile(downloader, cancellationToken), cancellationToken);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        }
+
+        private async Task<DccDownloader> GetDownloader(DownloadRequest downloadRequest, CreateDownloaderContext createDownloaderContext, CancellationToken cancellationToken)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var timeOutCancellationToken = new CancellationTokenSource();
+                var downloadTaskCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(timeOutCancellationToken.Token, cancellationToken);
+
+                var dccDownloaderTask = new Task<DccDownloader>(dccDownloaderCancellationToken =>
+                {
+                    this.logger.Info("Waiting for receiving dcc message");
+                    var ct = (CancellationToken)dccDownloaderCancellationToken;
+                    createDownloaderContext.ManualResetEvent.Wait(ct);
+                    return createDownloaderContext.Downloader;
+                }, timeOutCancellationToken.Token, TaskCreationOptions.LongRunning);
+
+                if (!await this.ircDownloadQueueSemaphore.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken))
+                {
+                    this.logger.Warn("Download Lock took longer than 10 seconds to free!");
+                }
+
+                await this.ircConnectSemaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    if (this.requestedDownloads.ContainsKey(downloadRequest.FileName))
+                    {
+                        this.logger.Info($"Already downloading '{downloadRequest.FileName}'");
+                        return null;
+                    }
+                    if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
+                    {
+                        this.logger.Info("Sending DCC message to bot");
+                        this.ircClient.SendMessage($"xdcc send #{downloadRequest.PackageNumber}", downloadRequest.BotName);
+                    }
+                }
+                finally
+                {
+                    this.ircDownloadQueueSemaphore.Release();
+                }
+
+                this.logger.Info($"Starting download '{downloadRequest.FileName}'");
+                dccDownloaderTask.Start();
+                timeOutCancellationToken.CancelAfter(5000);
+
+                try
+                {
+                    var downloader = await dccDownloaderTask;
+                    return downloader;
+                }
+                catch (OperationCanceledException)
+                {
+                    this.logger.Warn("Timeout in receiving DCC message response from bot!");
+
+                    await this.ircConnectSemaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        this.requestedDownloads.TryRemove(downloadRequest.FileName, out _);
+                    }
+                    finally
+                    {
+                        this.ircDownloadQueueSemaphore.Release();
+                    }
+                    continue;
+                }
+            }
+
+            this.logger.Error("Timeout in receiving DCC message response from bot resulted 3 times!");
+            return null;
         }
 
         private async Task DownloadFile(DccDownloader downloader, CancellationToken cancellationToken)
