@@ -17,12 +17,14 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly ILogger logger;
         private readonly ISettingsService settingsService;
+        private readonly DiscordClient discordClient;
 
-        public PlexActionService(Ircanime.IrcAnimeService.IrcAnimeServiceClient client, ILogger logger, ISettingsService settingsService)
+        public PlexActionService(Ircanime.IrcAnimeService.IrcAnimeServiceClient client, ILogger logger, ISettingsService settingsService, DiscordClient discordClient)
         {
             this.client = client;
             this.logger = logger;
             this.settingsService = settingsService;
+            this.discordClient = discordClient;
         }
 
         public async Task Execute(AnimeInfoContext animeContext, IAnimeInfo animeInfo, CancellationToken cancellationToken)
@@ -67,6 +69,8 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
 
                     await Task.Delay(TimeSpan.FromSeconds(5));
                 }
+
+                await this.discordClient.WebhookClient.SendMessageAsync($"{niblAnimeInfo.Name} is now available in Plex!");
             }
         }
 
