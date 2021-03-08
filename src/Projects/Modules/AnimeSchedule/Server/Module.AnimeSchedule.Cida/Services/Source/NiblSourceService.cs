@@ -14,7 +14,14 @@ namespace Module.AnimeSchedule.Cida.Services.Source
 {
     public class NiblSourceService : ISourceService
     {
-        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/search/21?query=";
+        private const string NiblApiUrl = "https://api.nibl.co.uk/nibl/search/";
+
+        private readonly Dictionary<int, string> Bots = new Dictionary<int, string>()
+        {
+            { 696, "CR-HOLLAND|NEW" },
+            { 21, "Ginpachi-Sensei" },
+        };
+
         private readonly ILogger logger;
 
         public NiblSourceService(ILogger logger)
@@ -26,18 +33,24 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         {
             try
             {
+                var result = new List<NiblAnimeResult>();
                 var webClient = new WebClient { Proxy = null };
-                var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl + searchTerm)).ConfigureAwait(false);
-                var result = JsonSerializer.Deserialize<RequestResult>(page);
+                foreach (var item in this.Bots)
+                {
+                    var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl + item.Key + "?query=" + searchTerm)).ConfigureAwait(false);
+                    var botResult = JsonSerializer.Deserialize<RequestResult>(page);
 
-                if (result.Status.ToUpper() == "OK")
-                {
-                    return result.Content;
+                    if (botResult.Status.ToUpper() == "OK")
+                    {
+                        result.AddRange(botResult.Content);
+                    }
+                    else
+                    {
+                        this.logger.Warn($"Error on getting search results. Status code is '{botResult.Status}'");
+                    }
                 }
-                else
-                {
-                    this.logger.Warn($"Error on getting search results. Status code is '{result.Status}'");
-                }
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -66,17 +79,26 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                             PackageNumber = (ulong)item.Number,
                             DestinationFolderName = niblAnimeInfoContext.FolderName,
                             MyAnimeListId = context.MyAnimeListId,
-                        });
+                            Bot = this.Bots[item.BotId],
+                        })
+                        ;
                     }
                 }
 
-                var newEpisodes = temp.Where(x => !context.Episodes.Select(y => y.EpisodeNumber).Contains(x.EpisodeNumber) && x.Name.Contains(context.Filter)).ToArray();
+                var newEpisodes = temp.Where(x => !context.Episodes.Select(y => y.EpisodeNumber).Contains(x.EpisodeNumber) && x.Name.Contains(context.Filter)).Distinct(new NiblAnimeInfoEqualityComparer()).ToArray();
                 this.logger.Info($"'{newEpisodes.Length}' new episodes found for '{context.Identifier}'");
 
                 return newEpisodes;
             }
 
             return Enumerable.Empty<IAnimeInfo>();
+        }
+
+        private class NiblAnimeInfoEqualityComparer : IEqualityComparer<NiblAnimeInfo>
+        {
+            public bool Equals(NiblAnimeInfo x, NiblAnimeInfo y) => x.EpisodeNumber.Equals(y.EpisodeNumber);
+
+            public int GetHashCode(NiblAnimeInfo obj) => obj.EpisodeNumber.GetHashCode();
         }
     }
 }
