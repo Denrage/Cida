@@ -36,7 +36,7 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                 {
                     DownloadRequest_ = new DownloadRequest.Types.Request()
                     {
-                        BotName = "Ginpachi-Sensei",
+                        BotName = niblAnimeInfo.Bot,
                         FileName = animeInfo.Name,
                         PackageNumber = (long)niblAnimeInfo.PackageNumber,
                     }

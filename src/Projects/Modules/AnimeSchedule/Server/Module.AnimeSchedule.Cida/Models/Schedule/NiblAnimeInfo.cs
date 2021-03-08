@@ -5,5 +5,7 @@
         public ulong PackageNumber { get; set; }
 
         public string DestinationFolderName { get; set; }
+
+        public string Bot { get; set; }
     }
 }
