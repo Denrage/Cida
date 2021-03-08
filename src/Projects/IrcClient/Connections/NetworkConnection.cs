@@ -22,16 +22,19 @@ namespace IrcClient.Connections
         {
             this.bufferSize = bufferSize;
             this.Logger = logger;
-            InitializeSocket();
         }
 
-        public bool IsConnected => socket.Connected;
+        public bool IsConnected => socket?.Connected ?? false;
 
-        public bool IsDataAvailable => socket.Available > 0;
+        public bool IsDataAvailable => (socket?.Available ?? 0) > 0;
 
         public void Connect(string host, int port)
         {
             Logger.Info($"Connecting to '{host}:{port}'");
+            if (socket == null)
+            {
+                InitializeSocket();
+            }
             cancellationTokenSource = new CancellationTokenSource();
             socket.Connect(host, port);
             stream = new NetworkStream(socket);
@@ -48,7 +51,9 @@ namespace IrcClient.Connections
                 socket.Shutdown(SocketShutdown.Both);
                 readTask.Wait();
                 socket.Disconnect(true);
+                stream.Dispose();
                 Logger.Info("Disconnected");
+                socket = null;
             }
         }
 
