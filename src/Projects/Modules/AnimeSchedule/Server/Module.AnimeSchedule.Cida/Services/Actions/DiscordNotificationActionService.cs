@@ -11,43 +11,21 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
 {
     public class DiscordNotificationActionService : IActionService
     {
+        private readonly IJikan jikan;
         private readonly ILogger logger;
         private readonly ISettingsService settingsService;
-        private readonly IJikan jikan;
-        private readonly SemaphoreSlim settingsSemaphore = new SemaphoreSlim(1);
+        private readonly DiscordClient client;
 
-        private DiscordWebhookClient webhookClient;
-
-        public DiscordNotificationActionService(ILogger logger, ISettingsService settingsService)
+        public DiscordNotificationActionService(ILogger logger, ISettingsService settingsService, DiscordClient client)
         {
+            jikan = new Jikan();
             this.logger = logger;
             this.settingsService = settingsService;
-            jikan = new Jikan();
-            this.settingsService.OnSettingsChanged += async () => await InitializeClient();
-        }
-
-        private async Task InitializeClient()
-        {
-            await this.settingsSemaphore.WaitAsync();
-
-            try
-            {
-                var settings = await this.settingsService.Get(default);
-                this.webhookClient = new DiscordWebhookClient(ulong.Parse(settings.DiscordWebhookId), settings.DiscordWebhookToken);
-            }
-            finally
-            {
-                this.settingsSemaphore.Release();
-            }
+            this.client = client;
         }
 
         public async Task Execute(AnimeInfoContext animeContext, IAnimeInfo animeInfo, CancellationToken cancellationToken)
         {
-            if (this.webhookClient is null)
-            {
-                await this.InitializeClient();
-            }
-
             Embed embed;
             switch (animeInfo)
             {
@@ -64,7 +42,7 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                     return;
             }
 
-            await this.webhookClient.SendMessageAsync(embeds: new[] { embed });
+            await this.client.WebhookClient.SendMessageAsync(embeds: new[] { embed });
         }
 
         private async Task<Embed> CreateCrunchyrollEmbed(CrunchyrollAnimeInfo anime, CancellationToken cancellationToken)
