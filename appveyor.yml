@@ -17,8 +17,8 @@ build_script:
   - cmd: dotnet build ./src/Cida.sln -c Release
 after_build:
   # For once the build has completed
-  - 7z a crunchyroll\avalonia.acm %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.Avalonia\bin\Release\net5.0\*
-  - 7z a crunchyroll.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Server\Module.Crunchyroll.Cida\bin\Release\net5.0\*
+  - 7z a crunchyroll\avalonia.acm %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.Avalonia\bin\Release\netstandard2.1\*
+  - 7z a crunchyroll.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Server\Module.Crunchyroll.Cida\bin\Release\netstandard2.1\*
   - 7z a crunchyroll.cidam .\crunchyroll\avalonia.acm
   - 7z a hsnr.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Hsnr\Server\Module.Hsnr.Cida\bin\Release\net5.0\*
   - 7z a horriblesubs.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\HorribleSubs\Server\Module.HorribleSubs.Cida\bin\Release\net5.0\*
