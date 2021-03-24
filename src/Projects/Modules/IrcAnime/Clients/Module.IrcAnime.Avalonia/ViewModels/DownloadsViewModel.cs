@@ -29,13 +29,13 @@ namespace Module.IrcAnime.Avalonia.ViewModels
         public string Filter
         {
             get => filter;
-            set 
+
+            set
             {
                 this.RaiseAndSetIfChanged(ref this.filter, value);
                 this.RaisePropertyChanged(nameof(this.FilteredDownloads));
             }
         }
-
 
         public ICommand FocusCommand { get; }
 

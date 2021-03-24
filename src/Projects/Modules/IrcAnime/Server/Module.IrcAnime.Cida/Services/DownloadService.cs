@@ -96,9 +96,6 @@ namespace Module.IrcAnime.Cida.Services
                 this.ircConnectSemaphore.Release();
             }
 
-
-
-
             var createDownloaderContext = new CreateDownloaderContext()
             {
                 Filename = downloadRequest.FileName,
@@ -107,7 +104,6 @@ namespace Module.IrcAnime.Cida.Services
             {
                 createDownloaderContext.ManualResetEvent.Wait(cancellationToken);
                 return createDownloaderContext.Downloader;
-
             }, TaskCreationOptions.LongRunning);
 
             if (!await this.ircDownloadQueueSemaphore.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken))
@@ -136,7 +132,6 @@ namespace Module.IrcAnime.Cida.Services
             dccDownloaderTask.Start();
             var downloader = await dccDownloaderTask;
 
-
             using (var context = this.getContext())
             {
                 context.ChangeTracker.AutoDetectChangesEnabled = false;
@@ -151,13 +146,10 @@ namespace Module.IrcAnime.Cida.Services
                 await context.SaveChangesAsync(cancellationToken);
             }
 
-
             this.logger.Info($"Download preparations complete. Initiate download '{downloadRequest.FileName}'");
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(async () => await this.DownloadFile(downloader, cancellationToken), cancellationToken);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
-
         }
 
         private async Task DownloadFile(DccDownloader downloader, CancellationToken cancellationToken)
@@ -240,9 +232,10 @@ namespace Module.IrcAnime.Cida.Services
         private class CreateDownloaderContext
         {
             public string Filename { get; set; }
+
             public DccDownloader Downloader { get; set; }
+
             public ManualResetEventSlim ManualResetEvent { get; } = new ManualResetEventSlim(false);
         }
-
     }
 }
