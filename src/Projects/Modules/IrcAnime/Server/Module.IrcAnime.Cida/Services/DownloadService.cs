@@ -74,10 +74,18 @@ namespace Module.IrcAnime.Cida.Services
             this.logger.Info($"Incoming download request. Name: '{downloadRequest.FileName}' Bot: '{downloadRequest.BotName}' PackageNumber: '{downloadRequest.PackageNumber}'");
             using (var context = this.getContext())
             {
-                if ((await context.Downloads.FindAsync(new[] { downloadRequest.FileName }, cancellationToken)) != null)
+                var existingDownload = (await context.Downloads.FindAsync(new[] { downloadRequest.FileName }, cancellationToken));
+                if (existingDownload != null)
                 {
-                    this.logger.Info($"Already downloaded '{downloadRequest.FileName}'");
-                    return;
+                    if (existingDownload.DownloadStatus == DownloadStatus.Available)
+                    {
+                        this.logger.Info($"Already downloaded '{downloadRequest.FileName}'");
+                        return;
+                    }
+                    else
+                    {
+                        this.logger.Info($"Download for '{downloadRequest.FileName}' didn't finish successfully, redownloading ...");
+                    }
                 }
             }
 
@@ -90,6 +98,10 @@ namespace Module.IrcAnime.Cida.Services
                     this.ircClient.Connect();
                     this.ircClient.JoinChannel("#nibl");
                 }
+                else
+                {
+                    this.logger.Info("Already connected!");
+                }
             }
             finally
             {
@@ -101,11 +113,12 @@ namespace Module.IrcAnime.Cida.Services
                 Filename = downloadRequest.FileName,
             };
 
+            this.logger.Info($"Creating downloader for {downloadRequest.FileName}");
             var downloader = await this.GetDownloader(downloadRequest, createDownloaderContext, cancellationToken);
 
             if (downloader is null)
             {
-                this.logger.Warn("Couldn't get downloader! Cancelling download");
+                this.logger.Warn($"Couldn't get downloader! Cancelling download for {downloadRequest.FileName}");
                 try
                 {
                     if (this.ircClient.IsConnected)
@@ -283,8 +296,14 @@ namespace Module.IrcAnime.Cida.Services
                     {
                         if (this.ircClient.IsConnected)
                         {
+                            this.logger.Info($"Disconnecting from IRC");
                             this.ircClient.Disconnect();
+                            this.logger.Info($"Disconnected");
                         }
+                    }
+                    else
+                    {
+                        this.logger.Info($"Not disconnecting from IRC because of these active downloads: {Environment.NewLine + string.Join(Environment.NewLine, this.downloadStatus.Keys)}");
                     }
                 }
                 finally
