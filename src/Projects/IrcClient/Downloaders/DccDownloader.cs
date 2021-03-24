@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using IrcClient.Clients;
+using NLog;
 
 namespace IrcClient.Downloaders
 {
@@ -30,7 +32,7 @@ namespace IrcClient.Downloaders
 
         public string TempFolder { get; }
 
-        public static bool TryCreateFromSendMessage(string message, string tempFolder, out DccDownloader downloader)
+        public static bool TryCreateFromSendMessage(string message, string tempFolder, out DccDownloader downloader, ILogger logger = null)
         {
             try
             {
@@ -39,7 +41,7 @@ namespace IrcClient.Downloaders
                 string host = ParseHost(ref processedMessage);
                 int port = ParsePort(ref processedMessage);
 
-                DccClient client = new DccClient(host, port, 64 * 1024);
+                DccClient client = new DccClient(host, port, logger, 64 * 1024);
 
                 if (ulong.TryParse(processedMessage, out ulong filesize))
                 {
@@ -59,10 +61,10 @@ namespace IrcClient.Downloaders
             }
         }
 
-        public async Task StartDownload()
-            => await StartDownload(Path.Combine(TempFolder, Filename));
+        public async Task StartDownload(CancellationToken cancellationToken)
+            => await StartDownload(Path.Combine(TempFolder, Filename), cancellationToken);
 
-        public async Task StartDownload(string outputPath)
+        public async Task StartDownload(string outputPath, CancellationToken cancellationToken)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? throw new InvalidOperationException());
 
@@ -76,13 +78,14 @@ namespace IrcClient.Downloaders
                 // TODO Find a better way to check for finished downloads (which works on clients not sending filesize)
                 while ((downloadedBytes < Filesize && client.IsConnected) || client.IsDataAvailable)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     (byte[] buffer, int count) = this.client.GetBuffer();
                     stream.Write(buffer, 0, count);
                     downloadedBytes += (ulong)count;
 
-                    Task.Run(() => ProgressChanged?.Invoke(downloadedBytes, Filesize));
+                    Task.Run(() => ProgressChanged?.Invoke(downloadedBytes, Filesize), cancellationToken);
                 }
-            }).ContinueWith(_ =>
+            }, cancellationToken).ContinueWith(_ =>
             {
                 stream.Close();
                 this.client.Disconnect();

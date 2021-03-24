@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using IrcClient.Models;
+using NLog;
 
 namespace IrcClient.Handlers
 {
     internal abstract class BaseHandler<T>
         where T : struct
     {
-        protected BaseHandler()
+        internal ILogger Logger { get; private set; }
+
+        protected BaseHandler(ILogger logger)
         {
+            this.Logger = logger;
             Handler = new Dictionary<T, Action<IrcMessage>>();
         }
 

@@ -15,7 +15,7 @@ namespace Module.Crunchyroll.Cida.Services.Sessions
 
         public async Task<Result<Session>> GetSession(CancellationToken cancellationToken)
         {
-            var response = await this.RestClient.ExecuteTaskAsync(this.GenerateRestRequest(), cancellationToken);
+            var response = await this.RestClient.ExecuteAsync(this.GenerateRestRequest(), cancellationToken);
             return response.IsSuccessful ? JsonSerializer.Deserialize<Result<Session>>(response.Content) : null;
         }
     }

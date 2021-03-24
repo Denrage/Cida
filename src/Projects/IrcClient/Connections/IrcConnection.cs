@@ -12,11 +12,6 @@ namespace IrcClient.Connections
     {
         private string lastMessage;
 
-        public IrcConnection(int bufferSize = 1024)
-            : base(bufferSize)
-        {
-        }
-
         public event Action<IrcMessage> DataReceived;
 
         public void SendMessage(string message, string target)

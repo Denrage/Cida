@@ -1,0 +1,7 @@
+{
+  "id": "109F8F54-DE94-479A-840A-7B4EF0F284D2",
+  "name": "Irc Anime",
+  "assemblyFile": "Module.IrcAnime.Cida.dll",
+  "entryType": "Module.IrcAnime.Cida.Module",
+  "clients": {}
+}

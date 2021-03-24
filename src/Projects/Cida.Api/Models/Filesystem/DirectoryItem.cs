@@ -7,6 +7,8 @@ namespace Cida.Api.Models.Filesystem
     public abstract class DirectoryItem : IDisposable
     {
         public const string Separator = "/";
+        private readonly Action onDispose;
+
         protected bool Disposed { get; private set; } = false;
         public string Name { get; }
 
@@ -16,12 +18,13 @@ namespace Cida.Api.Models.Filesystem
 
         public string FullPath(string separator) => GetFullPath(this, separator);
 
-        public DirectoryItem(string name, Directory directory)
+        public DirectoryItem(string name, Directory directory, Action onDispose = null)
         {
             this.Name = name ??
                         throw new ArgumentNullException(nameof(name));
 
             this.Directory = directory;
+            this.onDispose = onDispose;
             this.Directory?.InternalFiles.Add(this);
         }
 
@@ -42,6 +45,7 @@ namespace Cida.Api.Models.Filesystem
             this.Directory?.InternalFiles.Remove(this);
             this.Directory = null;
             Dispose(true);
+            this.onDispose?.Invoke();
             GC.SuppressFinalize(this);
         }
 

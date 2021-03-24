@@ -6,7 +6,7 @@ namespace Module.Crunchyroll.Cida.Services.Sessions
     {
         public const string Version1BaseUrl = "https://api1.cr-unblocker.com";
         public const string Version1ApiCommand = "getsession.php";
-        public const string Version2BaseUrl = "https://api2.cr-unblocker.com";
+        public const string Version2BaseUrl = "https://cr-unblocker.us.to";
         public const string Version2ApiCommand = "start_session";
         private readonly string command;
 

@@ -9,6 +9,6 @@ namespace Cida.Client.Avalonia.Api
 
         ModuleViewModel ViewModel { get; }
 
-        Task LoadAsync(Channel channel);
+        Task LoadAsync(Channel channel, ISettingsFactory settingsFactory);
     }
 }

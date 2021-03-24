@@ -1,64 +1,40 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Cida.Api.Models.Filesystem
 {
     public class File : DirectoryItem
     {
-        private Stream stream;
+        private Func<CancellationToken, Task<Stream>> getStream;
 
-        public File(string name, Directory directory, Stream stream)
-            : base(name, directory)
+        public File(string name, Directory directory, Func<CancellationToken, Task<Stream>> getStream, Action onDispose = null)
+            : base(name, directory, onDispose)
         {
-            this.stream = stream;
+            this.getStream = getStream;
         }
 
-        public File ReplaceContent(Stream stream)
+        public File ReplaceContent(Func<CancellationToken, Task<Stream>> getStream, Action onDispose = null)
         {
             if (this.Disposed)
             {
                 throw new InvalidOperationException("This file is already disposed");
             }
             
-            var file = new File(this.Name, this.Directory, stream);
+            var file = new File(this.Name, this.Directory, getStream, onDispose);
             this.Dispose();
             return file;
         }
 
-        public async Task<MemoryStream> GetStreamAsync()
+        public async Task<Stream> GetStreamAsync(CancellationToken cancellationToken)
         {
             if (this.Disposed)
             {
                 throw new InvalidOperationException("This file is already disposed");
             }
-            
-            var memoryStream = new MemoryStream();
 
-            if (this.stream.CanSeek)
-            {
-                this.stream.Seek(0, SeekOrigin.Begin);
-            }
-
-            await this.stream.CopyToAsync(memoryStream);
-            
-            if (this.stream.CanSeek)
-            {
-                this.stream.Seek(0, SeekOrigin.Begin);
-            }
-
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            return memoryStream;
-        }
-        
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            if (disposing)
-            {
-                this.stream?.Dispose();
-            }
+            return await this.getStream(cancellationToken);
         }
     }
 }

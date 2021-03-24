@@ -78,7 +78,7 @@ namespace Module.Crunchyroll.Cida.Services
             do
             {
                 request.AddOrUpdateParameter("session_id", this.session);
-                var response = await this.apiClient.ExecuteTaskAsync(request, cancellationToken);
+                var response = await this.apiClient.ExecuteAsync(request, cancellationToken);
                 Libs.Models.Result<T> infoResult = null;
 
                 if (response.IsSuccessful)

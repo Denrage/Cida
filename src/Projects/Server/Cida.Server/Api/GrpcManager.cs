@@ -16,14 +16,17 @@ namespace Cida.Server.Api
         public class CidaApiService : Cida.CidaApiService.CidaApiServiceBase
         {
             private readonly ModuleLoaderManager moduleLoaderManager;
+            private readonly ILogger logger;
 
-            public CidaApiService(ModuleLoaderManager moduleLoaderManager)
+            public CidaApiService(ModuleLoaderManager moduleLoaderManager, ILogger logger)
             {
                 this.moduleLoaderManager = moduleLoaderManager;
+                this.logger = logger;
             }
 
             public override Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
             {
+                this.logger.Info($"Connected client {context.Peer}");
                 return Task.FromResult(new VersionResponse()
                 {
                     Version = 1,
@@ -32,6 +35,7 @@ namespace Cida.Server.Api
 
             public override async Task<ClientModuleResponse> ClientModule(ClientModuleRequest request, ServerCallContext context)
             {
+                this.logger.Info($"Client '{context.Peer}' requesting modules for Id '{request.Id}'");
                 return new ClientModuleResponse()
                 {
                     Streams = { (await this.moduleLoaderManager.GetClientModulesAsync(Guid.Parse(request.Id))).ToArray().Select(ByteString.CopyFrom) }

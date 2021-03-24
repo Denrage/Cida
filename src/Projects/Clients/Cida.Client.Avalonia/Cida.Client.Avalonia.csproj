@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Models\" />
@@ -16,27 +16,33 @@
   <ItemGroup>
     <AvaloniaResource Remove="Views\LauncherWindow.xaml" />
     <AvaloniaResource Remove="Views\Launcher\ConnectionScreenView.xaml" />
+    <AvaloniaResource Remove="Views\Launcher\ModuleSelectScreenView.xaml" />
     <AvaloniaResource Remove="Views\Launcher\StatusScreenView.xaml" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Views\LauncherWindow.xaml" />
     <None Remove="Views\Launcher\ConnectionScreenView.xaml" />
+    <None Remove="Views\Launcher\ModuleSelectScreenView.xaml" />
     <None Remove="Views\Launcher\StatusScreenView.xaml" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.9.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.9.3" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.3" />
-    <PackageReference Include="Google.Protobuf" Version="3.9.1" />
-    <PackageReference Include="Grpc" Version="2.23.0" />
+    <PackageReference Include="Avalonia" Version="0.10.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.0" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.0" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.14.0" />
+    <PackageReference Include="Grpc" Version="2.35.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3" />
-    <PackageReference Include="Grpc.Tools" Version="2.23.0">
+    <PackageReference Include="Grpc.Tools" Version="2.35.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <Protobuf Include="../../../protos/server.proto" Link="server.proto" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Views\Launcher\ModuleSelectScreenView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Include="Views\Launcher\LauncherWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
@@ -55,6 +61,9 @@
     <ProjectReference Include="..\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\Launcher\ConnectionScreenView - Copy.xaml.cs">
+      <DependentUpon>ConnectionScreenView.xaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\Launcher\ConnectionScreenView.xaml.cs">
       <DependentUpon>ConnectionScreenView.xaml</DependentUpon>
     </Compile>

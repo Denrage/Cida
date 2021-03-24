@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Autofac;
@@ -12,7 +15,7 @@ namespace Cida.Server.Console
     internal class Program
     {
         private readonly string currentWorkingDirectory = Path
-            .GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase)
+            .GetDirectoryName(Assembly.GetExecutingAssembly().Location)
             .Replace("file:", string.Empty).TrimStart('\\');
 
         private readonly IContainer container;
@@ -34,7 +37,10 @@ namespace Cida.Server.Console
 
             var program = new Program(nodeName);
             program.Start();
-            System.Console.ReadKey();
+            while (true)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
         }
 
         public Program(string nodeName = "")
@@ -45,11 +51,11 @@ namespace Cida.Server.Console
 
         public void Start()
         {
-            GrpcEnvironment.SetLogger(new GrpcLogger(this.container.Resolve<ILogger>()));
+            GrpcEnvironment.SetLogger(new GrpcLogger(NLog.LogManager.GetLogger("GRPC")));
 
             var server =
                 new CidaServer(this.currentWorkingDirectory, this.container.Resolve<ISettingsProvider>(),
-                    this.container.Resolve<ILogger>());
+                    NLog.LogManager.GetLogger("CIDA"));
             Task.Run(async () =>
             {
                 try
@@ -79,7 +85,6 @@ namespace Cida.Server.Console
                         $"{this.nodeName}.json"))))
                 .As<ISettingsProvider>()
                 .SingleInstance();
-            builder.RegisterInstance(NLog.LogManager.GetCurrentClassLogger()).As<ILogger>().SingleInstance();
             return builder.Build();
         }
     }

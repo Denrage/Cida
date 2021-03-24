@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 
 namespace IrcClient.Clients
 {
@@ -20,17 +21,19 @@ namespace IrcClient.Clients
         private readonly string tempFolder;
         private bool motdReceived;
         private bool namesReceived;
+        private ILogger logger;
 
-        public IrcClient(string host, int port, string userName, string realName, string nickName, string tempFolder)
+        public IrcClient(string host, int port, string userName, string realName, string nickName, string tempFolder, ILogger logger = null)
         {
             Host = host;
             Port = port;
             UserName = userName;
             RealName = realName;
             NickName = nickName;
-            handler = new IrcHandler();
+            handler = new IrcHandler(logger);
             channels = new List<string>();
             errors = new ConcurrentBag<IrcMessage>();
+            this.logger = logger;
             this.tempFolder = tempFolder;
 
             handler.MessageReceived += MessageReceived;
@@ -93,9 +96,10 @@ namespace IrcClient.Clients
             }
             else
             {
+                logger.Log(LogLevel.Debug, $"Joining channel {channel}");
                 while (!namesReceived)
                 {
-                    Task.Delay(100);
+                    System.Threading.Thread.Sleep(100);
                 }
 
                 namesReceived = false;
@@ -103,8 +107,9 @@ namespace IrcClient.Clients
 
                 while (!namesReceived)
                 {
-                    Task.Delay(100);
+                    System.Threading.Thread.Sleep(100);
                 }
+                logger.Log(LogLevel.Debug, $"Channel {channel} joined");
             }
 
             channels.Add(channel);
@@ -177,7 +182,7 @@ namespace IrcClient.Clients
         {
             if (DownloadRequested != null)
             {
-                if (DccDownloader.TryCreateFromSendMessage(message.Message, tempFolder, out var downloader))
+                if (DccDownloader.TryCreateFromSendMessage(message.Message, tempFolder, out var downloader, logger))
                 {
                     OnDownloadRequested(downloader);
                 }

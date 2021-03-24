@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Cida.Api.Models.Filesystem;
 using Cida.Server.Infrastructure;
@@ -19,21 +20,21 @@ namespace Cida.Server.Module
             this.ModuleDirectory = directory;
         }
 
-        public async Task<File> DownloadFileAsync(File file)
+        public async Task<File> DownloadFileAsync(File file, CancellationToken cancellationToken)
         {
             if (file.IsInDirectory(this.ModuleDirectory))
             {
-                return await this.ftpClient.GetFileAsync(file);
+                return await this.ftpClient.GetFileAsync(file, cancellationToken);
             }
 
             throw new InvalidOperationException("File to download needs to be in the module directory");
         }
 
-        public async Task UploadFileAsync(File file)
+        public async Task UploadFileAsync(File file, CancellationToken cancellationToken)
         {
             if (file.IsInDirectory(this.ModuleDirectory))
             {
-                await this.ftpClient.SaveFileAsync(file);
+                await this.ftpClient.SaveFileAsync(file, cancellationToken);
             }
             else
             {

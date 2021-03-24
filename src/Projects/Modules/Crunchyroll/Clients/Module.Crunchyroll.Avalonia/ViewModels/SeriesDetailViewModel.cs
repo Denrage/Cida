@@ -97,7 +97,12 @@ namespace Module.Crunchyroll.Avalonia.ViewModels
             {
                 this.Collections.Clear();
                 this.Collections.AddRange(collections.Collections.Select(x =>
-                    new CollectionDetailViewModel(this.client, this.imageDownloadService)));
+                    new CollectionDetailViewModel(this.client, this.imageDownloadService)
+                    {
+                        Description = x.Description,
+                        Id = x.Id,
+                        Name = x.Name,
+                    }));
             });
         }
     }

@@ -16,7 +16,7 @@ namespace Module.Crunchyroll.Avalonia
 
         public ModuleViewModel ViewModel { get; private set; }
 
-        public async Task LoadAsync(Channel channel)
+        public async Task LoadAsync(Channel channel, ISettingsFactory settingsFactory)
         {
             this.client = new CrunchyrollService.CrunchyrollServiceClient(channel);
             this.ViewModel = new CrunchyrollViewModel(this.client, new ImageDownlodService());

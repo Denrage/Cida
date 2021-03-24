@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Cida.Api;
 using Cida.Server.Api;
@@ -21,7 +22,7 @@ namespace Cida.Server.Module
     {
         public const string ModuleFolderName = "Modules";
         public const string ModuleFileExtension = "cidam";
-        
+
         private readonly Cida.Api.Models.Filesystem.Directory ModuleDirectory = new Cida.Api.Models.Filesystem.Directory(ModuleFolderName, null);
         private readonly string moduleDirectory;
         private readonly IEnumerable<string> unpackedModuleDirectories;
@@ -32,14 +33,24 @@ namespace Cida.Server.Module
         private readonly ILogger logger;
         private readonly GlobalConfigurationService globalConfigurationService;
         private readonly IModuleFtpClientFactory moduleFtpClientFactory;
+        private readonly IModuleLoggerFactory moduleLoggerFactory;
         private readonly ConcurrentDictionary<Guid, CidaModule> modules;
         private readonly ConcurrentBag<Guid> unpackedModules;
 
         public IEnumerable<Guid> Modules
             => this.modules.Select(x => x.Key);
 
-        public ModuleLoaderManager(string moduleDirectory, IGrpcRegistrar grpcRegistrar, Infrastructure.IFtpClient ftpClient,
-            CidaContext databaseContext, IDatabaseConnector databaseConnector, ILogger logger, GlobalConfigurationService globalConfigurationService, IModuleFtpClientFactory moduleFtpClientFactory, IEnumerable<string> unpackedModuleDirectories = null)
+        public ModuleLoaderManager(
+            string moduleDirectory,
+            IGrpcRegistrar grpcRegistrar,
+            Infrastructure.IFtpClient ftpClient,
+            CidaContext databaseContext,
+            IDatabaseConnector databaseConnector,
+            ILogger logger,
+            GlobalConfigurationService globalConfigurationService,
+            IModuleFtpClientFactory moduleFtpClientFactory,
+            IModuleLoggerFactory moduleLoggerFactory,
+            IEnumerable<string> unpackedModuleDirectories = null)
         {
             this.moduleDirectory = moduleDirectory;
             this.unpackedModuleDirectories = unpackedModuleDirectories ?? Array.Empty<string>();
@@ -50,6 +61,7 @@ namespace Cida.Server.Module
             this.logger = logger;
             this.globalConfigurationService = globalConfigurationService;
             this.moduleFtpClientFactory = moduleFtpClientFactory;
+            this.moduleLoggerFactory = moduleLoggerFactory;
             this.modules = new ConcurrentDictionary<Guid, CidaModule>();
             this.unpackedModules = new ConcurrentBag<Guid>();
 
@@ -162,7 +174,6 @@ namespace Cida.Server.Module
             return null;
         }
 
-
         public async Task Start()
         {
             this.logger.Info("Loading modules");
@@ -193,33 +204,35 @@ namespace Cida.Server.Module
 
             this.logger.Info("Done loading packed modules");
 
-            await this.UploadToDatabase();
+            await this.UploadToDatabase(default);
 
-            await this.LoadFromDatabase();
+            await this.LoadFromDatabase(default);
 
             this.logger.Info("Done loading modules");
 
             this.globalConfigurationService.ConfigurationChanged += async () =>
             {
                 this.logger.Info("Loading modules from new database configuration");
-                await this.UploadToDatabase();
-                await this.LoadFromDatabase();
+                await this.UploadToDatabase(default);
+                await this.LoadFromDatabase(default);
                 this.logger.Info("Done loading modules from new database configuration");
             };
         }
 
-        private async Task LoadFromDatabase()
+        private async Task LoadFromDatabase(CancellationToken cancellationToken)
         {
             this.logger.Info("Loading Database modules");
             var services = new List<ServerServiceDefinition>();
             // TODO: Save locally
-            var modulePaths = await this.databaseContext.FtpPaths.ToArrayAsync();
+            var modulePaths = await this.databaseContext.FtpPaths.ToArrayAsync(cancellationToken);
             foreach (var path in modulePaths.Where(x => !this.Modules.Contains(x.ModuleId)).Select(x => x.FtpPath))
             {
                 using var requestedFile = new Cida.Api.Models.Filesystem.File(Path.GetFileName(path), this.ModuleDirectory, null);
-                using var file = await this.ftpClient.GetFileAsync(requestedFile);
-                await using var stream = await file.GetStreamAsync();
-                var loadedModule = await this.LoadPacked(stream.ToArray());
+                using var file = await this.ftpClient.GetFileAsync(requestedFile, cancellationToken);
+                await using var stream = await file.GetStreamAsync(cancellationToken);
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream, cancellationToken);
+                var loadedModule = await this.LoadPacked(memoryStream.ToArray());
                 if (loadedModule != null)
                 {
                     services.AddRange(loadedModule.GrpcServices);
@@ -230,11 +243,11 @@ namespace Cida.Server.Module
             this.logger.Info("Done loading Database modules");
         }
 
-        private async Task UploadToDatabase()
+        private async Task UploadToDatabase(CancellationToken cancellationToken)
         {
             this.logger.Info("Upload modules");
             // TODO: Move this to somewhere where it gets called everytime a module gets loaded
-            var modulesInDatabase = await this.databaseContext.FtpPaths.ToArrayAsync();
+            var modulesInDatabase = await this.databaseContext.FtpPaths.ToArrayAsync(cancellationToken);
             var notUploaded = this.modules.Where(module =>
                     modulesInDatabase.FirstOrDefault(x =>
                         Path.GetFileNameWithoutExtension(x.FtpPath) == module.Value.Metadata.IdToString()) ==
@@ -246,21 +259,22 @@ namespace Cida.Server.Module
                 .Where(x => !this.unpackedModules.Contains(x.Key)))
             {
                 this.logger.Info($"Uploading module {module.Value.Metadata.Name}({module.Value.Metadata.Id})");
-                var zippedModule = await module.Value.ToArchiveStream();
+
+                async Task<Stream> getStream(CancellationToken cancellationToken)
+                    => await module.Value.ToArchiveStream();
 
                 try
                 {
-                    using var file = new Cida.Api.Models.Filesystem.File($"{module.Value.Metadata.IdToString()}.{ModuleFileExtension}", this.ModuleDirectory, zippedModule);
-                    await this.ftpClient.SaveFileAsync(file);
-
+                    using var file = new Cida.Api.Models.Filesystem.File($"{module.Value.Metadata.IdToString()}.{ModuleFileExtension}", this.ModuleDirectory, getStream);
+                    await this.ftpClient.SaveFileAsync(file, cancellationToken);
 
                     await this.databaseContext.FtpPaths.AddAsync(new FtpInformation()
                     {
                         FtpPath = file.FullPath("/"),
                         ModuleId = module.Value.Metadata.Id,
-                    });
+                    }, cancellationToken);
 
-                    await this.databaseContext.SaveChangesAsync();
+                    await this.databaseContext.SaveChangesAsync(cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -279,7 +293,7 @@ namespace Cida.Server.Module
                 {
                     var rootDirectory = new Cida.Api.Models.Filesystem.Directory("ModuleFiles", null);
                     var moduleDirectory = new Cida.Api.Models.Filesystem.Directory(module.Metadata.Id.ToString(), rootDirectory);
-                    return await module.Load(this.databaseConnector, this.moduleFtpClientFactory.Create(moduleDirectory), moduleDirectory);
+                    return await module.Load(this.databaseConnector, this.moduleFtpClientFactory.Create(moduleDirectory), moduleDirectory, this.moduleLoggerFactory.Create(module.Metadata.Name));
                 }
             }
             catch (Exception ex)
@@ -289,6 +303,7 @@ namespace Cida.Server.Module
 
             return null;
         }
+
         public async Task<IEnumerable<byte[]>> GetClientModulesAsync(Guid id)
         {
             return (await Task.WhenAll(this.modules.Select(x => x.Value.GetClientModule(id)))).Where(x => x.Length > 0);

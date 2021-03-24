@@ -39,6 +39,7 @@ namespace Cida.Server
                 this.logger,
                 this.globalConfigurationService,
                 new ModuleFtpClientFactory(ftpClient),
+                new ModuleLoggerFactory(NLog.LogManager.LogFactory),
                 this.settingsProvider.Get<ServerConfiguration>().UnpackedModuleDirectories);
 
             this.interNodeConnectionManager = new InterNodeConnectionManager(
@@ -77,7 +78,7 @@ namespace Cida.Server
 
 
             await this.grpcManager.AddServicesAsync(new[]
-                {CidaApiService.BindService(new GrpcManager.CidaApiService(this.moduleLoader))});
+                {CidaApiService.BindService(new GrpcManager.CidaApiService(this.moduleLoader, this.logger))});
             await this.moduleLoader.Start();
         }
 

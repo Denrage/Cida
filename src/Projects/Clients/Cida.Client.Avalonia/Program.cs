@@ -1,5 +1,5 @@
 ﻿using Avalonia;
-using Avalonia.Logging.Serilog;
+using Avalonia.Platform;
 using Avalonia.ReactiveUI;
 
 namespace Cida.Client.Avalonia
@@ -16,7 +16,7 @@ namespace Cida.Client.Avalonia
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .LogToDebug()
+                .LogToTrace()
                 .UseReactiveUI();
     }
 }

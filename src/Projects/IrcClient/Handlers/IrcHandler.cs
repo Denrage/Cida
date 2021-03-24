@@ -4,6 +4,7 @@ using IrcClient.Commands;
 using IrcClient.Commands.Helpers;
 using IrcClient.Connections;
 using IrcClient.Models;
+using NLog;
 
 namespace IrcClient.Handlers
 {
@@ -12,13 +13,14 @@ namespace IrcClient.Handlers
         private readonly IrcConnection connection;
         private readonly CtcpHandler ctcpHandler;
 
-        public IrcHandler()
+        public IrcHandler(ILogger logger = null)
+            :base(logger)
         {
             connection = new IrcConnection();
-            ctcpHandler = new CtcpHandler();
+            ctcpHandler = new CtcpHandler(logger);
 
             connection.DataReceived += OnMessageReceived;
-            AddHandler(IrcCommand.PrivMsg, HandleCtcpMessage);
+            AddHandler(IrcCommand.PrivMsg, HandlePrivateCtcpMessage);
             AddHandler(IrcCommand.CPrivMsg, HandleCtcpMessage);
             AddHandler(IrcCommand.Notice, HandleCtcpMessage);
             AddHandler(IrcCommand.CNotice, HandleCtcpMessage);
@@ -79,6 +81,12 @@ namespace IrcClient.Handlers
             }
 
             ctcpHandler.HandleCtcp(new IrcMessage(processedMessage, message.Sender));
+        }
+
+        private void HandlePrivateCtcpMessage(IrcMessage message)
+        {
+            this.Logger?.Log(LogLevel.Debug, $"{message.Sender}: \"{message.Message}\"");
+            this.HandleCtcpMessage(message);
         }
     }
 }
