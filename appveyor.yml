@@ -21,7 +21,7 @@ after_build:
   - 7z a crunchyroll.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Server\Module.Crunchyroll.Cida\bin\Release\netstandard2.1\*
   - 7z a crunchyroll.cidam .\crunchyroll\avalonia.acm
   - 7z a hsnr.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Hsnr\Server\Module.Hsnr.Cida\bin\Release\netstandard2.1\*
-  - 7z a horriblesubs.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\HorribleSubs\Server\Module.HorribleSubs.Cida\bin\Release\net5.0\*
+  - 7z a horriblesubs.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\HorribleSubs\Server\Module.HorribleSubs.Cida\bin\Release\netstandard2.1\*
   - 7z a modules.zip crunchyroll.cidam
   - 7z a modules.zip hsnr.cidam
   - 7z a modules.zip horriblesubs.cidam
