@@ -19,7 +19,6 @@ namespace Module.IrcAnime.Avalonia.Services
 
         public event Action OnStatusUpdate;
 
-
         public DownloadStatusService(IrcAnimeService.IrcAnimeServiceClient client)
         {
             this.client = client;
@@ -39,7 +38,6 @@ namespace Module.IrcAnime.Avalonia.Services
             {
                 this.semaphore.Release();
             }
-
         }
 
         private void UpdateStatus()
@@ -60,7 +58,6 @@ namespace Module.IrcAnime.Avalonia.Services
                     {
                         this.semaphore.Release();
                     }
-
 
                     Thread.Sleep(WaitTime);
                 }

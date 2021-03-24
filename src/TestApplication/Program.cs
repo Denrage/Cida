@@ -9,9 +9,9 @@ using System.Threading;
 
 namespace TestApplication
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var filename = "[HorribleSubs] Sword Art Online - Alicization - War of Underworld - 16 [1080p].mkv";
             var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
@@ -23,7 +23,7 @@ namespace TestApplication
 
             //foreach (var result in results.SearchResults)
             //{
-                //Console.WriteLine($"Botname:{result.BotName};Filename:{result.FileName};Filesize:{result.FileSize};PackageNumber:{result.PackageNumber}");
+            //Console.WriteLine($"Botname:{result.BotName};Filename:{result.FileName};Filesize:{result.FileSize};PackageNumber:{result.PackageNumber}");
             //}
 
             //client.Download(new DownloadRequest()
@@ -35,7 +35,6 @@ namespace TestApplication
             //        PackageNumber = 10734
             //    }
             //});
-
 
             //while (true)
             //{

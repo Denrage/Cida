@@ -8,7 +8,6 @@ namespace Cida.Client.Avalonia.Views.Launcher
 {
     public class ModuleSelectScreenView : UserControl
     {
-
         public ModuleSelectScreenView()
         {
             this.InitializeComponent();

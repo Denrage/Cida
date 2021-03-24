@@ -13,14 +13,13 @@ namespace Cida.Client.Avalonia.Services
         private ConcurrentDictionary<Type, object> settingsCache = new ConcurrentDictionary<Type, object>();
         private readonly string moduleName;
 
-
         public ModuleSettingsService(string moduleName, ISettingsService settingsService)
         {
             this.settingsService = settingsService;
             this.moduleName = moduleName;
         }
 
-        public async Task<T> Get<T>() 
+        public async Task<T> Get<T>()
             where T : class, ICloneable, new()
         {
             var type = typeof(T);
@@ -35,11 +34,11 @@ namespace Cida.Client.Avalonia.Services
             return (T)((T)result).Clone();
         }
 
-        public async Task Save<T>(T settings) 
+        public async Task Save<T>(T settings)
             where T : class, ICloneable
         {
             var type = typeof(T);
-            this.settingsCache.TryAdd(type,settings);
+            this.settingsCache.TryAdd(type, settings);
             await this.settingsService.Save<T>(this.moduleName, settings);
         }
     }

@@ -62,7 +62,6 @@ namespace Cida.Server.Infrastructure
             request.Method = WebRequestMethods.Ftp.DownloadFile;
             using var cancellationRegister = cancellationToken.Register(() => request.Abort());
 
-
             using var response = await request.GetResponseAsync();
             await using var responseStream = response.GetResponseStream();
 
@@ -142,7 +141,6 @@ namespace Cida.Server.Infrastructure
             using var response = await request.GetResponseAsync();
             this.logger.Info("Uploaded file: {value1}", file.FullPath(Separator));
         }
-
 
         private FtpWebRequest CreateRequest(string path)
         {

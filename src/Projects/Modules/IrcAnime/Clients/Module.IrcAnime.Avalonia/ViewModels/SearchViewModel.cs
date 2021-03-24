@@ -21,7 +21,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
         private readonly SemaphoreSlim packSemaphore = new SemaphoreSlim(1, 1);
         private string searchTerm;
 
-        AvaloniaList<DownloadContext> Packs { get; } = new AvaloniaList<DownloadContext>();
+        private AvaloniaList<DownloadContext> Packs { get; } = new AvaloniaList<DownloadContext>();
 
         public string SearchTerm
         {
@@ -79,7 +79,6 @@ namespace Module.IrcAnime.Avalonia.ViewModels
                         this.packSemaphore.Release();
                     }
                 });
-
             }
         }
     }

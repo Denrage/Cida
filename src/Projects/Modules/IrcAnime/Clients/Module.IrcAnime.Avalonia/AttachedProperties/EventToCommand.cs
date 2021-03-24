@@ -14,7 +14,6 @@ namespace Module.IrcAnime.Avalonia.AttachedProperties
         public static readonly AttachedProperty<ICommand> CommandProperty = AvaloniaProperty.RegisterAttached<EventToCommand, Interactive, ICommand>(
             "Command", default, false, BindingMode.OneTime, null, OnCommandChange);
 
-
         public static readonly AttachedProperty<string> EventNameProperty = AvaloniaProperty.RegisterAttached<EventToCommand, Interactive, string>(
             "EventName", default, false, BindingMode.OneWay, null, OnEventNameChange);
 
@@ -44,7 +43,7 @@ namespace Module.IrcAnime.Avalonia.AttachedProperties
             {
                 return;
             }
-            
+
             System.EventHandler handler = Handler;
             var eventInfo = element.GetType().GetEvent(eventName);
 
@@ -56,7 +55,6 @@ namespace Module.IrcAnime.Avalonia.AttachedProperties
             {
                 eventInfo.RemoveEventHandler(element, handler);
             }
-
         }
 
         private static void Handler(object s, EventArgs e)
@@ -69,7 +67,6 @@ namespace Module.IrcAnime.Avalonia.AttachedProperties
                 }
             }
         }
-
 
         public static void SetCommand(AvaloniaObject element, ICommand commandValue)
         {

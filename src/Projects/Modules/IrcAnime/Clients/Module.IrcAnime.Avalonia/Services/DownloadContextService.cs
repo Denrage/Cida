@@ -80,12 +80,12 @@ namespace Module.IrcAnime.Avalonia.Services
                 this.context.TryAdd(packMetadata.Name, result);
             }
 
-            // This only works bc Pack is not be copied and one instance is shared, maybe not desireable
+            // This only works bc Pack is not be copied and one instance is
+            // shared, maybe not desireable
             this.packService.Update(packMetadata);
 
             return result;
         }
-
 
         private async Task Context_OnDownload(DownloadContext item)
         {

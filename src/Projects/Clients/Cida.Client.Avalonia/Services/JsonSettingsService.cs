@@ -13,7 +13,6 @@ namespace Cida.Client.Avalonia.Services
         private readonly string settingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Cida", "Avalonia", "settings.json");
         private Settings cache;
 
-
         public JsonSettingsService()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(this.settingsFile));
@@ -50,7 +49,6 @@ namespace Cida.Client.Avalonia.Services
 
             await this.SaveSettings(JsonSerializer.Serialize<Settings>(this.cache));
             return defaultItem;
-
         }
 
         public async Task Save<T>(string moduleName, T item)
@@ -94,7 +92,6 @@ namespace Cida.Client.Avalonia.Services
                 this.cache = JsonSerializer.Deserialize<Settings>(await File.ReadAllTextAsync(this.settingsFile));
             }
         }
-
 
         public class Module
         {

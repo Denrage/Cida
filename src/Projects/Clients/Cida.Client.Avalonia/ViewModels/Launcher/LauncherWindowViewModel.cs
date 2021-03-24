@@ -14,6 +14,7 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
         private ModuleSelectScreenViewModel moduleSelection;
 
         public event Action ConnectionSuccessfull;
+
         public event Action<ModuleViewModel> ModuleSelected;
 
         public ViewModelBase Content
@@ -51,8 +52,6 @@ namespace Cida.Client.Avalonia.ViewModels.Launcher
             {
                 this.ConnectionSuccessfull?.Invoke();
             }
-
-
         }
 
         public void SelectModule()

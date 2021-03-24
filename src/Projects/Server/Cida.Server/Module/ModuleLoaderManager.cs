@@ -22,7 +22,7 @@ namespace Cida.Server.Module
     {
         public const string ModuleFolderName = "Modules";
         public const string ModuleFileExtension = "cidam";
-        
+
         private readonly Cida.Api.Models.Filesystem.Directory ModuleDirectory = new Cida.Api.Models.Filesystem.Directory(ModuleFolderName, null);
         private readonly string moduleDirectory;
         private readonly IEnumerable<string> unpackedModuleDirectories;
@@ -174,7 +174,6 @@ namespace Cida.Server.Module
             return null;
         }
 
-
         public async Task Start()
         {
             this.logger.Info("Loading modules");
@@ -269,7 +268,6 @@ namespace Cida.Server.Module
                     using var file = new Cida.Api.Models.Filesystem.File($"{module.Value.Metadata.IdToString()}.{ModuleFileExtension}", this.ModuleDirectory, getStream);
                     await this.ftpClient.SaveFileAsync(file, cancellationToken);
 
-
                     await this.databaseContext.FtpPaths.AddAsync(new FtpInformation()
                     {
                         FtpPath = file.FullPath("/"),
@@ -305,6 +303,7 @@ namespace Cida.Server.Module
 
             return null;
         }
+
         public async Task<IEnumerable<byte[]>> GetClientModulesAsync(Guid id)
         {
             return (await Task.WhenAll(this.modules.Select(x => x.Value.GetClientModule(id)))).Where(x => x.Length > 0);

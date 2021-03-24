@@ -21,6 +21,7 @@ namespace Module.IrcAnime.Cida
     {
         // Hack: Remove this asap
         private const string DatabasePassword = "IrcAnime";
+
         private const string Id = "109F8F54-DE94-479A-840A-7B4EF0F284D2";
         private string connectionString;
         private SearchService searchService;
@@ -57,6 +58,7 @@ namespace Module.IrcAnime.Cida
         {
             // One megabyte
             private const int ChunkSize = 1024 * 1024;
+
             private readonly SearchService searchService;
             private readonly DownloadService downloadService;
             private readonly Func<IrcAnimeDbContext> getContext;
@@ -123,12 +125,10 @@ namespace Module.IrcAnime.Cida
                     }));
                 }
 
-
                 return await Task.FromResult(new DownloadStatusResponse()
                 {
                     Status = { currentDownloads }
                 });
-
             }
 
             public override async Task<FileTransferInformationResponse> FileTransferInformation(FileTransferInformationRequest request, ServerCallContext context)
@@ -156,12 +156,12 @@ namespace Module.IrcAnime.Cida
             {
                 this.logger.Info($"Incoming download to client request from {context.Peer}");
                 using var databaseContext = this.getContext();
-                var databaseFile = await databaseContext.Downloads.FindAsync(new[] { request.FileName }, cancellationToken:context.CancellationToken);
+                var databaseFile = await databaseContext.Downloads.FindAsync(new[] { request.FileName }, cancellationToken: context.CancellationToken);
                 if (databaseFile != null)
                 {
                     using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), this.downloadDirectory, null);
                     using var downloadedFile = await this.ftpClient.DownloadFileAsync(file, context.CancellationToken);
-                    
+
                     using var fileStream = await downloadedFile.GetStreamAsync(context.CancellationToken);
                     fileStream.Seek((long)request.Position, System.IO.SeekOrigin.Begin);
                     while (fileStream.Position != fileStream.Length)
@@ -177,7 +177,6 @@ namespace Module.IrcAnime.Cida
                             Position = (ulong)fileStream.Position,
                         });
                     }
-
                 }
             }
         }

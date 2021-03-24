@@ -18,6 +18,7 @@ namespace Module.IrcAnime.Avalonia.ViewModels
         private readonly IModuleSettingsService moduleSettingsService;
 
         public event Action<DownloadContext> OnDownload;
+
         public event Action<DownloadContext> OnDownloadLocally;
 
         public Pack Pack { get; }
@@ -35,10 +36,10 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         public int Progress => (int)Math.Round((double)this.DownloadedBytes * 100.0 / (double)this.Pack.Size);
 
-        public PackageStatus Status 
-        { 
-            get => this.status; 
-            private set => this.RaiseAndSetIfChanged(ref this.status, value); 
+        public PackageStatus Status
+        {
+            get => this.status;
+            private set => this.RaiseAndSetIfChanged(ref this.status, value);
         }
 
         public DownloadContext(Pack pack, IModuleSettingsService moduleSettingsService)
@@ -90,7 +91,6 @@ namespace Module.IrcAnime.Avalonia.ViewModels
             this.Status = this.Status & ~PackageStatus.Downloading & ~PackageStatus.NotAvailable | PackageStatus.Locally;
         }
     }
-
 
     [Flags]
     public enum PackageStatus
