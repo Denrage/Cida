@@ -28,7 +28,7 @@ namespace Module.IrcAnime.Cida.Services
     {
         public static string Separator = "/";
         private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "IrcDownloads");
-        private readonly IrcConnection ircConnection;
+        private readonly RefCounted<IrcConnection> ircConnection;
         private readonly ConcurrentDictionary<string, CreateDownloaderContext> requestedDownloads;
         private readonly ConcurrentDictionary<string, DownloadProgress> downloadStatus;
         private readonly Func<IrcAnimeDbContext> getContext;
@@ -71,7 +71,23 @@ namespace Module.IrcAnime.Cida.Services
                 }
             );
 
-            this.ircConnection = ircClient.GetConnection(host, port);
+            string name = "ad_" + Guid.NewGuid();
+            this.ircConnection = new RefCounted<IrcConnection>(
+                async () =>
+                {
+                    var c = ircClient.GetConnection(host, port);
+
+                    this.logger.Info("Connecting to IRC-Server");
+                    await c.Connect();
+                    await c.Send(IrcCommand.Nick, name);
+                    await c.Send(IrcCommand.User, $"{name} 0 * :realname");
+                    await c.Send(IrcCommand.Join, "#nibl");
+
+                    return c;
+                }
+            );
+                
+                
 
             this.downloadDirectory = downloadDirectory;
 
@@ -100,25 +116,6 @@ namespace Module.IrcAnime.Cida.Services
                 }
             }
 
-            await this.ircConnectSemaphore.WaitAsync(cancellationToken);
-            try
-            {
-                if (!this.ircConnection.IsConnected)
-                {
-                    string name = "ad_" + Guid.NewGuid();
-                    this.logger.Info("Connecting to IRC-Server");
-
-                    await this.ircConnection.Connect();
-                    await this.ircConnection.Send(IrcCommand.Nick, name);
-                    await this.ircConnection.Send(IrcCommand.User, $"{name} 0 * :realname");
-                    await this.ircConnection.Send(IrcCommand.Join, "#nibl");
-                }
-            }
-            finally
-            {
-                this.ircConnectSemaphore.Release();
-            }
-
             var createDownloaderContext = new CreateDownloaderContext()
             {
                 Filename = downloadRequest.FileName,
@@ -134,6 +131,7 @@ namespace Module.IrcAnime.Cida.Services
                 this.logger.Warn("Download Lock took longer than 10 seconds to free!");
             }
 
+            var ircConnection = await this.ircConnection.Acquire();
             try
             {
                 if (this.requestedDownloads.ContainsKey(downloadRequest.FileName))
@@ -143,11 +141,12 @@ namespace Module.IrcAnime.Cida.Services
                 }
                 if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
                 {
-                    await this.ircConnection.Send(IrcCommand.PrivMsg, $"{downloadRequest.BotName} :xdcc send #{downloadRequest.PackageNumber}");
+                    await ircConnection.Send(IrcCommand.PrivMsg, $"{downloadRequest.BotName} :xdcc send #{downloadRequest.PackageNumber}");
                 }
             }
             finally
             {
+                await this.ircConnection.Release();
                 this.ircDownloadQueueSemaphore.Release();
             }
 
