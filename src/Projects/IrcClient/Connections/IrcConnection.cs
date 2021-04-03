@@ -64,7 +64,7 @@ namespace IrcClient.Connections
 
         public async Task Connect(CancellationToken token = default)
         {
-            await this.socket.ConnectAsync(this.host, this.port, token).ConfigureAwait(false);
+            await this.socket.ConnectAsync(this.host, this.port/*, token*/).ConfigureAwait(false);
 
             this.receiver = Task.Factory.StartNew(async () => 
             {
