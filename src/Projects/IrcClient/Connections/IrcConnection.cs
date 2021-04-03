@@ -32,6 +32,8 @@ namespace IrcClient.Connections
         public Action<string> MessageSent { get; set; }
         public Action<string> MessageReceived { get; set; }
 
+        public bool IsConnected => this.socket.Connected;
+
         ~IrcConnection()
         {
             Dispose();
