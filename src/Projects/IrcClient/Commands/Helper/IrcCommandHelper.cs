@@ -90,7 +90,7 @@ namespace IrcClient.Commands.Helper
             {
                 parameter = string.Empty;
             }
-            
+
             var matches = ircCommands
                 .Where((x) => x.Value == commandString)
                 .Select((x) => x.Key);
@@ -99,5 +99,4 @@ namespace IrcClient.Commands.Helper
             return matches.Any();
         }
     }
-
 }

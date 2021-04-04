@@ -20,6 +20,7 @@ namespace IrcClient.Clients
         }
 
         public string Filename { get; private set; }
+
         public ulong Filesize { get; private set; }
 
         public event Action<ulong, ulong> Progress;
@@ -57,5 +58,4 @@ namespace IrcClient.Clients
             await Task.Run(() => Progress?.Invoke(count, Filesize)).ConfigureAwait(false);
         }
     }
-
 }

@@ -86,8 +86,6 @@ namespace Module.IrcAnime.Cida.Services
                     return c;
                 }
             );
-                
-                
 
             this.downloadDirectory = downloadDirectory;
 

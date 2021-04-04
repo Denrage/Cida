@@ -38,7 +38,7 @@ namespace IrcClient.Commands.Helper
             {
                 parameter = string.Empty;
             }
-            
+
             var matches = dccCommands
                 .Where((x) => x.Value == commandString)
                 .Select((x) => x.Key);
@@ -47,5 +47,4 @@ namespace IrcClient.Commands.Helper
             return matches.Any();
         }
     }
-
 }
