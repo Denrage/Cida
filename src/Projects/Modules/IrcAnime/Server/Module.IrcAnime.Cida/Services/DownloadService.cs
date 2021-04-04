@@ -73,7 +73,7 @@ namespace Module.IrcAnime.Cida.Services
 
             string name = "ad_" + Guid.NewGuid();
             this.ircConnection = new RefCounted<IrcConnection>(
-                async () =>
+                async token =>
                 {
                     var c = ircClient.GetConnection(host, port);
 
