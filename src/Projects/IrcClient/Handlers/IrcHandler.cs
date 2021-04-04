@@ -6,6 +6,7 @@ using IrcClient.Handlers;
 using IrcClient.Models;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IrcClient.Handlers
@@ -19,7 +20,7 @@ namespace IrcClient.Handlers
             this.connection = connection;
         }
 
-        public async Task<bool> Handle(IrcMessage message)
+        public async Task<bool> Handle(IrcMessage message, CancellationToken token)
         {
             if (IrcCommandHelper.TryParse(message.Message, out var command, out var parameter))
             {
@@ -34,7 +35,7 @@ namespace IrcClient.Handlers
                         return true;
                     */
                     case IrcCommand.Ping:
-                        await this.connection.Send(IrcCommand.Pong, parameter);
+                        await this.connection.Send(IrcCommand.Pong, parameter, token);
                         return true;
                 }
             }

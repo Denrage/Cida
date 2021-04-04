@@ -6,6 +6,7 @@ using IrcClient.Connections;
 using IrcClient.Models;
 using System;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IrcClient.Handlers
@@ -21,7 +22,7 @@ namespace IrcClient.Handlers
 
         public Action<DccClient> FileReceived { get; set; }
 
-        public async Task<bool> Handle(IrcMessage message)
+        public async Task<bool> Handle(IrcMessage message, CancellationToken token)
         {
             if (IrcCommandHelper.TryParse(message.Message, out IrcCommand ircCommand, out string ircParameter)
                 && ircCommand == IrcCommand.Dcc
@@ -45,7 +46,7 @@ namespace IrcClient.Handlers
                             var ipBytes = BitConverter.GetBytes(bitwiseIp);
                             var host = $"{ipBytes[3]}.{ipBytes[2]}.{ipBytes[1]}.{ipBytes[0]}";
 
-                            await client.Connect(host, port).ConfigureAwait(false);
+                            await client.Connect(host, port, token).ConfigureAwait(false);
 
                             FileReceived?.Invoke(client);
                         }

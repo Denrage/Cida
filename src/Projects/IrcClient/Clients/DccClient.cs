@@ -25,7 +25,8 @@ namespace IrcClient.Clients
 
         public event Action<ulong, ulong> Progress;
 
-        public async Task Connect(string host, int port)
+        // TODO: use CancellationToken for socket when it's implemented in .net
+        public async Task Connect(string host, int port, CancellationToken token)
         {
             await this.socket.ConnectAsync(host, port).ConfigureAwait(false);
         }
