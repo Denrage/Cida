@@ -99,8 +99,9 @@ namespace Module.IrcAnime.Cida
 
             public override async Task<DownloadResponse> Download(DownloadRequest request, ServerCallContext context)
             {
+                context.CancellationToken.Register(() => this.logger.Info($"'{request.DownloadRequest_.FileName}' cancelled!"));
                 this.logger.Info($"Incoming downloadrequest from {context.Peer}");
-                await this.downloadService.CreateDownloader(request.DownloadRequest_.FromGrpc(), context.CancellationToken);
+                await this.downloadService.InitiateDownload(request.DownloadRequest_.FromGrpc(), context.CancellationToken);
                 return new DownloadResponse();
             }
 

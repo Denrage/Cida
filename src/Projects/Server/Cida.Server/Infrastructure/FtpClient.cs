@@ -93,53 +93,60 @@ namespace Cida.Server.Infrastructure
 
         public async Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken)
         {
-            this.logger.Info("Uploading file: {value1}", file.FullPath(Separator));
-
-            var directories = new List<Directory>();
-            var currentDir = file.Directory;
-            while (currentDir != null)
+            try
             {
-                directories.Add(currentDir);
-                currentDir = currentDir.Directory;
-            }
+                this.logger.Info("Uploading file: {value1}", file.FullPath(Separator));
 
-            directories.Reverse();
-
-            foreach (var directory in directories)
-            {
-                var createDirectoryRequest = this.CreateRequest(directory.FullPath((Separator)));
-                createDirectoryRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
-                using var createDirectoryRegister = cancellationToken.Register(() => createDirectoryRequest.Abort());
-                try
+                var directories = new List<Directory>();
+                var currentDir = file.Directory;
+                while (currentDir != null)
                 {
-                    using var createDirectoryResponse = await createDirectoryRequest.GetResponseAsync();
+                    directories.Add(currentDir);
+                    currentDir = currentDir.Directory;
                 }
-                catch (WebException ex)
+
+                directories.Reverse();
+
+                foreach (var directory in directories)
                 {
-                    if (ex.Response is FtpWebResponse makeDirectoryResponse)
+                    var createDirectoryRequest = this.CreateRequest(directory.FullPath((Separator)));
+                    createDirectoryRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
+                    using var createDirectoryRegister = cancellationToken.Register(() => createDirectoryRequest.Abort());
+                    try
                     {
-                        // If File is unavailable the folder already exists
-                        if (makeDirectoryResponse.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+                        using var createDirectoryResponse = await createDirectoryRequest.GetResponseAsync();
+                    }
+                    catch (WebException ex)
+                    {
+                        if (ex.Response is FtpWebResponse makeDirectoryResponse)
+                        {
+                            // If File is unavailable the folder already exists
+                            if (makeDirectoryResponse.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+                            {
+                                this.logger.Error(ex);
+                            }
+                        }
+                        else
                         {
                             this.logger.Error(ex);
                         }
                     }
-                    else
-                    {
-                        this.logger.Error(ex);
-                    }
                 }
+
+                var request = this.CreateRequest(file.FullPath(Separator));
+                request.Method = WebRequestMethods.Ftp.UploadFile;
+                using var cancellationRegister = cancellationToken.Register(() => request.Abort());
+
+                await using var stream = await request.GetRequestStreamAsync();
+                await using var fileStream = await file.GetStreamAsync(cancellationToken);
+                await fileStream.CopyToAsync(stream, cancellationToken);
+                using var response = await request.GetResponseAsync();
+                this.logger.Info("Uploaded file: {value1}", file.FullPath(Separator));
             }
-
-            var request = this.CreateRequest(file.FullPath(Separator));
-            request.Method = WebRequestMethods.Ftp.UploadFile;
-            using var cancellationRegister = cancellationToken.Register(() => request.Abort());
-
-            await using var stream = await request.GetRequestStreamAsync();
-            await using var fileStream = await file.GetStreamAsync(cancellationToken);
-            await fileStream.CopyToAsync(stream, cancellationToken);
-            using var response = await request.GetResponseAsync();
-            this.logger.Info("Uploaded file: {value1}", file.FullPath(Separator));
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Error occured while uploading file");
+            }
         }
 
         private FtpWebRequest CreateRequest(string path)

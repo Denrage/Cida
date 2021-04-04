@@ -21,7 +21,6 @@ namespace Module.IrcAnime.Cida.Services
         private const string BotPart = "/bots";
         private const string SearchPart = "/search?query=";
         private readonly ILogger logger;
-        private DateTime lastBotUpdate;
         private List<BotData.Bot> Bots;
 
         public SearchService(ILogger logger)

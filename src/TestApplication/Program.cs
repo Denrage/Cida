@@ -46,9 +46,14 @@ namespace TestApplication
             //    Thread.Sleep(3000);
             //}
 
-            client.File(new FileRequest()
+            client.Download(new DownloadRequest()
             {
-                FileName = "[HorribleSubs] Sword Art Online - Alicization - War of Underworld - 17 [1080p].mkv",
+                DownloadRequest_ = new DownloadRequest.Types.Request()
+                {
+                    BotName = "Ginpachi-Sensei",
+                    PackageNumber = 7,
+                    FileName = "[Beatrice-Raws] Kaguya-sama wa Kokurasetai (Creditless ED 03 video storyboard) [BDRip 1920x1080 HEVC FLAC].mkv"
+                }
             });
         }
     }
