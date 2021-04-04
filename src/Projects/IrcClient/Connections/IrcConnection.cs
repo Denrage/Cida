@@ -22,6 +22,7 @@ namespace IrcClient.Connections
         private Task receiver;
         private CancellationTokenSource receiverCancellationTokenSource;
         private bool isDisposed;
+        private ManualResetEventSlim motdEvent;
 
         public IrcConnection(String host, int port)
         {
@@ -29,6 +30,8 @@ namespace IrcClient.Connections
             this.port = port;
             this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.handler = new ConcurrentBag<IHandler>();
+            this.motdEvent = new ManualResetEventSlim();
+            this.MessageReceived += WaitForEndOfMotd;
         }
 
         public Action<string> MessageSent { get; set; }
@@ -152,6 +155,18 @@ namespace IrcClient.Connections
             {
                 throw new InvalidOperationException($"{nameof(IrcConnection)} is already disposed");
             }
+        }
+
+        private void WaitForEndOfMotd(string message)
+        {
+            if (message.Contains("376"))
+                this.motdEvent.Set();
+        }
+
+        public async Task WaitUntilMotdReceived()
+        {
+            await Task.Run(() => this.motdEvent.Wait());
+            this.MessageReceived -= WaitForEndOfMotd;
         }
     }
 }
