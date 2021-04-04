@@ -47,8 +47,8 @@ namespace IrcClient.Connections
 
         public void Dispose()
         {
-            this.isDisposed = true;
             this.Disconnect(false);
+            this.isDisposed = true;
             this.socket.Dispose();
             GC.SuppressFinalize(this);
         }
