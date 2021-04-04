@@ -1,9 +1,10 @@
-﻿namespace IrcClient.Commands
+namespace IrcClient.Commands
 {
     public enum IrcCommand
     {
         Admin,
         Away,
+        Cap,
         CNotice,
         CPrivMsg,
         Connect,

@@ -1,92 +1,45 @@
-﻿using System;
-using System.Linq;
+// IrcClient.Handlers.IrcHandler
 using IrcClient.Commands;
-using IrcClient.Commands.Helpers;
+using IrcClient.Commands.Helper;
 using IrcClient.Connections;
+using IrcClient.Handlers;
 using IrcClient.Models;
-using NLog;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace IrcClient.Handlers
 {
-    internal class IrcHandler : BaseHandler<IrcCommand>, IDisposable
+    public class IrcHandler : IHandler
     {
         private readonly IrcConnection connection;
-        private readonly CtcpHandler ctcpHandler;
 
-        public IrcHandler(ILogger logger = null)
-            :base(logger)
+        public IrcHandler(IrcConnection connection)
         {
-            connection = new IrcConnection();
-            ctcpHandler = new CtcpHandler(logger);
-
-            connection.DataReceived += OnMessageReceived;
-            AddHandler(IrcCommand.PrivMsg, HandlePrivateCtcpMessage);
-            AddHandler(IrcCommand.CPrivMsg, HandleCtcpMessage);
-            AddHandler(IrcCommand.Notice, HandleCtcpMessage);
-            AddHandler(IrcCommand.CNotice, HandleCtcpMessage);
+            this.connection = connection;
         }
 
-        public new Action<IrcMessage> MessageReceived
+        public async Task<bool> Handle(IrcMessage message)
         {
-            get => base.MessageReceived;
-            set
+            if (IrcCommandHelper.TryParse(message.Message, out var command, out var parameter))
             {
-                ctcpHandler.MessageReceived = value;
-                base.MessageReceived = value;
-            }
-        }
-
-        public bool IsConnected => connection.IsConnected;
-
-        public void AddCtcpHandler(IrcCommand command, Action<IrcMessage> handler)
-            => ctcpHandler.AddHandler(command, handler);
-
-        public void AddDccHandler(DccCommand command, Action<IrcMessage> handler)
-            => ctcpHandler.AddDccHandler(command, handler);
-
-        public void Connect(string host, int port)
-            => connection.Connect(host, port);
-
-        public void Disconnect()
-            => connection.Disconnect();
-
-        public void SendMessage(string message, string target)
-            => connection.SendMessage(message, target);
-
-        public void SendCommand(IrcCommand command, string parameter = "")
-            => connection.SendCommand(command, parameter);
-
-        public void SendCtcpRequest(string target, IrcCommand command, string parameter = "")
-            => connection.SendCtcpRequest(target, command, parameter);
-
-        public void SendCtcpResponse(string target, IrcCommand command, string parameter = "")
-            => connection.SendCtcpResponse(target, command, parameter);
-
-        public void Dispose()
-        {
-            connection.Dispose();
-        }
-
-        protected override bool TryParseCommand(string message, out IrcCommand? command, out string parameter)
-            => IrcCommandHelper.TryParse(message, out command, out parameter);
-
-        private void HandleCtcpMessage(IrcMessage message)
-        {
-            const char ctcpChar = '\x01';
-            string processedMessage = message.Message;
-            if (processedMessage.Contains(ctcpChar))
-            {
-                processedMessage = processedMessage.Remove(processedMessage.LastIndexOf(ctcpChar));
-                processedMessage = processedMessage.Substring(processedMessage.LastIndexOf(ctcpChar) + 1);
+                switch (command)
+                {
+                    /*
+                    case IrcCommand.Cap:
+                        if (parameter.Contains("LS"))
+                            await this.connection.Send(IrcCommand.Cap, "REQ away-notify chghost multi-prefix userhost-in-names");
+                        if (parameter.Contains("ACK"))
+                            await this.connection.Send(IrcCommand.Cap, "END");
+                        return true;
+                    */
+                    case IrcCommand.Ping:
+                        await this.connection.Send(IrcCommand.Pong, parameter);
+                        return true;
+                }
             }
 
-            ctcpHandler.HandleCtcp(new IrcMessage(processedMessage, message.Sender));
-        }
-
-        private void HandlePrivateCtcpMessage(IrcMessage message)
-        {
-            this.Logger?.Log(LogLevel.Debug, $"{message.Sender}: \"{message.Message}\"");
-            this.HandleCtcpMessage(message);
+            return false;
         }
     }
 }

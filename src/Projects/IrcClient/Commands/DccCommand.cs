@@ -1,4 +1,4 @@
-﻿namespace IrcClient.Commands
+namespace IrcClient.Commands
 {
     public enum DccCommand
     {

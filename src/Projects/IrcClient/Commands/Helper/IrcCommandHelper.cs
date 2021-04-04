@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
+using IrcClient.Commands;
 
-namespace IrcClient.Commands.Helpers
+namespace IrcClient.Commands.Helper
 {
-    internal static class IrcCommandHelper
+    public static class IrcCommandHelper
     {
-        private static readonly Dictionary<IrcCommand, string> IrcCommandStrings = new Dictionary<IrcCommand, string>()
+        private static readonly Dictionary<IrcCommand, string> ircCommands = new Dictionary<IrcCommand, string>()
         {
             { IrcCommand.Admin, "ADMIN" },
             { IrcCommand.Away, "AWAY" },
+            { IrcCommand.Cap, "CAP" },
             { IrcCommand.CNotice, "CNOTICE" },
             { IrcCommand.CPrivMsg, "CPRIVMSG" },
             { IrcCommand.Connect, "CONNECT" },
@@ -71,31 +73,30 @@ namespace IrcClient.Commands.Helpers
 
         public static string ToCommandString(this IrcCommand command)
         {
-            return IrcCommandStrings[command];
+            return ircCommands[command];
         }
 
-        public static bool TryParse(string message, out IrcCommand? command, out string parameter)
+        public static bool TryParse(string message, out IrcCommand command, out string parameter)
         {
-            const char space = ' ';
             string commandString = message;
-            if (commandString.Contains(space))
+            int position = message.IndexOf(' ');
+
+            if (position >= 0)
             {
-                parameter = commandString.Substring(message.IndexOf(space) + 1);
-                commandString = commandString.Remove(commandString.IndexOf(space)).ToUpper();
+                parameter = commandString.Substring(position + 1);
+                commandString = commandString.Remove(position).ToUpper();
             }
             else
             {
                 parameter = string.Empty;
             }
 
-            if (IrcCommandStrings.ContainsValue(commandString))
-            {
-                command = IrcCommandStrings.First((x) => x.Value == commandString).Key;
-                return true;
-            }
+            var matches = ircCommands
+                .Where((x) => x.Value == commandString)
+                .Select((x) => x.Key);
 
-            command = null;
-            return false;
+            command = matches.FirstOrDefault();
+            return matches.Any();
         }
     }
 }
