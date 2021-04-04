@@ -1,45 +1,81 @@
-﻿using System;
-using System.Linq;
+// IrcClient.Handlers.CtcpHandler
 using IrcClient.Commands;
-using IrcClient.Commands.Helpers;
+using IrcClient.Commands.Helper;
+using IrcClient.Connections;
+using IrcClient.Handlers;
 using IrcClient.Models;
-using NLog;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IrcClient.Handlers
 {
-    internal class CtcpHandler : BaseHandler<IrcCommand>
+    public class CtcpHandler : IHandler
     {
-        private readonly DccHandler dccHandler;
-
-        public CtcpHandler(ILogger logger)
-            : base(logger)
+        private static readonly ISet<IrcCommand> commands = new HashSet<IrcCommand>(new IrcCommand[4]
         {
-            dccHandler = new DccHandler(logger);
+            IrcCommand.PrivMsg,
+            IrcCommand.CPrivMsg,
+            IrcCommand.Notice,
+            IrcCommand.CNotice
+        });
 
-            AddHandler(IrcCommand.Dcc, HandleDcc);
+        private readonly IrcConnection connection;
+
+        public CtcpHandler(IrcConnection connection)
+        {
+            this.connection = connection;
         }
 
-        public Action<IrcMessage> HandleCtcp => OnMessageReceived;
-
-        public void AddDccHandler(DccCommand command, Action<IrcMessage> handler)
-            => dccHandler.AddHandler(command, handler);
-
-        protected override void OnMessageReceived(IrcMessage message)
+        public async Task<bool> Handle(IrcMessage message, CancellationToken token)
         {
-            const char userChar = '!';
-            string processedSender = message.Sender;
-            if (processedSender != null && processedSender.Contains(userChar))
+            if (IrcCommandHelper.TryParse(message.Message, out var ircCommand, out var parameter)
+                && commands.Contains(ircCommand))
             {
-                processedSender = processedSender.Remove(processedSender.IndexOf(userChar));
+                var sender = message.Sender;
+                if (sender != null)
+                {
+                    var idx = sender.IndexOf('!');
+                    if (idx >= 0)
+                    {
+                        sender = sender.Remove(idx);
+                    }
+                }
+
+                var privMessage = parameter;
+                var firstIdx = privMessage.IndexOf('\x01');
+                var lastIdx = privMessage.LastIndexOf('\x01');
+                if (firstIdx >= 0 && lastIdx >= 0 && firstIdx != lastIdx)
+                {
+                    privMessage = privMessage
+                        .Remove(lastIdx)[(firstIdx + 1)..];
+                }
+
+                if (IrcCommandHelper.TryParse(privMessage, out var ctcpCommand, out var ctcpParameter))
+                {
+                    switch (ctcpCommand)
+                    {
+                        case IrcCommand.Ping:
+                            await this.connection.SendResponse(sender, IrcCommand.Ping, token, ctcpParameter).ConfigureAwait(false);
+                            return true;
+
+                        case IrcCommand.Time:
+                            await this.connection.SendResponse(sender, IrcCommand.Time, token, DateTime.UtcNow.ToString("o")).ConfigureAwait(false);
+                            return true;
+
+                        case IrcCommand.Version:
+                            await this.connection.SendResponse(sender, IrcCommand.Version, token, "C# IrcClient v2").ConfigureAwait(false);
+                            return true;
+                    }
+                }
+
+                return await this.connection.Handle(new IrcMessage(privMessage, sender), token).ConfigureAwait(false);
             }
 
-            base.OnMessageReceived(new IrcMessage(message.Message, processedSender));
+            return false;
         }
-
-        protected override bool TryParseCommand(string message, out IrcCommand? command, out string parameter)
-            => IrcCommandHelper.TryParse(message, out command, out parameter);
-
-        private void HandleDcc(IrcMessage message)
-            => dccHandler.HandleDccReceived(message);
     }
 }

@@ -1,7 +1,10 @@
 ﻿using Filesystem = Cida.Api.Models.Filesystem;
 using Google.Protobuf.WellKnownTypes;
 using IrcClient;
-using IrcClient.Downloaders;
+using IrcClient.Connections;
+using IrcClient.Handlers;
+using IrcClient.Commands;
+using IrcClient.Clients;
 using Microsoft.EntityFrameworkCore;
 using Module.IrcAnime.Cida.Models;
 using Module.IrcAnime.Cida.Models.Database;
@@ -25,7 +28,7 @@ namespace Module.IrcAnime.Cida.Services
     {
         public static string Separator = "/";
         private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "IrcDownloads");
-        private readonly IrcClient.Clients.IrcClient ircClient;
+        private readonly RefCounted<IrcConnection> ircConnection;
         private readonly ConcurrentDictionary<string, CreateDownloaderContext> requestedDownloads;
         private readonly ConcurrentDictionary<string, DownloadProgress> downloadStatus;
         private readonly Func<IrcAnimeDbContext> getContext;
@@ -40,21 +43,51 @@ namespace Module.IrcAnime.Cida.Services
         public DownloadService(string host, int port, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Filesystem.Directory downloadDirectory, IModuleLogger moduleLogger)
         {
             this.logger = moduleLogger.CreateSubLogger("Download-Service");
-            string name = "ad_" + Guid.NewGuid();
             this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
             this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
-            this.ircClient = new IrcClient.Clients.IrcClient(host, port, name, name, name, this.tempFolder, moduleLogger.CreateSubLogger("IRC-Client"));
-            this.downloadDirectory = downloadDirectory;
 
-            this.ircClient.DownloadRequested += downloader =>
-            {
-                this.logger.Info($"Received incoming filedownload '{downloader.Filename}'");
-                if (this.requestedDownloads.TryGetValue(downloader.Filename, out var context))
+            var ircClient = new IrcClient.Clients.IrcClient(
+                (c) =>
                 {
-                    context.Downloader = downloader;
-                    context.ManualResetEvent.Set();
+                    c.MessageReceived += (m) => this.logger.Log(LogLevel.Debug, $"Received \"{m}\"");
+                    c.MessageSent += (m) => this.logger.Log(LogLevel.Debug, $"Sent \"{m}\"");
+
+                    c.AddHandler(new IrcHandler(c));
+                    c.AddHandler(new CtcpHandler(c));
+                    c.AddHandler(
+                        new DccHandler(c)
+                        {
+                            FileReceived = (c) =>
+                            {
+                                this.logger.Info($"Received incoming filedownload '{c.Filename}'");
+                                if (this.requestedDownloads.TryGetValue(c.Filename, out var context))
+                                {
+                                    context.Downloader = c;
+                                    context.ManualResetEvent.Set();
+                                }
+                            }
+                        }
+                    );
                 }
-            };
+            );
+
+            string name = "ad_" + Guid.NewGuid();
+            this.ircConnection = new RefCounted<IrcConnection>(
+                async () =>
+                {
+                    var c = ircClient.GetConnection(host, port);
+
+                    this.logger.Info("Connecting to IRC-Server");
+                    await c.Connect();
+                    await c.Send(IrcCommand.Nick, name);
+                    await c.Send(IrcCommand.User, $"{name} 0 * :realname");
+                    await c.Send(IrcCommand.Join, "#nibl");
+
+                    return c;
+                }
+            );
+
+            this.downloadDirectory = downloadDirectory;
 
             this.getContext = getContext;
             this.ftpClient = ftpClient;
@@ -228,7 +261,7 @@ namespace Module.IrcAnime.Cida.Services
             {
                 var previousPercent = 0.0;
                 DateTime start = default;
-                downloader.ProgressChanged += (downloadedBytes, size) =>
+                downloader.Progress += (downloadedBytes, size) =>
                 {
                     var percent = Math.Round((double)downloadedBytes / (double)size, 4) * 100.0;
                     if (percent % 2 == 0 && previousPercent != percent)
@@ -242,20 +275,19 @@ namespace Module.IrcAnime.Cida.Services
 
                 this.logger.Info($"Start download '{downloader.Filename}'");
                 start = DateTime.Now;
-                await downloader.StartDownload(cancellationToken);
                 this.logger.Info($"Download finished '{downloader.Filename}'");
 
                 this.downloadStatus.TryRemove(downloader.Filename, out _);
 
                 async Task<Stream> getStream(CancellationToken cancellationToken)
-                    => await Task.FromResult(new FileStream(Path.Combine(downloader.TempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
+                    => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
 
                 void onDispose()
                 {
-                    if (File.Exists(Path.Combine(downloader.TempFolder, downloader.Filename)))
+                    if (File.Exists(Path.Combine(this.tempFolder, downloader.Filename)))
                     {
                         this.logger.Info($"deleting temporary file '{downloader.Filename}'");
-                        File.Delete(Path.Combine(downloader.TempFolder, downloader.Filename));
+                        File.Delete(Path.Combine(this.tempFolder, downloader.Filename));
                     }
                 }
 
@@ -264,6 +296,11 @@ namespace Module.IrcAnime.Cida.Services
                     this.downloadDirectory,
                     getStream,
                     onDispose);
+
+                using (var stream = await file.GetStreamAsync(cancellationToken))
+                {
+                    await downloader.WriteToStream(stream, cancellationToken);
+                }
 
                 using (var context = this.getContext())
                 {
@@ -313,7 +350,7 @@ namespace Module.IrcAnime.Cida.Services
             }
         }
 
-        private void UpdateProgress(DccDownloader downloader, ulong downloadedBytes)
+        private void UpdateProgress(DccClient downloader, ulong downloadedBytes)
         {
             if (this.downloadStatus.TryGetValue(downloader.Filename, out var downloadProgress))
             {
@@ -325,7 +362,7 @@ namespace Module.IrcAnime.Cida.Services
         {
             public string Filename { get; set; }
 
-            public DccDownloader Downloader { get; set; }
+            public DccClient Downloader { get; set; }
 
             public ManualResetEventSlim ManualResetEvent { get; } = new ManualResetEventSlim(false);
         }
