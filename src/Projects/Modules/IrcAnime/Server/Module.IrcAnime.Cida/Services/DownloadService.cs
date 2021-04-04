@@ -73,7 +73,7 @@ namespace Module.IrcAnime.Cida.Services
 
             string name = "ad_" + Guid.NewGuid();
             this.ircConnection = new RefCounted<IrcConnection>(
-                async () =>
+                async token =>
                 {
                     var c = ircClient.GetConnection(host, port);
 
@@ -81,6 +81,7 @@ namespace Module.IrcAnime.Cida.Services
                     await c.Connect();
                     await c.Send(IrcCommand.Nick, name);
                     await c.Send(IrcCommand.User, $"{name} 0 * :realname");
+                    await c.WaitUntilMotdReceived();
                     await c.Send(IrcCommand.Join, "#nibl");
 
                     return c;

@@ -9,22 +9,23 @@ namespace Cida.Api
     {
         private int count;
         private T value;
-        private readonly Func<Task<T>> factory;
+        private readonly Func<CancellationToken, Task<T>> factory;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
-        public RefCounted(Func<Task<T>> factory)
+        public RefCounted(Func<CancellationToken, Task<T>> factory)
         {
             this.factory = factory;
         }
 
         public async Task<T> Acquire(CancellationToken cancellationToken = default)
         {
-            await this.semaphore.WaitAsync(cancellationToken);            
+            await this.semaphore.WaitAsync(cancellationToken);
             try
             {
                 if (count++ == 0)
-                    this.value = await factory.Invoke();
-
+                {
+                    this.value = await factory.Invoke(cancellationToken);
+                }
                 return this.value;
             }
             finally
@@ -39,7 +40,9 @@ namespace Cida.Api
             try
             {
                 if (--count == 0)
+                {
                     this.value.Dispose();
+                }
             }
             finally
             {
