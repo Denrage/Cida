@@ -54,15 +54,11 @@ namespace Module.AnimeSchedule.Cida.Services
 
     public class Settings
     {
-        public string PlexWebToken { get; set; }
-
         public string DiscordWebhookToken { get; set; }
 
         public string DiscordWebhookId { get; set; }
 
-        public string PlexAnimeLibraryUrl { get; set; }
-
-        public string PlexMediaFolder { get; set; }
+        public string MediaFolder { get; set; }
 
         internal static Settings FromDb(IEnumerable<Models.Database.Settings> settings)
         {

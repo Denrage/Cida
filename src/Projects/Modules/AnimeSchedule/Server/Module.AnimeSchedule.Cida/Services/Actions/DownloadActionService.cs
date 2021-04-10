@@ -12,14 +12,14 @@ using NLog;
 
 namespace Module.AnimeSchedule.Cida.Services.Actions
 {
-    public class PlexActionService : IActionService
+    public class DownloadActionService : IActionService
     {
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly ILogger logger;
         private readonly ISettingsService settingsService;
         private readonly DiscordClient discordClient;
 
-        public PlexActionService(Ircanime.IrcAnimeService.IrcAnimeServiceClient client, ILogger logger, ISettingsService settingsService, DiscordClient discordClient)
+        public DownloadActionService(Ircanime.IrcAnimeService.IrcAnimeServiceClient client, ILogger logger, ISettingsService settingsService, DiscordClient discordClient)
         {
             this.client = client;
             this.logger = logger;
@@ -59,8 +59,6 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                                 this.logger.Info($"File '{niblAnimeInfo.Name}' downloaded. Moving to destination folder");
                                 await this.Download(niblAnimeInfo, cancellationToken);
                                 this.logger.Info($"Finished moving file '{niblAnimeInfo.Name}'. Refreshing Plex Library");
-                                await RefreshLibrary(cancellationToken);
-                                this.logger.Info($"Library refreshed. Anime '{niblAnimeInfo.Name}' should now be available!");
                                 checkStatus = false;
                                 break;
                             }
@@ -70,41 +68,14 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                     await Task.Delay(TimeSpan.FromSeconds(5));
                 }
 
-                await this.discordClient.WebhookClient.SendMessageAsync($"{niblAnimeInfo.Name} is now available in Plex!");
+                await this.discordClient.WebhookClient.SendMessageAsync($"{niblAnimeInfo.Name} is now available!");
             }
         }
-
-        private async Task RefreshLibrary(CancellationToken cancellationToken)
-        {
-            var request = WebRequest.Create(await this.PlexRefreshLibrary(cancellationToken));
-            request.Method = "GET";
-
-            var oldCallback = ServicePointManager.ServerCertificateValidationCallback;
-
-            ServicePointManager.ServerCertificateValidationCallback =
-               new RemoteCertificateValidationCallback(
-                    delegate
-                    { return true; }
-                );
-
-            using var requestRegistry = cancellationToken.Register(() => request.Abort());
-            using var response = (HttpWebResponse)await request.GetResponseAsync();
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                this.logger.Warn("$Failed to refresh Plex library. Statuscode is '{response.StatusCode}'");
-            }
-
-            ServicePointManager.ServerCertificateValidationCallback = oldCallback;
-        }
-
-        private async Task<string> PlexRefreshLibrary(CancellationToken cancellationToken) =>
-            (await this.settingsService.Get(cancellationToken)).PlexAnimeLibraryUrl + "?X-Plex-Token=" + (await this.settingsService.Get(cancellationToken)).PlexWebToken;
 
         private async Task Download(NiblAnimeInfo animeInfo, CancellationToken cancellationToken)
         {
             var filename = animeInfo.Name;
-            var directory = Path.Combine((await this.settingsService.Get(cancellationToken)).PlexMediaFolder, animeInfo.DestinationFolderName);
+            var directory = Path.Combine((await this.settingsService.Get(cancellationToken)).MediaFolder, animeInfo.DestinationFolderName);
 
             Directory.CreateDirectory(directory);
 

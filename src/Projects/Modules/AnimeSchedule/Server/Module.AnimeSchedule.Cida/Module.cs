@@ -48,7 +48,7 @@ namespace Module.AnimeSchedule.Cida
                 new IActionService[]
                 {
                     new DiscordNotificationActionService(moduleLogger.CreateSubLogger("Discord-Action"), settingsService, discordClient),
-                    new PlexActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Plex-Action"), settingsService, discordClient),
+                    new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient),
                     new DatabaseActionService(this.GetContext),
                 }, this.GetContext, moduleLogger.CreateSubLogger("Schedule-Service"));
 
