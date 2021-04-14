@@ -23,16 +23,6 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             this.logger = logger;
             this.settingsService = settingsService;
             this.client = client;
-            Task.Run(async () => await this.client.WebhookClient.SendMessageAsync(embeds: new[] { await this.CreateCrunchyrollEmbed(new CrunchyrollAnimeInfo()
-            {
-                EpisodeNumber = 1,
-                MyAnimeListId = 40586,
-                Name = "test",
-                ReleaseDate = DateTime.Now,
-                SeasonNumber = 1,
-                SeasonTitle = "TestSeason",
-                SeriesTitle = "TestSeries"
-            }, default) }));
         }
 
         public async Task Execute(AnimeInfoContext animeContext, IAnimeInfo animeInfo, CancellationToken cancellationToken)
