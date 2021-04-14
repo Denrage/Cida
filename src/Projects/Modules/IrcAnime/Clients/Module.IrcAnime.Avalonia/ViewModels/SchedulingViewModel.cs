@@ -13,10 +13,10 @@ namespace Module.IrcAnime.Avalonia.ViewModels
 
         public AvaloniaList<ScheduleContext> Schedules { get; }
 
-        public ScheduleContext SelectedItem 
-        { 
-            get => selectedItem; 
-            set => this.RaiseAndSetIfChanged(ref this.selectedItem, value); 
+        public ScheduleContext SelectedItem
+        {
+            get => selectedItem;
+            set => this.RaiseAndSetIfChanged(ref this.selectedItem, value);
         }
 
         public SchedulingViewModel()
@@ -28,6 +28,5 @@ namespace Module.IrcAnime.Avalonia.ViewModels
         {
             this.Schedules.Add(new ScheduleContext() { Name = "new schedule" });
         }
-
     }
 }

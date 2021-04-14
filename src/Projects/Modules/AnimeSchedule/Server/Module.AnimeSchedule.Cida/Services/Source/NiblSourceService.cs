@@ -82,8 +82,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                             DestinationFolderName = niblAnimeInfoContext.FolderName,
                             MyAnimeListId = context.MyAnimeListId,
                             Bot = this.Bots[item.BotId],
-                        })
-                        ;
+                        });
                     }
                 }
 

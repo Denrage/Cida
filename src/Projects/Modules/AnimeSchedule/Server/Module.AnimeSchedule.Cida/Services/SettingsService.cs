@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models;
 using Module.AnimeSchedule.Cida.Models.Schedule;
 
 namespace Module.AnimeSchedule.Cida.Services
@@ -49,46 +48,6 @@ namespace Module.AnimeSchedule.Cida.Services
             }
 
             return this.cache;
-        }
-    }
-
-    public class Settings
-    {
-        public string DiscordWebhookToken { get; set; }
-
-        public string DiscordWebhookId { get; set; }
-
-        public string MediaFolder { get; set; }
-
-        internal static Settings FromDb(IEnumerable<Models.Database.Settings> settings)
-        {
-            var scheduleSettings = new Settings();
-
-            var properties = scheduleSettings.GetType().GetProperties();
-
-            foreach (var item in properties)
-            {
-                var dbSetting = settings.First(x => x.Name == item.Name);
-                item.SetValue(scheduleSettings, dbSetting.Value);
-            }
-
-            return scheduleSettings;
-        }
-
-        internal static IEnumerable<Models.Database.Settings> ToDb(Settings settings)
-        {
-            var properties = settings.GetType().GetProperties();
-            var result = new List<Models.Database.Settings>();
-            foreach (var item in properties)
-            {
-                result.Add(new Models.Database.Settings()
-                {
-                    Name = item.Name,
-                    Value = item.GetValue(settings).ToString(),
-                });
-            }
-
-            return result;
         }
     }
 }
