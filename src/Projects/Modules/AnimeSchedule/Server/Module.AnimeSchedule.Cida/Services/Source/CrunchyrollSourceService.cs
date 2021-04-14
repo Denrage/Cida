@@ -134,7 +134,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
         private async Task<TokenResult> GetTokenAsync(CancellationToken cancellationToken, string refreshToken = null)
         {
             Dictionary<string, string> values;
-            if (string.IsNullOrEmpty(refreshToken))
+            if (!string.IsNullOrEmpty(refreshToken))
             {
                 values = new Dictionary<string, string>()
                 {
