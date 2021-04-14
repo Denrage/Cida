@@ -36,7 +36,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
 
         private async Task<bool> RefreshCache(CancellationToken cancellationToken)
         {
-            await this.cacheSemaphore.WaitAsync();
+            await this.cacheSemaphore.WaitAsync(cancellationToken);
             try
             {
                 if (DateTime.Now - this.cache.LastRefresh > this.cache.CacheDuration)
