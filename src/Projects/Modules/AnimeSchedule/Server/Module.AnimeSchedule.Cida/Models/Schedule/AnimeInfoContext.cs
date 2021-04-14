@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Module.AnimeSchedule.Cida.Interfaces;
 using Module.AnimeSchedule.Cida.Services.Source;
@@ -23,7 +24,7 @@ namespace Module.AnimeSchedule.Cida.Models.Schedule
             this.SourceService = sourceService;
         }
 
-        public abstract Task<IEnumerable<IAnimeInfo>> NewEpisodesAvailable();
+        public abstract Task<IEnumerable<IAnimeInfo>> NewEpisodesAvailable(CancellationToken cancellationToken);
 
         // TODO: put that rather into a factory
         public static AnimeInfoContext FromDb(Models.Database.AnimeContext context, CrunchyrollSourceService crunchyrollSourceService, NiblSourceService niblSourceService)

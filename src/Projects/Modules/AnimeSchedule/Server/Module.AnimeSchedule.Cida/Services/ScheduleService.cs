@@ -37,12 +37,12 @@ namespace Module.AnimeSchedule.Cida.Services
 
         public void StartSchedule(Schedule schedule)
         {
-            var scheduleTask = new Task(async () => await this.Schedule(schedule), schedule.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+            var scheduleTask = new Task(async () => await this.Schedule(schedule, default), schedule.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
             scheduleTask.Start();
             this.schedules.Add((schedule, scheduleTask));
         }
 
-        private async Task Schedule(Schedule schedule)
+        private async Task Schedule(Schedule schedule, CancellationToken cancellationToken)
         {
             this.logger.Info($"Starting Schedule '{schedule.Name}'");
             while (true)
@@ -55,7 +55,7 @@ namespace Module.AnimeSchedule.Cida.Services
 
                     foreach (var item in schedule.Animes)
                     {
-                        var newEpisodes = await item.NewEpisodesAvailable();
+                        var newEpisodes = await item.NewEpisodesAvailable(cancellationToken);
 
                         foreach (var episode in newEpisodes)
                         {

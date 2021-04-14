@@ -29,7 +29,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
             this.logger = logger;
         }
 
-        private async Task<IEnumerable<NiblAnimeResult>> Search(string searchTerm)
+        private async Task<IEnumerable<NiblAnimeResult>> Search(string searchTerm, CancellationToken cancellationToken)
         {
             try
             {
@@ -37,6 +37,7 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                 var webClient = new WebClient { Proxy = null };
                 foreach (var item in this.Bots)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl + item.Key + "?query=" + searchTerm)).ConfigureAwait(false);
                     var botResult = JsonSerializer.Deserialize<RequestResult>(page);
 
@@ -60,16 +61,17 @@ namespace Module.AnimeSchedule.Cida.Services.Source
             return Enumerable.Empty<NiblAnimeResult>();
         }
 
-        public async Task<IEnumerable<IAnimeInfo>> GetNewEpisodes(AnimeInfoContext context)
+        public async Task<IEnumerable<IAnimeInfo>> GetNewEpisodes(AnimeInfoContext context, CancellationToken cancellationToken)
         {
             if (context is NiblAnimeInfoContext niblAnimeInfoContext)
             {
-                var items = await this.Search(context.Identifier);
+                var items = await this.Search(context.Identifier, cancellationToken);
 
                 this.logger.Info($"Checking for new episodes for '{context.Identifier}'");
                 var temp = new List<NiblAnimeInfo>();
                 foreach (var item in items)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (item.Name.ToUpper().Contains(context.Identifier.ToUpper()))
                     {
                         temp.Add(new NiblAnimeInfo()

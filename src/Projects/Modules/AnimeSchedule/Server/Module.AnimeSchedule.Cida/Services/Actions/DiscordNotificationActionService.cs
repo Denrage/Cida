@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Webhook;
@@ -22,6 +23,16 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             this.logger = logger;
             this.settingsService = settingsService;
             this.client = client;
+            Task.Run(async () => await this.client.WebhookClient.SendMessageAsync(embeds: new[] { await this.CreateCrunchyrollEmbed(new CrunchyrollAnimeInfo()
+            {
+                EpisodeNumber = 1,
+                MyAnimeListId = 40586,
+                Name = "test",
+                ReleaseDate = DateTime.Now,
+                SeasonNumber = 1,
+                SeasonTitle = "TestSeason",
+                SeriesTitle = "TestSeries"
+            }, default) }));
         }
 
         public async Task Execute(AnimeInfoContext animeContext, IAnimeInfo animeInfo, CancellationToken cancellationToken)
@@ -51,10 +62,16 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             var myAnimelistInfo = await this.jikan.GetAnime((long)anime.MyAnimeListId);
             var embedBuilder = new Discord.EmbedBuilder();
             embedBuilder
-                .WithFooter("Crunchyroll")
-                .WithDescription("Episode: " + anime.EpisodeNumber.ToString())
-                .WithTitle(myAnimelistInfo.Title)
-                .WithImageUrl(myAnimelistInfo.ImageURL);
+                .WithTitle($"Episode {anime.EpisodeNumber}: {anime.Name}")
+                .WithAuthor($"{myAnimelistInfo.Title}", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/0/08/Crunchyroll_Logo.png")
+                .WithColor(16711680)
+                .WithFooter(anime.ReleaseDate.ToString("r"))
+                .WithImageUrl(myAnimelistInfo.ImageURL)
+                .WithFields(
+                    new[]
+                    {
+                        new EmbedFieldBuilder().WithName($"Season {anime.SeasonNumber}").WithValue(anime.SeasonTitle).WithIsInline(true),
+                    });
 
             return embedBuilder.Build();
         }
