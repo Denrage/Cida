@@ -52,7 +52,14 @@ namespace Module.AnimeSchedule.Cida
                     new DatabaseActionService(this.GetContext),
                 }, this.GetContext, moduleLogger.CreateSubLogger("Schedule-Service"));
 
-            await scheduleService.Initialize(default, crunchyrollSourceService, nibleSourceService);
+            // HACK: Add a after loaded all modules method to execute this without a delay
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10));
+                await scheduleService.Initialize(default, crunchyrollSourceService, nibleSourceService);
+            });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private AnimeScheduleDbContext GetContext() => new AnimeScheduleDbContext(this.connectionString);
