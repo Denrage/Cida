@@ -15,11 +15,14 @@ namespace IrcClient.Connections
 {
     public class IrcConnection : IDisposable
     {
-        private string host;
-        private int port;
+        private readonly string host;
+        private readonly int port;
         private readonly Socket socket;
         private readonly ConcurrentBag<IHandler> handler;
         private Task receiver;
+        private CancellationTokenSource receiverCancellationTokenSource;
+        private bool isDisposed;
+        private ManualResetEventSlim motdEvent;
 
         public IrcConnection(String host, int port)
         {
@@ -27,9 +30,12 @@ namespace IrcClient.Connections
             this.port = port;
             this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.handler = new ConcurrentBag<IHandler>();
+            this.motdEvent = new ManualResetEventSlim();
+            this.MessageReceived += WaitForEndOfMotd;
         }
 
         public Action<string> MessageSent { get; set; }
+
         public Action<string> MessageReceived { get; set; }
 
         public bool IsConnected => this.socket.Connected;
@@ -41,21 +47,24 @@ namespace IrcClient.Connections
 
         public void Dispose()
         {
-            Disconnect(false);
+            this.Disconnect(false);
+            this.isDisposed = true;
             this.socket.Dispose();
             GC.SuppressFinalize(this);
         }
 
         public void AddHandler(IHandler handler)
         {
+            this.ThrowIfDisposed();
             this.handler.Add(handler);
         }
 
-        public async Task<bool> Handle(IrcMessage message)
+        public async Task<bool> Handle(IrcMessage message, CancellationToken token)
         {
+            this.ThrowIfDisposed();
             foreach (var handler in this.handler)
             {
-                if (await handler.Handle(message).ConfigureAwait(false))
+                if (await handler.Handle(message, token).ConfigureAwait(false))
                 {
                     return true;
                 }
@@ -66,15 +75,25 @@ namespace IrcClient.Connections
 
         public async Task Connect(CancellationToken token = default)
         {
-            await this.socket.ConnectAsync(this.host, this.port/*, token*/).ConfigureAwait(false);
+            this.ThrowIfDisposed();
 
-            this.receiver = Task.Factory.StartNew(async () => 
+            if (this.receiverCancellationTokenSource != default && this.receiver != null)
+            {
+                this.receiverCancellationTokenSource.Cancel();
+            }
+
+            this.receiverCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
+
+            // TODO: use CancellationToken for socket when it's implemented in .net
+            await this.socket.ConnectAsync(this.host, this.port).ConfigureAwait(false);
+
+            this.receiver = Task.Factory.StartNew(async () =>
             {
                 using var reader = new StreamReader(new NetworkStream(this.socket));
 
                 while (this.socket.Connected)
                 {
-                    token.ThrowIfCancellationRequested();
+                    this.receiverCancellationTokenSource.Token.ThrowIfCancellationRequested();
 
                     var message = await reader.ReadLineAsync().ConfigureAwait(false);
                     // TODO: do this betterer
@@ -91,22 +110,25 @@ namespace IrcClient.Connections
                     if (message.First() == ':')
                     {
                         // message contains sender
-                        var idx = message.IndexOf(' ');
-                        sender = message.Remove(idx).Substring(1);
-                        message = message.Substring(idx + 1);
+                        var index = message.IndexOf(' ');
+                        sender = message.Remove(index)[1..];
+                        message = message[(index + 1)..];
                     }
 
-                    await Handle(new IrcMessage(message, sender)).ConfigureAwait(false);
+                    await Handle(new IrcMessage(message, sender), this.receiverCancellationTokenSource.Token).ConfigureAwait(false);
                 }
-            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            }, this.receiverCancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
+
         public void Disconnect(bool reuse = true)
         {
+            this.ThrowIfDisposed();
             this.socket.Disconnect(reuse);
         }
 
         public async Task Send(IrcCommand command, string parameter = "", CancellationToken token = default)
         {
+            this.ThrowIfDisposed();
             var message = $"{command.ToCommandString()} {parameter}";
             var data = Encoding.UTF8.GetBytes(message + "\r\n");
             //this.socket.SendBufferSize = data.Length;
@@ -115,14 +137,36 @@ namespace IrcClient.Connections
             MessageSent?.Invoke(message);
         }
 
-        public async Task SendRequest(string target, IrcCommand command, string parameter = "")
+        public async Task SendRequest(string target, IrcCommand command, CancellationToken token, string parameter = "")
         {
-            await Send(IrcCommand.PrivMsg, $"{target} {command.ToCommandString()} {parameter}").ConfigureAwait(false);
+            this.ThrowIfDisposed();
+            await Send(IrcCommand.PrivMsg, $"{target} {command.ToCommandString()} {parameter}", token).ConfigureAwait(false);
         }
 
-        public async Task SendResponse(string target, IrcCommand command, string parameter = "")
+        public async Task SendResponse(string target, IrcCommand command, CancellationToken token, string parameter = "")
         {
-            await Send(IrcCommand.Notice, $"{target} \x01{command.ToCommandString()} {parameter}\x01").ConfigureAwait(false);
+            this.ThrowIfDisposed();
+            await Send(IrcCommand.Notice, $"{target} \x01{command.ToCommandString()} {parameter}\x01", token).ConfigureAwait(false);
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (this.isDisposed)
+            {
+                throw new InvalidOperationException($"{nameof(IrcConnection)} is already disposed");
+            }
+        }
+
+        private void WaitForEndOfMotd(string message)
+        {
+            if (message.Contains("376"))
+                this.motdEvent.Set();
+        }
+
+        public async Task WaitUntilMotdReceived()
+        {
+            await Task.Run(() => this.motdEvent.Wait());
+            this.MessageReceived -= WaitForEndOfMotd;
         }
     }
 }
