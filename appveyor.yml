@@ -17,20 +17,22 @@ build_script:
   - cmd: dotnet build ./src/Cida.sln -c Release
 after_build:
   # For once the build has completed
-  - 7z a crunchyroll\avalonia.acm %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.Avalonia\bin\Release\netstandard2.1\*
-  - 7z a crunchyroll.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Server\Module.Crunchyroll.Cida\bin\Release\netstandard2.1\*
+  - 7z a crunchyroll\avalonia.acm %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Clients\Module.Crunchyroll.Avalonia\bin\Release\net5.0\*
+  - 7z a crunchyroll.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Crunchyroll\Server\Module.Crunchyroll.Cida\bin\Release\net5.0\*
   - 7z a crunchyroll.cidam .\crunchyroll\avalonia.acm
-  - 7z a hsnr.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Hsnr\Server\Module.Hsnr.Cida\bin\Release\netstandard2.1\*
-  - 7z a ircanime.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\IrcAnime\Server\Module.IrcAnime.Cida\bin\Release\netstandard2.1\*
+  - 7z a hsnr.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\Hsnr\Server\Module.Hsnr.Cida\bin\Release\net5.0\*
+  - 7z a ircanime.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\IrcAnime\Server\Module.IrcAnime.Cida\bin\Release\net5.0\*
+  - 7z a animeschedule.cidam %APPVEYOR_BUILD_FOLDER%\src\Projects\Modules\AnimeSchedule\Server\Module.AnimeSchedule.Cida\bin\Release\net5.0\*
   - 7z a modules.zip crunchyroll.cidam
   - 7z a modules.zip hsnr.cidam
   - 7z a modules.zip ircanime.cidam
+  - 7z a modules.zip animeschedule.cidam
 artifacts:
- - path: '\src\Projects\Server\Cida.Server.Console\bin\Release\netcoreapp3.0'
+ - path: '\src\Projects\Server\Cida.Server.Console\bin\Release\net5.0'
    name: Cida-Server
    type: Zip
 
- - path: '\src\Projects\Clients\Cida.Client.Avalonia\bin\Release\netcoreapp3.0'
+ - path: '\src\Projects\Clients\Cida.Client.Avalonia\bin\Release\net5.0'
    name: Avalonia-Client
    type: Zip
   
