@@ -14,7 +14,7 @@ using NLog;
 namespace Module.AnimeSchedule.Cida.Services.Source
 {
     // API is undocumented and completely reverse engineered, therefor
-    // continously subjective to change
+    // continously subject to change
     public class CrunchyrollSourceService : ISourceService
     {
         private const string BaseUrl = "https://beta-api.crunchyroll.com/";
