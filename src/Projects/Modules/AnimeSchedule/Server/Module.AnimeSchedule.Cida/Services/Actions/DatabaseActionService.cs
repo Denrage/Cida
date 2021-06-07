@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Module.AnimeSchedule.Cida.Interfaces;
@@ -25,6 +26,12 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                 EpisodeNumber = animeInfo.EpisodeNumber,
                 Name = animeInfo.Name,
             };
+
+            if (animeInfo is CrunchyrollAnimeInfo crunchyrollAnimeInfo)
+            {
+                episode.Name = crunchyrollAnimeInfo.SeriesTitle + " - " + "Episode " +
+                               crunchyrollAnimeInfo.EpisodeNumber + " - " + crunchyrollAnimeInfo.Name;
+            }
 
             if (animeInfo is NiblAnimeInfo niblAnimeInfo)
             {

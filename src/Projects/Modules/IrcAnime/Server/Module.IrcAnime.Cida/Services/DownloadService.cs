@@ -87,29 +87,61 @@ namespace Module.IrcAnime.Cida.Services
                 });
         }
 
-        public async Task InitiateDownload(DownloadRequest downloadRequest, CancellationToken token)
+        public async Task InitiateDownload(IEnumerable<DownloadRequest> downloadRequests, CancellationToken token)
         {
-            this.logger.Info($"Incoming download request. Name: '{downloadRequest.FileName}' Bot: '{downloadRequest.BotName}' PackageNumber: '{downloadRequest.PackageNumber}'");
+            var downloadIdentifier = Guid.NewGuid();
+            this.logger.Info($"Incoming download requests. Guid: '{downloadIdentifier.ToString() + Environment.NewLine}' {string.Join(Environment.NewLine, downloadRequests.Select(x => $"Name: '{x.FileName}' Bot: '{x.BotName}' PackageNumber: '{x.PackageNumber}'"))}");
 
-            if (await this.AlreadyDownloaded(downloadRequest, token))
+            var notDownloaded = new List<DownloadRequest>();
+
+            foreach (var item in downloadRequests)
+            {
+                if (!(await this.AlreadyDownloaded(item, token)))
+                {
+                    notDownloaded.Add(item);
+                }
+            }
+
+            if (!notDownloaded.Any())
             {
                 return;
             }
 
-            this.logger.Info($"Acquire IrcConnection for '{downloadRequest.FileName}'");
+            var batches = notDownloaded.GroupBy(x => x.BotName);
+
+            this.logger.Info($"Acquire IrcConnection for '{downloadIdentifier}'");
             var ircConnection = await this.ircConnection.Acquire(token);
 
-            if (this.requestedDownloads.ContainsKey(downloadRequest.FileName))
+            foreach (var item in batches)
             {
-                this.logger.Info($"Already downloading '{downloadRequest.FileName}'");
-                this.logger.Info($"Releasing IrcConnection for '{downloadRequest.FileName}'");
-                await this.ircConnection.Release(token);
-                return;
-            }
-            if (this.requestedDownloads.TryAdd(downloadRequest.FileName, token))
-            {
-                this.logger.Info("Sending DCC message to bot");
-                await ircConnection.Send(IrcCommand.PrivMsg, $"{downloadRequest.BotName} :xdcc send #{downloadRequest.PackageNumber}", token);
+                var ircMessage = $"{item.Key} :xdcc batch {string.Join(",", item.Select(x => x.PackageNumber))}";
+                bool added = false;
+                foreach (var requestedDownload in item)
+                {
+                    if (this.requestedDownloads.ContainsKey(requestedDownload.FileName))
+                    {
+                        this.logger.Info($"Already downloading '{requestedDownload.FileName}'");
+                    }
+                    else
+                    {
+                        if (this.requestedDownloads.TryAdd(requestedDownload.FileName, token))
+                        {
+                            added = true;
+                        }
+                    }
+                }
+
+                if (added)
+                {
+                    this.logger.Info("Sending DCC message to bot");
+                    await ircConnection.Send(IrcCommand.PrivMsg, ircMessage, token);
+                }
+                else
+                {
+                    this.logger.Info($"Releasing IrcConnection for '{downloadIdentifier}'");
+                    await this.ircConnection.Release(token);
+                    return;
+                }
             }
         }
 

@@ -27,6 +27,7 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
             this.discordClient = discordClient;
         }
 
+        // TODO: Gather all episodes and download them together
         public async Task Execute(AnimeInfoContext animeContext, IAnimeInfo animeInfo, CancellationToken cancellationToken)
         {
             if (animeInfo is NiblAnimeInfo niblAnimeInfo)
@@ -34,12 +35,12 @@ namespace Module.AnimeSchedule.Cida.Services.Actions
                 this.logger.Info($"Initiate download on IrcAnime-Module for '{animeInfo.Name}'");
                 await this.client.DownloadAsync(new DownloadRequest()
                 {
-                    DownloadRequest_ = new DownloadRequest.Types.Request()
+                    DownloadRequest_ = { new DownloadRequest.Types.Request()
                     {
                         BotName = niblAnimeInfo.Bot,
                         FileName = animeInfo.Name,
                         PackageNumber = (long)niblAnimeInfo.PackageNumber,
-                    }
+                    } }
                 }, cancellationToken: cancellationToken);
 
                 var checkStatus = true;
