@@ -34,11 +34,11 @@ namespace Module.AnimeSchedule.Cida.Services.Source
             try
             {
                 var result = new List<NiblAnimeResult>();
-                var webClient = new WebClient { Proxy = null };
+                var httpClient = new HttpClient();
                 foreach (var item in this.Bots)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var page = await webClient.DownloadStringTaskAsync(new Uri(NiblApiUrl + item.Key + "?query=" + searchTerm)).ConfigureAwait(false);
+                    var page = await httpClient.GetStringAsync(NiblApiUrl + item.Key + "?query=" + searchTerm, cancellationToken).ConfigureAwait(false);
                     var botResult = JsonSerializer.Deserialize<RequestResult>(page);
 
                     if (botResult.Status.ToUpper() == "OK")

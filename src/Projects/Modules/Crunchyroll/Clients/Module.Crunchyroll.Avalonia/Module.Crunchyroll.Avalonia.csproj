@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
 
@@ -32,12 +31,12 @@
     <None Remove="Views\SeriesDetailView.xaml" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.0" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.14.0" />
-    <PackageReference Include="Grpc" Version="2.35.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.35.0">
+    <PackageReference Include="Avalonia" Version="*" />
+    <PackageReference Include="Avalonia.Desktop" Version="*" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="*" />
+    <PackageReference Include="Google.Protobuf" Version="*" />
+    <PackageReference Include="Grpc" Version="*" />
+    <PackageReference Include="Grpc.Tools" Version="*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

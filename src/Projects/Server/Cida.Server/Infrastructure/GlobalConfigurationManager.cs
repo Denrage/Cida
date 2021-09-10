@@ -64,18 +64,18 @@ namespace Cida.Server.Infrastructure
 
     public class ExternalServerConnection
     {
-        public string Host { get; set; }
+        public string Host { get; set; } = string.Empty;
         
         public int Port { get; set; }
+
+        public string Username { get; set; } = string.Empty;
         
-        public string Username { get; set; }
-        
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
     }
 
     public class DatabaseConnection
     {
-        public string DatabaseName { get; set; }
+        public string DatabaseName { get; set; } = string.Empty;
         
         public ExternalServerConnection Connection { get; set; } = new ExternalServerConnection();
     }

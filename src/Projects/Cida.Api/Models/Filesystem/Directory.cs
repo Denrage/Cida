@@ -1,16 +1,15 @@
-using System.Collections.Generic;
+namespace Cida.Api.Models.Filesystem;
 
-namespace Cida.Api.Models.Filesystem
+public class Directory : DirectoryItem
 {
-    public class Directory : DirectoryItem
-    {
-        public IReadOnlyList<DirectoryItem> Files => this.InternalFiles; 
+    public static Directory EmptyDirectory = new Directory("Empty", null);
 
-        internal List<DirectoryItem> InternalFiles { get; } = new List<DirectoryItem>();
-        
-        public Directory(string name, Directory directory)
-            : base(name, directory)
-        {
-        }
+    public IReadOnlyList<DirectoryItem> Files => this.InternalFiles;
+
+    internal List<DirectoryItem> InternalFiles { get; } = new List<DirectoryItem>();
+
+    public Directory(string name, Directory directory)
+        : base(name, directory)
+    {
     }
 }

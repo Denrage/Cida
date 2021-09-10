@@ -16,7 +16,7 @@ namespace Cida.Server.Infrastructure
         private const string Separator = "/";
         private readonly ILogger logger;
         private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "FtpDownloads");
-        private GlobalConfigurationManager.ExternalServerConnectionManager settings;
+        private GlobalConfigurationManager.ExternalServerConnectionManager settings = null!;
 
         public FtpClient(GlobalConfigurationService globalConfiguration, ILogger logger)
         {
@@ -88,7 +88,7 @@ namespace Cida.Server.Infrastructure
                 return file.ReplaceContent(getStream, onDispose);
             }
 
-            return null;
+            return Filesystem.File.EmptyFile;
         }
 
         public async Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken)
@@ -167,7 +167,7 @@ namespace Cida.Server.Infrastructure
             return true;
         }
 
-        public bool TryConnect(ExternalServerConnection ftpConnection, out Exception occuredException)
+        public bool TryConnect(ExternalServerConnection ftpConnection, out Exception? occuredException)
         {
             try
             {

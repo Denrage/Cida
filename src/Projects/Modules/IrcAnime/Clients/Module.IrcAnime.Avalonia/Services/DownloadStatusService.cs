@@ -15,6 +15,7 @@ namespace Module.IrcAnime.Avalonia.Services
         private readonly IrcAnimeService.IrcAnimeServiceClient client;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private readonly Thread statusThread;
+        private readonly CancellationTokenSource statusThreadCancellationToken;
         private Dictionary<string, DownloadStatusResponse.Types.DownloadStatus> status;
 
         public event Action OnStatusUpdate;
@@ -22,6 +23,7 @@ namespace Module.IrcAnime.Avalonia.Services
         public DownloadStatusService(IrcAnimeService.IrcAnimeServiceClient client)
         {
             this.client = client;
+            this.statusThreadCancellationToken = new CancellationTokenSource();
             this.statusThread = new Thread(new ThreadStart(UpdateStatus));
             this.statusThread.IsBackground = true;
             this.statusThread.Start();
@@ -47,8 +49,9 @@ namespace Module.IrcAnime.Avalonia.Services
                 try
                 {
                     // TODO: ADD CANCEL
+                    this.statusThreadCancellationToken.Token.ThrowIfCancellationRequested();
                     var result = this.client.DownloadStatus(new DownloadStatusRequest(), cancellationToken: default);
-                    this.semaphore.Wait();
+                    this.semaphore.Wait(this.statusThreadCancellationToken.Token);
                     try
                     {
                         this.status = result.Status.ToDictionary(x => x.Filename, y => y);
@@ -62,15 +65,20 @@ namespace Module.IrcAnime.Avalonia.Services
                     Thread.Sleep(WaitTime);
                 }
                 // Ignore Exceptions so loop won't get interrupted
-                catch
+                catch(Exception ex)
                 {
+                    if (ex is OperationCanceledException)
+                    {
+                        // Throw cancelled exception, so thread gets cancelled
+                        throw;
+                    }
                 }
             }
         }
 
         ~DownloadStatusService()
         {
-            this.statusThread.Abort();
+            this.statusThreadCancellationToken.Cancel();
         }
     }
 }

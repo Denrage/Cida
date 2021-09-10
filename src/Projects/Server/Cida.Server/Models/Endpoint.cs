@@ -4,7 +4,7 @@ namespace Cida.Server.Models
 {
     public class Endpoint
     {
-        public string Host { get; set; }
+        public string Host { get; set; } = string.Empty;
 
         public int Port { get; set; }
         

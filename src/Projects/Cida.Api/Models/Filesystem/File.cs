@@ -1,40 +1,36 @@
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+namespace Cida.Api.Models.Filesystem;
 
-namespace Cida.Api.Models.Filesystem
+public class File : DirectoryItem
 {
-    public class File : DirectoryItem
+    public static File EmptyFile = new("Empty", Directory.EmptyDirectory, null, null);
+
+    private Func<CancellationToken, Task<Stream>> getStream;
+
+    public File(string name, Directory directory, Func<CancellationToken, Task<Stream>> getStream, Action onDispose = null)
+        : base(name, directory, onDispose)
     {
-        private Func<CancellationToken, Task<Stream>> getStream;
+        this.getStream = getStream;
+    }
 
-        public File(string name, Directory directory, Func<CancellationToken, Task<Stream>> getStream, Action onDispose = null)
-            : base(name, directory, onDispose)
+    public File ReplaceContent(Func<CancellationToken, Task<Stream>> getStream, Action onDispose = null)
+    {
+        if (this.Disposed)
         {
-            this.getStream = getStream;
+            throw new InvalidOperationException("This file is already disposed");
         }
 
-        public File ReplaceContent(Func<CancellationToken, Task<Stream>> getStream, Action onDispose = null)
+        var file = new File(this.Name, this.Directory, getStream, onDispose);
+        this.Dispose();
+        return file;
+    }
+
+    public async Task<Stream> GetStreamAsync(CancellationToken cancellationToken)
+    {
+        if (this.Disposed)
         {
-            if (this.Disposed)
-            {
-                throw new InvalidOperationException("This file is already disposed");
-            }
-            
-            var file = new File(this.Name, this.Directory, getStream, onDispose);
-            this.Dispose();
-            return file;
+            throw new InvalidOperationException("This file is already disposed");
         }
 
-        public async Task<Stream> GetStreamAsync(CancellationToken cancellationToken)
-        {
-            if (this.Disposed)
-            {
-                throw new InvalidOperationException("This file is already disposed");
-            }
-
-            return await this.getStream(cancellationToken);
-        }
+        return await this.getStream(cancellationToken);
     }
 }

@@ -1,70 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Cida.Api;
-using Cida.Api.Models.Filesystem;
+﻿using Cida.Api;
+using FS = Cida.Api.Models.Filesystem;
 using Grpc.Core;
 using Hsnr;
 using Module.Hsnr.Extensions;
 using Module.Hsnr.Timetable;
 using Module.Hsnr.Timetable.Data;
 
-namespace Module.Hsnr
+namespace Module.Hsnr;
+
+public class Module : IModule
 {
-    public class Module : IModule
+    public async Task Load(IDatabaseConnector connector, IFtpClient ftpClient, FS.Directory moduleDirectory, IModuleLogger moduleLogger)
     {
-        public async Task Load(IDatabaseConnector connector, IFtpClient ftpClient, Directory moduleDirectory, IModuleLogger moduleLogger)
+        Console.WriteLine("Loaded");
+
+        // var timetableService =
+        //     new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
+
+        this.GrpcServices = new[]
         {
-            Console.WriteLine("Loaded");
-
-            // var timetableService =
-            //     new TimetableService(new WeekDayParser(new TimetableTimeParser(), new SubjectParser()));
-
-            this.GrpcServices = new[]
-            {
                 HsnrService.BindService(new HsnrServiceImplementation()),
                 HsnrTimetableService.BindService(new HsnrTimetableServiceImplementation(null)),
             };
 
-            await Task.CompletedTask;
-        }
-
-        public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } 
-
+        await Task.CompletedTask;
     }
 
-    public class HsnrServiceImplementation : HsnrService.HsnrServiceBase
+    public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; }
+
+}
+
+public class HsnrServiceImplementation : HsnrService.HsnrServiceBase
+{
+    public override Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
     {
-        public override Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
-        {
-            return Task.FromResult(new VersionResponse() {Version = 1});
-        }
+        return Task.FromResult(new VersionResponse() { Version = 1 });
+    }
+}
+
+public class HsnrTimetableServiceImplementation : HsnrTimetableService.HsnrTimetableServiceBase
+{
+    private readonly TimetableService timetableService;
+
+    public HsnrTimetableServiceImplementation(TimetableService timetableService)
+    {
+        this.timetableService = timetableService;
     }
 
-    public class HsnrTimetableServiceImplementation : HsnrTimetableService.HsnrTimetableServiceBase
+    public override async Task<TimetableResponse> Timetable(TimetableRequest request, ServerCallContext context)
     {
-        private readonly TimetableService timetableService;
-
-        public HsnrTimetableServiceImplementation(TimetableService timetableService)
+        var result = (await this.timetableService.GetTimetableAsync(new FormData()
         {
-            this.timetableService = timetableService;
-        }
+            Calendar = request.Calendar.ToModel(),
+            Semester = request.Semester.ToModel(),
+            BranchOfStudy = request.BranchOfStudy,
+            Lecturer = request.Lecturer,
+            Room = request.Room,
+        })).ToGrpc();
 
-        public override async Task<TimetableResponse> Timetable(TimetableRequest request, ServerCallContext context)
+        return new TimetableResponse()
         {
-            var result = (await this.timetableService.GetTimetableAsync(new FormData()
-            {
-                Calendar = request.Calendar.ToModel(),
-                Semester = request.Semester.ToModel(),
-                BranchOfStudy = request.BranchOfStudy,
-                Lecturer = request.Lecturer,
-                Room = request.Room,
-            })).ToGrpc();
-            
-            return new TimetableResponse()
-            {
-                Result = result, 
-            };
-        }
+            Result = result,
+        };
     }
 }

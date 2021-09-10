@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Cida.Api;
-using Cida.Server.Interfaces;
-using Newtonsoft.Json;
 
 namespace Cida.Server.Module
 {
@@ -38,12 +31,10 @@ namespace Cida.Server.Module
 
             this.Assembly = this.loadContext.LoadFromStream(assembly);
 
-            this.entryType = this.Assembly.GetType(this.Metadata.EntryType);
-            if (this.entryType is null)
-            {
-                // TODO: Replace this with custom exception
-                throw new InvalidOperationException($"Entry type '{this.Metadata.EntryType}' not found in assembly");
-            }
+            var type = this.Assembly.GetType(this.Metadata.EntryType);
+
+            // TODO: Replace this with custom exception
+            this.entryType = type ?? throw new InvalidOperationException($"Entry type '{this.Metadata.EntryType}' not found in assembly");
         }
 
         private CidaModuleLoadContext InitializeLoadContext()
@@ -63,10 +54,13 @@ namespace Cida.Server.Module
             return context;
         }
 
-        public async Task<IModule> Load(IDatabaseConnector databaseConnector, Cida.Api.IFtpClient ftpClient, Cida.Api.Models.Filesystem.Directory moduleDirectory, IModuleLogger moduleLogger)
+        public async Task<IModule?> Load(IDatabaseConnector databaseConnector, Cida.Api.IFtpClient ftpClient, Cida.Api.Models.Filesystem.Directory moduleDirectory, IModuleLogger moduleLogger)
         {
-            var instance = (IModule)Activator.CreateInstance(this.entryType);
-            await instance.Load(databaseConnector, ftpClient, moduleDirectory, moduleLogger);
+            var instance = (IModule?)Activator.CreateInstance(this.entryType);
+            if (instance != null)
+            {
+                await instance.Load(databaseConnector, ftpClient, moduleDirectory, moduleLogger);
+            }
             return instance;
         }
 
@@ -112,10 +106,12 @@ namespace Cida.Server.Module
                 throw new InvalidOperationException($"No '{PackagesInfo}' found in root dir of module!");
             }
 
-            CidaModuleMetadata? parsedMetadata = null;
-            using (var metadataStream = new StreamReader(metadata, leaveOpen: true))
+            using var metadataStream = new StreamReader(metadata, leaveOpen: true);
+            var parsedMetadata = System.Text.Json.JsonSerializer.Deserialize<CidaModuleMetadata>(metadataStream.ReadToEnd());
+
+            if(parsedMetadata == null)
             {
-                parsedMetadata = JsonConvert.DeserializeObject<CidaModuleMetadata>(metadataStream.ReadToEnd());
+                throw new InvalidOperationException("Failed to deserialize module metadata");
             }
 
             return parsedMetadata;

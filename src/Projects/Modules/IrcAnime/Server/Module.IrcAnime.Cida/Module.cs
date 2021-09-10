@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Cida.Api;
-using Cida.Api.Models.Filesystem;
+﻿using Cida.Api.Models.Filesystem;
 using Google.Protobuf;
-using Google.Protobuf.Collections;
 using Grpc.Core;
 using Ircanime;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +9,7 @@ using NLog;
 
 namespace Module.IrcAnime.Cida
 {
-    public class Module : IModule
+    public class Module : API.IModule
     {
         // Hack: Remove this asap
         private const string DatabasePassword = "IrcAnime";
@@ -26,18 +18,18 @@ namespace Module.IrcAnime.Cida
         private string connectionString;
         private SearchService searchService;
         private DownloadService downloadService;
-        private Directory moduleDirectory;
-        private Directory downloadDirectory;
+        private API.Models.Filesystem.Directory moduleDirectory;
+        private API.Models.Filesystem.Directory downloadDirectory;
 
         public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
-        public async Task Load(IDatabaseConnector databaseConnector, IFtpClient ftpClient, Directory moduleDirectory, IModuleLogger moduleLogger)
+        public async Task Load(API.IDatabaseConnector databaseConnector, API.IFtpClient ftpClient, API.Models.Filesystem.Directory moduleDirectory, API.IModuleLogger moduleLogger)
         {
             this.connectionString =
                 await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
 
             this.moduleDirectory = moduleDirectory;
-            this.downloadDirectory = new Directory("Files", moduleDirectory);
+            this.downloadDirectory = new API.Models.Filesystem.Directory("Files", moduleDirectory);
 
             using (var context = this.GetContext())
             {
@@ -62,11 +54,11 @@ namespace Module.IrcAnime.Cida
             private readonly SearchService searchService;
             private readonly DownloadService downloadService;
             private readonly Func<IrcAnimeDbContext> getContext;
-            private readonly IFtpClient ftpClient;
-            private readonly Directory downloadDirectory;
+            private readonly API.IFtpClient ftpClient;
+            private readonly API.Models.Filesystem.Directory downloadDirectory;
             private readonly ILogger logger;
 
-            public IrcAnimeImplementation(SearchService searchService, DownloadService downloadService, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Directory downloadDirectory, ILogger logger)
+            public IrcAnimeImplementation(SearchService searchService, DownloadService downloadService, Func<IrcAnimeDbContext> getContext, API.IFtpClient ftpClient, API.Models.Filesystem.Directory downloadDirectory, ILogger logger)
             {
                 this.searchService = searchService;
                 this.downloadService = downloadService;
@@ -160,8 +152,14 @@ namespace Module.IrcAnime.Cida
                 var databaseFile = await databaseContext.Downloads.FindAsync(new[] { request.FileName }, cancellationToken: context.CancellationToken);
                 if (databaseFile != null)
                 {
-                    using var file = new File(System.IO.Path.GetFileName(databaseFile.FtpPath), this.downloadDirectory, null);
+                    using var file = new API.Models.Filesystem.File(System.IO.Path.GetFileName(databaseFile.FtpPath), this.downloadDirectory, null);
                     using var downloadedFile = await this.ftpClient.DownloadFileAsync(file, context.CancellationToken);
+
+                    if (downloadedFile.Equals(API.Models.Filesystem.File.EmptyFile))
+                    {
+                        this.logger.Warn($"Error occured on downloading '{request.FileName}' from ftp server!");
+                        return;
+                    }
 
                     using var fileStream = await downloadedFile.GetStreamAsync(context.CancellationToken);
                     fileStream.Seek((long)request.Position, System.IO.SeekOrigin.Begin);

@@ -92,12 +92,12 @@ namespace Module.IrcAnime.Avalonia.Services
             // TODO: ADD CANCEL
             await this.client.DownloadAsync(new DownloadRequest()
             {
-                DownloadRequest_ = new DownloadRequest.Types.Request()
+                DownloadRequest_ = { new DownloadRequest.Types.Request()
                 {
                     BotName = item.Pack.Packs.First().Key,
                     FileName = item.Pack.Name,
                     PackageNumber = (long)item.Pack.Packs.First().Value,
-                }
+                } }
             }, cancellationToken: default);
         }
 

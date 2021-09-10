@@ -48,12 +48,12 @@ namespace TestApplication
 
             client.Download(new DownloadRequest()
             {
-                DownloadRequest_ = new DownloadRequest.Types.Request()
+                DownloadRequest_ = { new DownloadRequest.Types.Request()
                 {
                     BotName = "Ginpachi-Sensei",
                     PackageNumber = 7,
                     FileName = "[Beatrice-Raws] Kaguya-sama wa Kokurasetai (Creditless ED 03 video storyboard) [BDRip 1920x1080 HEVC FLAC].mkv"
-                }
+                } }
             });
         }
     }

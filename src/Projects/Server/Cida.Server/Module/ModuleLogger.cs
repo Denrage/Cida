@@ -9,13 +9,21 @@ namespace Cida.Server.Module
 {
     public class ModuleLogger : NLog.Logger, IModuleLogger
     {
-        private IModuleSubLoggerFactory moduleSubLoggerFactory;
+        private IModuleSubLoggerFactory? moduleSubLoggerFactory;
 
         internal void Initialize(IModuleSubLoggerFactory moduleSubLoggerFactory)
         {
             this.moduleSubLoggerFactory = moduleSubLoggerFactory;
         }
 
-        public ILogger CreateSubLogger(string name) => this.moduleSubLoggerFactory.Create(name);
+        public ILogger CreateSubLogger(string name)
+        {
+            if (moduleSubLoggerFactory == null)
+            {
+                throw new InvalidOperationException($"{nameof(this.Initialize)} needs to be called first!");
+            }
+
+            return this.moduleSubLoggerFactory.Create(name);
+        }
     }
 }

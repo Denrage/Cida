@@ -32,20 +32,11 @@ namespace Module.Crunchyroll.Avalonia.Services
 
         private async Task<Stream> DownloadImageAsync(string url)
         {
-            var request = WebRequest.Create(new Uri(url, UriKind.Absolute));
-            request.Timeout = -1;
-            using var response = await request.GetResponseAsync();
-            await using var responseStream = response.GetResponseStream();
-
-            if (responseStream is null)
-            {
-                throw new InvalidOperationException();
-            }
-
+            var httpClient = new HttpClient();
             var memoryStream = new MemoryStream();
+            using var response = await httpClient.GetStreamAsync(url);
 
-            await responseStream.CopyToAsync(memoryStream);
-
+            await response.CopyToAsync(memoryStream);
             memoryStream.Seek(0, SeekOrigin.Begin);
 
             return memoryStream;
