@@ -23,7 +23,7 @@ namespace Module.AnimeSchedule.Cida.Models.Source.Crunchyroll
         public string Episode { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("episode_number")]
-        public int EpisodeNumber { get; set; }
+        public double? EpisodeNumber { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("title")]
         public string Title { get; set; }

@@ -1,4 +1,5 @@
 ﻿using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Database;
 
 namespace Module.AnimeSchedule.Cida.Models.Schedule
 {
@@ -9,6 +10,8 @@ namespace Module.AnimeSchedule.Cida.Models.Schedule
         public string Name { get; internal set; }
 
         public ulong MyAnimeListId { get; internal set; }
+
+        public abstract Episode ToDb();
 
         // TODO: put that rather into a factory
         public static IAnimeInfo FromDb(Database.Episode animeInfo)

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Animeschedule;
 using Cida.Api;
 using Cida.Api.Models.Filesystem;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Module.AnimeSchedule.Cida.Interfaces;
 using Module.AnimeSchedule.Cida.Models.Schedule;
@@ -34,8 +36,6 @@ namespace Module.AnimeSchedule.Cida
                 await context.Database.EnsureCreatedAsync();
             }
 
-            this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"))), };
-
             moduleLogger.Log(NLog.LogLevel.Info, "AnimeSchedule loaded successfully");
 
             var ircAnimeClient = new Ircanime.IrcAnimeService.IrcAnimeServiceClient(new Channel("127.0.0.1", 31564, ChannelCredentials.Insecure, new[] { new ChannelOption(ChannelOptions.MaxSendMessageLength, -1), new ChannelOption(ChannelOptions.MaxReceiveMessageLength, -1) }));
@@ -52,6 +52,8 @@ namespace Module.AnimeSchedule.Cida
                     new DatabaseActionService(this.GetContext),
                 }, this.GetContext, moduleLogger.CreateSubLogger("Schedule-Service"));
 
+            this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), scheduleService)), };
+
             // HACK: Add a after loaded all modules method to execute this without a delay
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Task.Run(async () =>
@@ -67,10 +69,37 @@ namespace Module.AnimeSchedule.Cida
         public class ScheduleAnimeImplementation : AnimeScheduleService.AnimeScheduleServiceBase
         {
             private readonly ILogger logger;
+            private readonly ScheduleService scheduleService;
 
-            public ScheduleAnimeImplementation(ILogger logger)
+            public ScheduleAnimeImplementation(ILogger logger, ScheduleService scheduleService)
             {
                 this.logger = logger;
+                this.scheduleService = scheduleService;
+            }
+
+            public override async Task<GetSchedulesResponse> GetSchedules(GetSchedulesRequest request, ServerCallContext context)
+            {
+                return new GetSchedulesResponse()
+                {
+                    Schedules =
+                    {
+                        this.scheduleService.Schedules.Select(x => new GetSchedulesResponse.Types.Schedule()
+                        {
+                            Interval = x.Interval.ToDuration(),
+                            Name = x.Name,
+                            StartDate = x.StartDate.ToUniversalTime().ToTimestamp(),
+                            AnimeContexts = { x.Animes.Select(x => new GetSchedulesResponse.Types.Schedule.Types.AnimeContext()
+                            {
+                                Filter = x.Filter,
+                                FolderName = x is NiblAnimeInfoContext niblContext ? niblContext.FolderName : string.Empty,
+                                Identifier = x.Identifier,
+                                MyAnimeListId = x.MyAnimeListId,
+                                Type = x is NiblAnimeInfoContext ? GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Nibl : GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Crunchyroll,
+                            })}
+                        })
+                    },
+                };
+                return await base.GetSchedules(request, context);
             }
 
             public override async Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)

@@ -1,9 +1,37 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
 package animeschedule;
 
 service AnimeScheduleService {
     rpc Version (VersionRequest) returns (VersionResponse);
+    rpc GetSchedules (GetSchedulesRequest) returns (GetSchedulesResponse);
+}
+
+message GetSchedulesRequest {
+}
+
+message GetSchedulesResponse {
+    message Schedule {
+        message AnimeContext {
+            enum AnimeContextType {
+                Crunchyroll = 0;
+                Nibl = 1;
+            }
+            uint64 MyAnimeListId = 1;
+            string Identifier = 2;
+            string Filter = 3;
+            AnimeContextType Type = 4;
+            string FolderName = 5;
+        }
+        string Name = 1;
+        google.protobuf.Timestamp StartDate = 2;
+        google.protobuf.Duration Interval = 3;
+        repeated AnimeContext AnimeContexts = 4;
+    }
+    repeated Schedule Schedules = 1;
 }
 
 message VersionRequest {

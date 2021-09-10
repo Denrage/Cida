@@ -1,4 +1,5 @@
 ﻿using System;
+using Module.AnimeSchedule.Cida.Models.Database;
 
 namespace Module.AnimeSchedule.Cida.Models.Schedule
 {
@@ -11,5 +12,14 @@ namespace Module.AnimeSchedule.Cida.Models.Schedule
         public DateTime ReleaseDate { get; set; }
 
         public int SeasonNumber { get; internal set; }
+
+        public override Episode ToDb()
+        {
+            return new Episode()
+            {
+                EpisodeNumber = this.EpisodeNumber,
+                Name = this.Name,
+            };
+        }
     }
 }

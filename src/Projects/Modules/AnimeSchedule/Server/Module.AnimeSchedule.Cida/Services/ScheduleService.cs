@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,8 @@ namespace Module.AnimeSchedule.Cida.Services
         private readonly ILogger logger;
         private List<IActionService> actionServices;
         private List<(Schedule schedule, Task task)> schedules = new List<(Schedule, Task)>();
+
+        public IReadOnlyList<Schedule> Schedules => this.schedules.Select(x => x.schedule).ToList().AsReadOnly();
 
         public ScheduleService(IEnumerable<IActionService> actionServices, Func<AnimeScheduleDbContext> getContext, ILogger logger)
         {

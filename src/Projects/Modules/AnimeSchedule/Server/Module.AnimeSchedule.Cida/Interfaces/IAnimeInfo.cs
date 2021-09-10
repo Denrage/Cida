@@ -7,5 +7,7 @@
         string Name { get; }
 
         ulong MyAnimeListId { get; }
+
+        Models.Database.Episode ToDb();
     }
 }

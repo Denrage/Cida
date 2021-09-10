@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Module.AnimeSchedule.Cida.Interfaces;
+using Module.AnimeSchedule.Cida.Models.Database;
 using Module.AnimeSchedule.Cida.Services.Source;
 
 namespace Module.AnimeSchedule.Cida.Models.Schedule
@@ -58,6 +59,19 @@ namespace Module.AnimeSchedule.Cida.Models.Schedule
             }
 
             return result;
+        }
+
+        public Database.AnimeContext ToDb()
+        {
+            return new Database.AnimeContext()
+            {
+                Episodes = this.Episodes.Select(x => x.ToDb()).ToList(),
+                Filter = this.Filter,
+                FolderName = this is NiblAnimeInfoContext niblContext ? niblContext.FolderName : string.Empty,
+                Identifier = this.Identifier,
+                MyAnimeListId = this.MyAnimeListId,
+                Type = this is NiblAnimeInfoContext ? AnimeContextType.Nibl : AnimeContextType.Crunchyroll,
+            };
         }
     }
 }

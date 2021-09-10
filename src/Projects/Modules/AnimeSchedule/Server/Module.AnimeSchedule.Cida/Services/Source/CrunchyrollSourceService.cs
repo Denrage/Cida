@@ -112,9 +112,28 @@ namespace Module.AnimeSchedule.Cida.Services.Source
                 foreach (var episode in episodes)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    var episodeNumber = 0.0;
+                    if (!episode.EpisodeNumber.HasValue)
+                    {
+                        if (double.TryParse(episode.Episode, out var parsedEpisodeNumber))
+                        {
+                            episodeNumber = parsedEpisodeNumber;
+                        }
+                        else
+                        {
+                            var lastEpisode = context.Episodes.Select(x => x.EpisodeNumber).OrderByDescending(x => x)
+                                .FirstOrDefault();
+                            episodeNumber = lastEpisode + 0.5;
+                        }
+                    }
+                    else
+                    {
+                        episodeNumber = episode.EpisodeNumber.Value;
+                    }
+
                     temp.Add(new CrunchyrollAnimeInfo()
                     {
-                        EpisodeNumber = episode.EpisodeNumber,
+                        EpisodeNumber = episodeNumber,
                         MyAnimeListId = context.MyAnimeListId,
                         Name = episode.Title,
                         SeriesTitle = episode.SeriesTitle,

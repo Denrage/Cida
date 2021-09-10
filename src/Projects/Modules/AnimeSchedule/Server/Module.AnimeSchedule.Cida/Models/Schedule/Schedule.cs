@@ -30,5 +30,16 @@ namespace Module.AnimeSchedule.Cida.Models.Schedule
                 Name = schedule.Name,
             };
         }
+
+        public Database.Schedule ToDb()
+        {
+            return new Database.Schedule()
+            {
+                Name = this.Name,
+                StartDate = this.StartDate,
+                AnimeContexts = this.Animes.Select(x => x.ToDb()).ToList(),
+                Interval = this.Interval,
+            };
+        }
     }
 }
