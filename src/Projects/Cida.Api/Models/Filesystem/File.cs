@@ -33,4 +33,12 @@ public class File : DirectoryItem
 
         return await this.getStream(cancellationToken);
     }
+
+    public async Task CopyToAsync(File file, CancellationToken cancellationToken)
+    {
+        using var stream = await this.GetStreamAsync(cancellationToken);
+        using var otherStream = await file.GetStreamAsync(cancellationToken);
+
+        stream.CopyTo(otherStream);
+    }
 }

@@ -27,6 +27,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="*" />
     <PackageReference Include="NLog" Version="*" />
     <PackageReference Include="System.Runtime.Loader" Version="*" />
+    <PackageReference Include="FluentFTP" Version="*" />
     <ProjectReference Include="..\..\Cida.Api\Cida.Api.csproj" />
     <Protobuf Include="../../../protos/server.proto" Link="server.proto" />
     <Protobuf Include="../../../protos/infrastructure.proto" Link="infrastructure.proto" />
