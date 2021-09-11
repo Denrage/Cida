@@ -65,7 +65,15 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
                 throw new InvalidOperationException("Database is not initialized!");
             }
 
-            var databaseInformation = new DatabaseInformation($"ModuleDb_{moduleId:N}", $"ModuleUser_{moduleId:N}", password, moduleId, moduleInformation);
+            var databaseInformation = new DatabaseInformation()
+            {
+                DatabaseName = $"ModuleDb_{moduleId:N}",
+                Username = $"ModuleUser_{moduleId:N}",
+                Password = password,
+                ModuleId = moduleId,
+                Module = moduleInformation,
+            };
+
             await this.Context.Databases.AddAsync(databaseInformation);
             await this.Context.SaveChangesAsync();
             return databaseInformation;
