@@ -8,6 +8,7 @@ using Module.AnimeSchedule.Cida.Services;
 using Module.AnimeSchedule.Cida.Services.Actions;
 using Module.AnimeSchedule.Cida.Services.Source;
 using NLog;
+using Module.AnimeSchedule.Cida.Models;
 
 namespace Module.AnimeSchedule.Cida;
 
@@ -48,7 +49,7 @@ public class Module : IModule
                 new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient),
             }, this.GetContext, moduleLogger, moduleLogger.CreateSubLogger("Schedule-Service"));
 
-        this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), scheduleService)), };
+        this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), this.GetContext)), };
 
         // HACK: Add a after loaded all modules method to execute this without a delay
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -65,17 +66,87 @@ public class Module : IModule
     public class ScheduleAnimeImplementation : AnimeScheduleService.AnimeScheduleServiceBase
     {
         private readonly ILogger logger;
-        private readonly ScheduleService scheduleService;
+        private readonly Func<AnimeScheduleDbContext> getContext;
 
-        public ScheduleAnimeImplementation(ILogger logger, ScheduleService scheduleService)
+        public ScheduleAnimeImplementation(ILogger logger, Func<AnimeScheduleDbContext> getContext)
         {
             this.logger = logger;
-            this.scheduleService = scheduleService;
+            this.getContext = getContext;
         }
 
         public override async Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
         {
             return await Task.FromResult(new VersionResponse() { Version = 1 });
+        }
+
+        public override async Task<CreateScheduleResponse> CreateSchedule(CreateScheduleRequest request, ServerCallContext context)
+        {
+            try
+            {
+                using var dbContext = this.getContext();
+
+                if (request.Override)
+                {
+                    var existingSchedule = await dbContext.Schedules.FindAsync(new object[] { request.ScheduleId }, context.CancellationToken);
+
+                    if (existingSchedule != null)
+                    {
+                        dbContext.Update(existingSchedule);
+                        existingSchedule.Name = request.Name;
+                        existingSchedule.Interval = request.Interval.ToTimeSpan();
+                        existingSchedule.StartDate = request.StartDate.ToDateTime().ToLocalTime();
+                        await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                        return new CreateScheduleResponse()
+                        {
+                            CreateResult = CreateScheduleResponse.Types.Result.Success,
+                            ScheduleId = existingSchedule.Id,
+                        };
+                    }
+                    else
+                    {
+                        return new CreateScheduleResponse()
+                        {
+                            ScheduleId = request.ScheduleId,
+                            CreateResult = CreateScheduleResponse.Types.Result.Schedulenotfound,
+                        };
+                    }
+                }
+
+                if (await dbContext.Schedules.AnyAsync(x => x.Name == request.Name, context.CancellationToken))
+                {
+                    return new CreateScheduleResponse()
+                    {
+                        CreateResult = CreateScheduleResponse.Types.Result.Alreadyexists,
+                        ScheduleId = 0,
+                    };
+                }
+
+                var schedule = new Schedule()
+                {
+                    Interval = request.Interval.ToTimeSpan(),
+                    Name = request.Name,
+                    StartDate = request.StartDate.ToDateTime().ToLocalTime(),
+                };
+
+                var result = await dbContext.Schedules.AddAsync(schedule, context.CancellationToken);
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                return new CreateScheduleResponse()
+                {
+                    CreateResult = CreateScheduleResponse.Types.Result.Success,
+                    ScheduleId = schedule.Id,
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return new CreateScheduleResponse()
+                {
+                    CreateResult = CreateScheduleResponse.Types.Result.Unknown,
+                    ScheduleId = 0,
+                };
+            }
         }
     }
 }

@@ -2,7 +2,7 @@
 
 public class AnimeFolder
 {
-    public uint AnimeId { get; set; }
+    public int AnimeId { get; set; }
 
     public string FolderName { get; set; }
 

@@ -15,8 +15,8 @@ public class ScheduleService
     private readonly Dictionary<AnimeInfoType, AnimeInfoHandlerBase> handlers;
     private readonly List<IActionService> actionServices;
     private readonly List<IMultiActionService> multiActionServices;
-    private readonly List<(uint scheduleId, Task task)> schedules = new List<(uint, Task)>();
-    private readonly SemaphoreSlim scheduleSemaphore = new SemaphoreSlim(1);
+    private readonly List<(int scheduleId, Task task)> schedules = new();
+    private readonly SemaphoreSlim scheduleSemaphore = new(1);
 
     //public IReadOnlyList<Schedule> Schedules => this.schedules.Select(x => x.schedule).ToList().AsReadOnly();
 
@@ -46,7 +46,7 @@ public class ScheduleService
         }
     }
 
-    public async void StartSchedule(uint scheduleId)
+    public async void StartSchedule(int scheduleId)
     {
         using var context = this.getContext();
 
@@ -73,7 +73,7 @@ public class ScheduleService
         while (true)
         {
             var context = this.getContext();
-            var schedule = await context.Schedules.FindAsync(new[] { scheduleContext.ScheduleId }, scheduleContext.CancellationTokenSource.Token);
+            var schedule = await context.Schedules.Include(x => x.Animes).FirstOrDefaultAsync(x => x.Id == scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
             context.Dispose();
 
             scheduleContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();

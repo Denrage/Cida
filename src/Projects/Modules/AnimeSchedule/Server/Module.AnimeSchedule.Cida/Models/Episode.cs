@@ -2,7 +2,7 @@
 
 public class Episode
 {
-    public uint AnimeId { get; set; }
+    public int AnimeId { get; set; }
 
     public string Name { get; set; }
 

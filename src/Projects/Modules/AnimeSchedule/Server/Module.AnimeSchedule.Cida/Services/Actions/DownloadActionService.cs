@@ -21,7 +21,7 @@ public class DownloadActionService : IMultiActionService
         this.discordClient = discordClient;
     }
 
-    public async Task Execute(IEnumerable<IActionable> actionables, uint scheduleId, CancellationToken cancellationToken)
+    public async Task Execute(IEnumerable<IActionable> actionables, int scheduleId, CancellationToken cancellationToken)
     {
         var downloadAnimes = actionables.Where(x => x is IDownloadable).Cast<IDownloadable>().Where(x => !x.AlreadyProcessed);
         if (downloadAnimes.Any())

@@ -2,6 +2,6 @@
 {
     public interface IActionService
     {
-        Task Execute(IActionable actionable, uint scheduleId, CancellationToken cancellationToken);
+        Task Execute(IActionable actionable, int scheduleId, CancellationToken cancellationToken);
     }
 }

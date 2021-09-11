@@ -2,5 +2,5 @@
 
 public interface IMultiActionService
 {
-    Task Execute(IEnumerable<IActionable> actionables, uint scheduleId, CancellationToken cancellationToken);
+    Task Execute(IEnumerable<IActionable> actionables, int scheduleId, CancellationToken cancellationToken);
 }

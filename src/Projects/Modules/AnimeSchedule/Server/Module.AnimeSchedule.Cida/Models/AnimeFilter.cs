@@ -2,7 +2,7 @@
 
 public class AnimeFilter
 {
-    public uint AnimeId { get; set; }
+    public int AnimeId { get; set; }
     
     public AnimeInfo Anime { get; set; }
     

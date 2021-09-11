@@ -92,7 +92,7 @@ namespace Cida.Server.Module
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex, "Error parsing module '{unpackedModule}'");
+                this.logger.Error(ex, $"Error parsing module '{unpackedModule}'");
             }
 
             if (module != null)

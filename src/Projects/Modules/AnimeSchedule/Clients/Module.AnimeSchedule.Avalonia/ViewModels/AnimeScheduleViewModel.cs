@@ -24,14 +24,14 @@ namespace Module.AnimeSchedule.Avalonia.ViewModels
 
         public override async Task LoadAsync()
         {
-            var schedules = await client.GetSchedulesAsync(new GetSchedulesRequest());
-            foreach (var schedule in schedules.Schedules)
-            {
-                this.Schedules.Add(new Schedule()
-                {
-                    Name = schedule.Name,
-                });
-            }
+            //var schedules = await client.GetSchedulesAsync(new GetSchedulesRequest());
+            //foreach (var schedule in schedules.Schedules)
+            //{
+            //    this.Schedules.Add(new Schedule()
+            //    {
+            //        Name = schedule.Name,
+            //    });
+            //}
         }
     }
 

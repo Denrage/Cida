@@ -16,7 +16,7 @@ public class DiscordNotificationActionService : IActionService
         this.client = client;
     }
 
-    public async Task Execute(IActionable actionable, uint scheduleId, CancellationToken cancellationToken)
+    public async Task Execute(IActionable actionable, int scheduleId, CancellationToken cancellationToken)
     {
         if (actionable is INotifyable notifyableAnime)
         {

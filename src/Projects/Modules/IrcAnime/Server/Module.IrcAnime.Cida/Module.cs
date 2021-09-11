@@ -127,7 +127,7 @@ namespace Module.IrcAnime.Cida
             public override async Task<FileTransferInformationResponse> FileTransferInformation(FileTransferInformationRequest request, ServerCallContext context)
             {
                 using var databaseContext = this.getContext();
-                var downloadItem = await databaseContext.Downloads.FindAsync(new[] { request.FileName }, cancellationToken: context.CancellationToken);
+                var downloadItem = await databaseContext.Downloads.FindAsync(new object[] { request.FileName }, cancellationToken: context.CancellationToken);
                 ulong fileSize = 0;
                 var sha = string.Empty;
 
@@ -149,7 +149,7 @@ namespace Module.IrcAnime.Cida
             {
                 this.logger.Info($"Incoming download to client request from {context.Peer}");
                 using var databaseContext = this.getContext();
-                var databaseFile = await databaseContext.Downloads.FindAsync(new[] { request.FileName }, cancellationToken: context.CancellationToken);
+                var databaseFile = await databaseContext.Downloads.FindAsync(new object[] { request.FileName }, cancellationToken: context.CancellationToken);
                 if (databaseFile != null)
                 {
                     using var file = new API.Models.Filesystem.File(System.IO.Path.GetFileName(databaseFile.FtpPath), this.downloadDirectory, null);

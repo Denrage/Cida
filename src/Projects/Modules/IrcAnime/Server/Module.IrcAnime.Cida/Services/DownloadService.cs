@@ -236,7 +236,7 @@ namespace Module.IrcAnime.Cida.Services
         {
             using var context = this.getContext();
             context.ChangeTracker.AutoDetectChangesEnabled = false;
-            var databaseDownloadEntry = await context.Downloads.FindAsync(new[] { downloadClient.Filename }, cancellationToken: token);
+            var databaseDownloadEntry = await context.Downloads.FindAsync(new object[] { downloadClient.Filename }, cancellationToken: token);
             if (databaseDownloadEntry != null)
             {
                 context.Downloads.Update(databaseDownloadEntry);
@@ -262,7 +262,7 @@ namespace Module.IrcAnime.Cida.Services
         {
             using (var context = this.getContext())
             {
-                var existingDownload = (await context.Downloads.FindAsync(new[] { downloadRequest.FileName }, token));
+                var existingDownload = (await context.Downloads.FindAsync(new object[] { downloadRequest.FileName }, token));
                 if (existingDownload != null)
                 {
                     if (existingDownload.DownloadStatus == DownloadStatus.Available)

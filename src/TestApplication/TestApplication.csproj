@@ -16,6 +16,7 @@
     <Protobuf Include="../protos/Modules/hsnr.proto" Link="hsnr.proto" />
     <Protobuf Include="../protos/Modules/crunchyroll.proto" Link="crunchyroll.proto" />
     <Protobuf Include="../protos/Modules/ircanime.proto" Link="ircanime.proto" />
+    <Protobuf Include="../protos/Modules/animeschedule.proto" Link="animeschedule.proto" />
   </ItemGroup>
 
 </Project>

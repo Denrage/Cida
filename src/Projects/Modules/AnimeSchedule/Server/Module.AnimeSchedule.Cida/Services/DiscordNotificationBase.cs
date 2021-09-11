@@ -17,9 +17,9 @@ public class DiscordClient
 
     protected ILogger Logger { get; private set; }
 
-    private Dictionary<uint, IEnumerable<ulong>> scheduleClientMapping = new Dictionary<uint, IEnumerable<ulong>>();
+    private Dictionary<int, IEnumerable<ulong>> scheduleClientMapping = new();
 
-    private Dictionary<ulong, DiscordWebhookClient> clients = new Dictionary<ulong, DiscordWebhookClient>();
+    private Dictionary<ulong, DiscordWebhookClient> clients = new();
 
     public DiscordClient(ILogger logger, Func<AnimeScheduleDbContext> getContext)
     {
@@ -27,7 +27,7 @@ public class DiscordClient
         this.getContext = getContext;
     }
 
-    public async Task<IEnumerable<DiscordWebhookClient>> GetClients(uint scheduleId)
+    public async Task<IEnumerable<DiscordWebhookClient>> GetClients(int scheduleId)
     {
         await this.settingsSemaphore.WaitAsync();
 

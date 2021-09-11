@@ -2,11 +2,11 @@
 
 public class AnimeInfo
 {
-    public uint Id { get; set; }
+    public int Id { get; set; }
     
     public string Identifier { get; set; }
     
-    public uint ScheduleId { get; set; }
+    public int ScheduleId { get; set; }
     
     public AnimeInfoType Type { get; set; }
     

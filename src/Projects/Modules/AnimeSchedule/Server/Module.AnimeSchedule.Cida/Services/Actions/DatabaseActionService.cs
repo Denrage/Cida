@@ -11,7 +11,7 @@ public class DatabaseActionService : IActionService
         this.getContext = getContext;
     }
 
-    public async Task Execute(IActionable actionable, uint scheduleId, CancellationToken cancellationToken)
+    public async Task Execute(IActionable actionable, int scheduleId, CancellationToken cancellationToken)
     {
         if (actionable is IDatabaseSavable databaseSavable)
         {
