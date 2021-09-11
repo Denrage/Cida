@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Module.AnimeSchedule.Cida.Models;
+﻿using Module.AnimeSchedule.Cida.Services;
 
 namespace Module.AnimeSchedule.Cida.Interfaces
 {

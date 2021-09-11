@@ -4,7 +4,6 @@ using API = Cida.Api;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Module.AnimeSchedule.Cida.Interfaces;
-using Module.AnimeSchedule.Cida.Models.Schedule;
 using Module.AnimeSchedule.Cida.Services;
 using Module.AnimeSchedule.Cida.Services.Actions;
 using Module.AnimeSchedule.Cida.Services.Source;
@@ -35,18 +34,19 @@ public class Module : IModule
         moduleLogger.Log(NLog.LogLevel.Info, "AnimeSchedule loaded successfully");
 
         var ircAnimeClient = new Ircanime.IrcAnimeService.IrcAnimeServiceClient(new Channel("127.0.0.1", 31564, ChannelCredentials.Insecure, new[] { new ChannelOption(ChannelOptions.MaxSendMessageLength, -1), new ChannelOption(ChannelOptions.MaxReceiveMessageLength, -1) }));
-        var crunchyrollSourceService = new CrunchyrollSourceService(moduleLogger.CreateSubLogger("Crunchyroll-Source"));
-        var nibleSourceService = new NiblSourceService(moduleLogger.CreateSubLogger("Nibl-Source"));
         var settingsService = new SettingsService(this.GetContext);
-        var discordClient = new DiscordClient(moduleLogger.CreateSubLogger("Discord-Client"), settingsService);
-        await discordClient.InitializeClient();
+        var discordClient = new DiscordClient(moduleLogger.CreateSubLogger("Discord-Client"), this.GetContext);
+        await discordClient.InitializeClients(default);
         var scheduleService = new ScheduleService(
             new IActionService[]
             {
-                    new DiscordNotificationActionService(moduleLogger.CreateSubLogger("Discord-Action"), settingsService, discordClient),
-                    new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient),
-                    new DatabaseActionService(this.GetContext),
-            }, this.GetContext, moduleLogger.CreateSubLogger("Schedule-Service"));
+                new DiscordNotificationActionService(moduleLogger.CreateSubLogger("Discord-Action"), settingsService, discordClient),
+                new DatabaseActionService(this.GetContext),
+            },
+            new IMultiActionService[]
+            {
+                new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient),
+            }, this.GetContext, moduleLogger, moduleLogger.CreateSubLogger("Schedule-Service"));
 
         this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), scheduleService)), };
 
@@ -55,7 +55,7 @@ public class Module : IModule
         Task.Run(async () =>
         {
             await Task.Delay(TimeSpan.FromSeconds(10));
-            await scheduleService.Initialize(default, crunchyrollSourceService, nibleSourceService);
+            await scheduleService.Initialize(default);
         });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
     }
@@ -75,26 +75,27 @@ public class Module : IModule
 
         public override Task<GetSchedulesResponse> GetSchedules(GetSchedulesRequest request, ServerCallContext context)
         {
-            return Task.FromResult(new GetSchedulesResponse()
-            {
-                Schedules =
-                    {
-                        this.scheduleService.Schedules.Select(x => new GetSchedulesResponse.Types.Schedule()
-                        {
-                            Interval = x.Interval.ToDuration(),
-                            Name = x.Name,
-                            StartDate = x.StartDate.ToUniversalTime().ToTimestamp(),
-                            AnimeContexts = { x.Animes.Select(x => new GetSchedulesResponse.Types.Schedule.Types.AnimeContext()
-                            {
-                                Filter = x.Filter,
-                                FolderName = x is NiblAnimeInfoContext niblContext ? niblContext.FolderName : string.Empty,
-                                Identifier = x.Identifier,
-                                MyAnimeListId = x.MyAnimeListId,
-                                Type = x is NiblAnimeInfoContext ? GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Nibl : GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Crunchyroll,
-                            })}
-                        })
-                    },
-            });
+            throw new NotImplementedException();
+            //return Task.FromResult(new GetSchedulesResponse()
+            //{
+            //    Schedules =
+            //        {
+            //            this.scheduleService.Schedules.Select(x => new GetSchedulesResponse.Types.Schedule()
+            //            {
+            //                Interval = x.Interval.ToDuration(),
+            //                Name = x.Name,
+            //                StartDate = x.StartDate.ToUniversalTime().ToTimestamp(),
+            //                AnimeContexts = { x.Animes.Select(x => new GetSchedulesResponse.Types.Schedule.Types.AnimeContext()
+            //                {
+            //                    Filter = x.Filter,
+            //                    FolderName = x is NiblAnimeInfoContext niblContext ? niblContext.FolderName : string.Empty,
+            //                    Identifier = x.Identifier,
+            //                    MyAnimeListId = x.MyAnimeListId,
+            //                    Type = x is NiblAnimeInfoContext ? GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Nibl : GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Crunchyroll,
+            //                })}
+            //            })
+            //        },
+            //});
         }
 
         public override async Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
