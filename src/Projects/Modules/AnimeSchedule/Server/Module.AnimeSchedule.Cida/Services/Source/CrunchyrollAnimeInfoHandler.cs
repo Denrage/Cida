@@ -144,7 +144,11 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
         }
         using var dbContext = this.GetContext();
         var dbEpisodes = await AsyncEnumerable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToListAsync(cancellationToken);
-        var newEpisodes = temp.Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.CrunchyrollEpisode.Episode.EpisodeNumber)).ToArray();
+        var episodesAddedFromOtherSchedule = dbEpisodes.Where(x => x.Created < DateTime.Now);
+        var newEpisodes = temp
+            .Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.CrunchyrollEpisode.Episode.EpisodeNumber))
+            .Concat(temp.Where(x => episodesAddedFromOtherSchedule.Select(y => y.EpisodeNumber).Contains(x.CrunchyrollEpisode.Episode.EpisodeNumber)))
+            .ToArray();
         this.Logger.Info($"'{newEpisodes.Length}' new episodes found for '{info.Identifier}'");
 
         return newEpisodes;

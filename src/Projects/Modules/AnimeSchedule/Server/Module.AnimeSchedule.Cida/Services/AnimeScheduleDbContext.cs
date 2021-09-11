@@ -34,17 +34,27 @@ public class AnimeScheduleDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Schedule>().HasKey(e => e.Id);
-        modelBuilder.Entity<Schedule>().HasMany(x => x.Animes).WithOne(x => x.Schedule);
+        modelBuilder.Entity<Schedule>().HasMany(x => x.Animes).WithMany(x => x.Schedules);
         modelBuilder.Entity<Schedule>().HasMany(x => x.DiscordWebhooks).WithMany(x => x.Schedules);
 
         modelBuilder.Entity<AnimeInfo>().HasKey(e => e.Id);
         modelBuilder.Entity<AnimeInfo>().HasMany(x => x.Episodes).WithOne(x => x.Anime);
-        modelBuilder.Entity<AnimeInfo>().HasOne(x => x.AnimeFilter).WithOne(x => x.Anime);
-        modelBuilder.Entity<AnimeInfo>().HasOne(x => x.AnimeFolder).WithOne(x => x.Anime);
+        modelBuilder.Entity<AnimeInfo>().HasOne(x => x.AnimeFilter).WithOne(x => x.Anime).HasForeignKey<AnimeFilter>(x => x.AnimeId);
+        modelBuilder.Entity<AnimeInfo>().HasOne(x => x.AnimeFolder).WithOne(x => x.Anime).HasForeignKey<AnimeFolder>(x => x.AnimeId);
 
         modelBuilder.Entity<Episode>().HasKey(e => e.Name);
-        modelBuilder.Entity<Episode>().HasOne(x => x.CrunchyrollEpisode).WithOne(x => x.Episode);
-        modelBuilder.Entity<Episode>().HasOne(x => x.Package).WithOne(x => x.Episode);
+        modelBuilder.Entity<Episode>().HasOne(x => x.CrunchyrollEpisode).WithOne(x => x.Episode).HasForeignKey<CrunchyrollEpisode>(x => x.EpisodeName);
+        modelBuilder.Entity<Episode>().HasOne(x => x.Package).WithOne(x => x.Episode).HasForeignKey<Package>(x => x.EpisodeName);
+
+        modelBuilder.Entity<AnimeFilter>().HasKey(e => e.AnimeId);
+        
+        modelBuilder.Entity<AnimeFolder>().HasKey(e => e.AnimeId);
+
+        modelBuilder.Entity<CrunchyrollEpisode>().HasKey(e => e.EpisodeName);
+
+        modelBuilder.Entity<Package>().HasKey(e => e.EpisodeName);
+
+        modelBuilder.Entity<DiscordWebhook>().HasKey(e => e.WebhookId);
 
         modelBuilder.Entity<DatabaseSettings>().HasKey(e => e.Key);
 

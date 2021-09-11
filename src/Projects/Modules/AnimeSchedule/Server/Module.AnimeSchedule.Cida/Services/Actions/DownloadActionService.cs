@@ -23,7 +23,7 @@ public class DownloadActionService : IMultiActionService
 
     public async Task Execute(IEnumerable<IActionable> actionables, uint scheduleId, CancellationToken cancellationToken)
     {
-        var downloadAnimes = actionables.Where(x => x is IDownloadable).Cast<IDownloadable>();
+        var downloadAnimes = actionables.Where(x => x is IDownloadable).Cast<IDownloadable>().Where(x => !x.AlreadyProcessed);
         if (downloadAnimes.Any())
         {
             var informations = new List<DownloadInformation>();

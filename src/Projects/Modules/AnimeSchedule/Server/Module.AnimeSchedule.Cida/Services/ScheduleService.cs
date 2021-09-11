@@ -16,6 +16,7 @@ public class ScheduleService
     private readonly List<IActionService> actionServices;
     private readonly List<IMultiActionService> multiActionServices;
     private readonly List<(uint scheduleId, Task task)> schedules = new List<(uint, Task)>();
+    private readonly SemaphoreSlim scheduleSemaphore = new SemaphoreSlim(1);
 
     //public IReadOnlyList<Schedule> Schedules => this.schedules.Select(x => x.schedule).ToList().AsReadOnly();
 
@@ -25,6 +26,7 @@ public class ScheduleService
         this.multiActionServices = new List<IMultiActionService>(multiActionServices);
         this.getContext = getContext;
         this.logger = logger;
+        this.moduleLogger = moduleLogger;
         var anilistClient = new Anilist4Net.Client();
         this.handlers = new Dictionary<AnimeInfoType, AnimeInfoHandlerBase>()
         {
@@ -44,16 +46,26 @@ public class ScheduleService
         }
     }
 
-    public void StartSchedule(uint scheduleId)
+    public async void StartSchedule(uint scheduleId)
     {
-        var scheduleContext = new ScheduleContext()
+        using var context = this.getContext();
+
+        if (await EntityFrameworkQueryableExtensions.AnyAsync(context.Schedules, x => x.Id == scheduleId))
         {
-            CancellationTokenSource = new CancellationTokenSource(),
-            ScheduleId = scheduleId,
-        };
-        var scheduleTask = new Task(async () => await this.Schedule(scheduleContext), scheduleContext.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
-        scheduleTask.Start();
-        this.schedules.Add((scheduleId, scheduleTask));
+            var scheduleContext = new ScheduleContext()
+            {
+                CancellationTokenSource = new CancellationTokenSource(),
+                ScheduleId = scheduleId,
+            };
+            var scheduleTask = new Task(async () => await this.Schedule(scheduleContext), scheduleContext.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+            scheduleTask.Start();
+            this.schedules.Add((scheduleId, scheduleTask));
+        }
+        else
+        {
+            this.logger.Warn($"Schedule with id '{scheduleId}' not found! This schedule will be ignored and wont be started!");
+        }
+
     }
 
     private async Task Schedule(ScheduleContext scheduleContext)
@@ -70,24 +82,33 @@ public class ScheduleService
             {
                 this.logger.Info($"Run Schedule '{schedule.Name}'");
 
-                foreach (var item in schedule.Animes)
+                await this.scheduleSemaphore.WaitAsync();
+                try
                 {
-                    var handler = this.GetHandler(item);
-                    this.logger.Info($"Checking for new episodes for '{item.Identifier}'");
-                    var newEpisodes = await handler.GetNewEpisodes(item, scheduleContext.CancellationTokenSource.Token);
 
-                    foreach (var episode in newEpisodes)
+                    foreach (var item in schedule.Animes)
                     {
-                        foreach (var actionService in this.actionServices)
+                        var handler = this.GetHandler(item);
+                        this.logger.Info($"Checking for new episodes for '{item.Identifier}'");
+                        var newEpisodes = await handler.GetNewEpisodes(item, scheduleContext.CancellationTokenSource.Token);
+
+                        foreach (var episode in newEpisodes)
                         {
-                            await actionService.Execute(episode, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
+                            foreach (var actionService in this.actionServices)
+                            {
+                                await actionService.Execute(episode, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
+                            }
+                        }
+
+                        foreach (var multiActionService in this.multiActionServices)
+                        {
+                            await multiActionService.Execute(newEpisodes, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
                         }
                     }
-
-                    foreach (var multiActionService in this.multiActionServices)
-                    {
-                        await multiActionService.Execute(newEpisodes, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
-                    }
+                }
+                finally
+                {
+                    this.scheduleSemaphore.Release();
                 }
             }
 

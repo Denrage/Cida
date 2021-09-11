@@ -73,31 +73,6 @@ public class Module : IModule
             this.scheduleService = scheduleService;
         }
 
-        public override Task<GetSchedulesResponse> GetSchedules(GetSchedulesRequest request, ServerCallContext context)
-        {
-            throw new NotImplementedException();
-            //return Task.FromResult(new GetSchedulesResponse()
-            //{
-            //    Schedules =
-            //        {
-            //            this.scheduleService.Schedules.Select(x => new GetSchedulesResponse.Types.Schedule()
-            //            {
-            //                Interval = x.Interval.ToDuration(),
-            //                Name = x.Name,
-            //                StartDate = x.StartDate.ToUniversalTime().ToTimestamp(),
-            //                AnimeContexts = { x.Animes.Select(x => new GetSchedulesResponse.Types.Schedule.Types.AnimeContext()
-            //                {
-            //                    Filter = x.Filter,
-            //                    FolderName = x is NiblAnimeInfoContext niblContext ? niblContext.FolderName : string.Empty,
-            //                    Identifier = x.Identifier,
-            //                    MyAnimeListId = x.MyAnimeListId,
-            //                    Type = x is NiblAnimeInfoContext ? GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Nibl : GetSchedulesResponse.Types.Schedule.Types.AnimeContext.Types.AnimeContextType.Crunchyroll,
-            //                })}
-            //            })
-            //        },
-            //});
-        }
-
         public override async Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
         {
             return await Task.FromResult(new VersionResponse() { Version = 1 });

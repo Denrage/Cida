@@ -67,12 +67,12 @@ public class DiscordClient
         try
         {
             using var context = this.getContext();
-            var schedules = await context.DiscordSchedules.Include(x => x.Webhooks).ToArrayAsync(cancellationToken);
+            var schedules = await context.Schedules.Include(x => x.DiscordWebhooks).ToArrayAsync(cancellationToken);
             var webhooks = await context.DiscordWebhooks.Include(x => x.Schedules).ToArrayAsync(cancellationToken);
 
             foreach (var item in schedules)
             {
-                this.scheduleClientMapping[item.ScheduleId] = item.Webhooks.Select(x => x.WebhookId).ToArray();
+                this.scheduleClientMapping[item.Id] = item.DiscordWebhooks.Select(x => x.WebhookId).ToArray();
             }
 
             foreach (var item in webhooks)

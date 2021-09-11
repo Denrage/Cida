@@ -11,6 +11,8 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
 
     public Package NiblPackage { get; }
 
+    public bool AlreadyProcessed { get; set; } = false;
+
     public NiblEpisodeContext(Package package, Anilist4Net.Client anilistClient)
     {
         this.NiblPackage = package;
@@ -22,8 +24,8 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
         var animeInfo = await this.anilistClient.GetMediaById((int)this.NiblPackage.Episode.AnimeId);
         var embedBuilder = new Discord.EmbedBuilder();
         embedBuilder
-            .WithFooter("Ginpachi-Sensei")
-            .WithDescription("Episode: " + this.NiblPackage.Episode.EpisodeNumber.ToString())
+            .WithFooter(this.NiblPackage.BotName)
+            .WithDescription("Episode: " + this.NiblPackage.Episode.EpisodeNumber.ToString() + (this.AlreadyProcessed ? " - Already available" : string.Empty))
             .WithTitle(animeInfo.RomajiTitle)
             .WithImageUrl(animeInfo.CoverImageLarge)
             .AddField("Original Name", this.NiblPackage.Episode.Name);
@@ -46,7 +48,16 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
 
     public async Task SaveToDatabase(AnimeScheduleDbContext context, CancellationToken cancellationToken)
     {
-        await context.Episodes.AddAsync(this.NiblPackage.Episode, cancellationToken);
-        await context.Packages.AddAsync(this.NiblPackage, cancellationToken);
+        var episode = await context.Episodes.FindAsync(this.NiblPackage.Episode.Name);
+        if (episode != null)
+        {
+            episode.Created = DateTime.Now;
+            context.Episodes.Update(episode);
+        }
+        else
+        {
+            await context.Episodes.AddAsync(this.NiblPackage.Episode, cancellationToken);
+            await context.Packages.AddAsync(this.NiblPackage, cancellationToken);
+        }
     }
 }

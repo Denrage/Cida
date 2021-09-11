@@ -13,7 +13,7 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
     public CrunchyrollEpisodeContext(CrunchyrollEpisode crunchyrollEpisode, Anilist4Net.Client client)
     {
         this.CrunchyrollEpisode = crunchyrollEpisode;
-        this.anilistClient = client; 
+        this.anilistClient = client;
     }
 
     public async Task<Embed> CreateEmbed()
@@ -37,7 +37,16 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
 
     public async Task SaveToDatabase(AnimeScheduleDbContext context, CancellationToken cancellationToken)
     {
-        await context.Episodes.AddAsync(this.CrunchyrollEpisode.Episode, cancellationToken);
-        await context.CrunchyrollEpisodes.AddAsync(this.CrunchyrollEpisode, cancellationToken);
+        var episode = await context.Episodes.FindAsync(this.CrunchyrollEpisode.Episode.Name);
+        if (episode != null)
+        {
+            episode.Created = DateTime.Now;
+            context.Episodes.Update(episode);
+        }
+        else
+        {
+            await context.Episodes.AddAsync(this.CrunchyrollEpisode.Episode, cancellationToken);
+            await context.CrunchyrollEpisodes.AddAsync(this.CrunchyrollEpisode, cancellationToken);
+        }
     }
 }
