@@ -9,6 +9,8 @@ using Module.AnimeSchedule.Cida.Services.Actions;
 using Module.AnimeSchedule.Cida.Services.Source;
 using NLog;
 using Module.AnimeSchedule.Cida.Models;
+using Microsoft.EntityFrameworkCore;
+using Module.AnimeSchedule.Cida.Extensions;
 
 namespace Module.AnimeSchedule.Cida;
 
@@ -67,6 +69,7 @@ public class Module : IModule
     {
         private readonly ILogger logger;
         private readonly Func<AnimeScheduleDbContext> getContext;
+        private readonly Anilist4Net.Client anilistClient = new();
 
         public ScheduleAnimeImplementation(ILogger logger, Func<AnimeScheduleDbContext> getContext)
         {
@@ -113,7 +116,7 @@ public class Module : IModule
                     }
                 }
 
-                if (await dbContext.Schedules.AnyAsync(x => x.Name == request.Name, context.CancellationToken))
+                if (await EntityFrameworkQueryableExtensions.AnyAsync(dbContext.Schedules, x => x.Name == request.Name, context.CancellationToken))
                 {
                     return new CreateScheduleResponse()
                     {
@@ -146,6 +149,276 @@ public class Module : IModule
                     CreateResult = CreateScheduleResponse.Types.Result.Unknown,
                     ScheduleId = 0,
                 };
+            }
+        }
+
+        public override async Task<CreateWebhookResponse> CreateDiscordWebhook(CreateDiscordWebhookRequest request, ServerCallContext context)
+        {
+            try
+            {
+                using var dbContext = this.getContext();
+
+                if ((await dbContext.DiscordWebhooks.FindAsync(new object[] { request.WebhookId }, context.CancellationToken)) != null)
+                {
+                    return new CreateWebhookResponse()
+                    {
+                        CreateResult = CreateWebhookResponse.Types.Result.Alreadyexists,
+                    };
+                }
+
+                await dbContext.DiscordWebhooks.AddAsync(new DiscordWebhook()
+                {
+                    WebhookId = request.WebhookId,
+                    WebhookToken = request.WebhookToken,
+                }, context.CancellationToken);
+
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                return new CreateWebhookResponse()
+                {
+                    CreateResult = CreateWebhookResponse.Types.Result.Success
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return new CreateWebhookResponse()
+                {
+                    CreateResult = CreateWebhookResponse.Types.Result.Unknown,
+                };
+            }
+        }
+
+        public override async Task<AssignWebhookToScheduleResponse> AssignWebhookToSchedule(AssignWebhookToScheduleRequest request, ServerCallContext context)
+        {
+            try
+            {
+                using var dbContext = this.getContext();
+                var schedule = await dbContext.Schedules.Include(x => x.DiscordWebhooks).FirstOrDefaultAsync(x => x.Id == request.ScheduleId, context.CancellationToken);
+                var webhook = await dbContext.DiscordWebhooks.Include(x => x.Schedules).FirstOrDefaultAsync(x => x.WebhookId == request.WebhookId, context.CancellationToken);
+
+                if (schedule == null)
+                {
+                    return new AssignWebhookToScheduleResponse()
+                    {
+                        AssignResult = AssignWebhookToScheduleResponse.Types.Result.Schedulenotfound,
+                    };
+                }
+
+                if (webhook == null)
+                {
+                    return new AssignWebhookToScheduleResponse()
+                    {
+                        AssignResult = AssignWebhookToScheduleResponse.Types.Result.Webhooknotfound,
+                    };
+                }
+
+                if (schedule.DiscordWebhooks.Select(x => x.WebhookId).Contains(webhook.WebhookId))
+                {
+                    return new AssignWebhookToScheduleResponse()
+                    {
+                        AssignResult = AssignWebhookToScheduleResponse.Types.Result.Alreadyexists,
+                    };
+                }
+
+                dbContext.Update(schedule);
+                schedule.DiscordWebhooks.Add(webhook);
+
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                return new AssignWebhookToScheduleResponse()
+                {
+                    AssignResult = AssignWebhookToScheduleResponse.Types.Result.Success,
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return new AssignWebhookToScheduleResponse()
+                {
+                    AssignResult = AssignWebhookToScheduleResponse.Types.Result.Unknown,
+                };
+            }
+        }
+
+        public override async Task<CreateAnimeResponse> CreateAnime(CreateAnimeRequest request, ServerCallContext context)
+        {
+            using var dbContext = this.getContext();
+            await dbContext.Database.OpenConnectionAsync(context.CancellationToken);
+            
+            try
+            {
+
+                if (request.Override)
+                {
+                    var existingeAnimeInfo = await dbContext.AnimeInfos.FindAsync(new object[] { request.Id }, context.CancellationToken);
+
+                    if (existingeAnimeInfo != null)
+                    {
+                        dbContext.Update(existingeAnimeInfo);
+                        existingeAnimeInfo.Identifier = request.Identifier;
+                        await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                        return new CreateAnimeResponse()
+                        {
+                            CreateResult = CreateAnimeResponse.Types.Result.Success,
+                        };
+                    }
+                    else
+                    {
+                        return new CreateAnimeResponse()
+                        {
+                            CreateResult = CreateAnimeResponse.Types.Result.Animeinfonotfound,
+                        };
+                    }
+                }
+
+                if (await EntityFrameworkQueryableExtensions.AnyAsync(dbContext.AnimeInfos, x => x.Id == request.Id, context.CancellationToken))
+                {
+                    return new CreateAnimeResponse()
+                    {
+                        CreateResult = CreateAnimeResponse.Types.Result.Alreadyexists,
+                    };
+                }
+
+                if ((await this.anilistClient.GetMediaById(request.Id)) == null)
+                {
+                    return new CreateAnimeResponse()
+                    {
+                        CreateResult = CreateAnimeResponse.Types.Result.Animenotfound,
+                    };
+                }
+
+                var animeInfo = new AnimeInfo()
+                {
+                    Id = request.Id,
+                    Identifier = request.Identifier,
+                    Type = request.Type.FromGrpc(),
+                };
+
+                if (ValidForFilter(request.Type))
+                {
+                    animeInfo.AnimeFilter = new AnimeFilter()
+                    {
+                        Anime = animeInfo,
+                        Filter = request.Filter,
+                    };
+                }
+
+                if (ValidForFolder(request.Type))
+                {
+                    if (string.IsNullOrEmpty(request.Folder))
+                    {
+                        return new CreateAnimeResponse()
+                        {
+                            CreateResult = CreateAnimeResponse.Types.Result.Missingfolder,
+                        };
+                    }
+
+                    animeInfo.AnimeFolder = new AnimeFolder()
+                    {
+                        Anime = animeInfo,
+                        FolderName = request.Folder,
+                    };
+                }
+
+                await dbContext.AnimeInfos.AddAsync(animeInfo, context.CancellationToken);
+
+                var result = await dbContext.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT AnimeInfos ON", context.CancellationToken);
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+                await dbContext.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT AnimeInfos OFF", context.CancellationToken);
+
+                return new CreateAnimeResponse()
+                {
+                    CreateResult = CreateAnimeResponse.Types.Result.Success,
+                };
+            }
+            catch (Exception ex)
+            {
+                await dbContext.Database.CloseConnectionAsync();
+                this.logger.Error(ex);
+                return new CreateAnimeResponse()
+                {
+                    CreateResult = CreateAnimeResponse.Types.Result.Unknown,
+                };
+            }
+        }
+
+        public override async Task<AssignAnimeInfoToScheduleResponse> AssignAnimeInfoToSchedule(AssignAnimeInfoToScheduleRequest request, ServerCallContext context)
+        {
+            try
+            {
+                using var dbContext = this.getContext();
+                var schedule = await dbContext.Schedules.Include(x => x.Animes).FirstOrDefaultAsync(x => x.Id == request.ScheduleId, context.CancellationToken);
+                var animeInfo = await dbContext.AnimeInfos.Include(x => x.Schedules).FirstOrDefaultAsync(x => x.Id == request.AnimeId, context.CancellationToken);
+
+                if (schedule == null)
+                {
+                    return new AssignAnimeInfoToScheduleResponse()
+                    {
+                        AssignResult = AssignAnimeInfoToScheduleResponse.Types.Result.Schedulenotfound,
+                    };
+                }
+
+                if (animeInfo == null)
+                {
+                    return new AssignAnimeInfoToScheduleResponse()
+                    {
+                        AssignResult = AssignAnimeInfoToScheduleResponse.Types.Result.Animeinfonotfound,
+                    };
+                }
+
+                if (schedule.Animes.Select(x => x.Id).Contains(animeInfo.Id))
+                {
+                    return new AssignAnimeInfoToScheduleResponse()
+                    {
+                        AssignResult = AssignAnimeInfoToScheduleResponse.Types.Result.Alreadyexists,
+                    };
+                }
+
+                dbContext.Update(schedule);
+                schedule.Animes.Add(animeInfo);
+
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                return new AssignAnimeInfoToScheduleResponse()
+                {
+                    AssignResult = AssignAnimeInfoToScheduleResponse.Types.Result.Success,
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return new AssignAnimeInfoToScheduleResponse()
+                {
+                    AssignResult = AssignAnimeInfoToScheduleResponse.Types.Result.Unknown,
+                };
+            }
+        }
+
+        private static bool ValidForFilter(CreateAnimeRequest.Types.AnimeInfoType type)
+        {
+            switch (type)
+            {
+                case CreateAnimeRequest.Types.AnimeInfoType.Crunchyroll:
+                    return false;
+                case CreateAnimeRequest.Types.AnimeInfoType.Nibl:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool ValidForFolder(CreateAnimeRequest.Types.AnimeInfoType type)
+        {
+            switch (type)
+            {
+                case CreateAnimeRequest.Types.AnimeInfoType.Crunchyroll:
+                    return false;
+                case CreateAnimeRequest.Types.AnimeInfoType.Nibl:
+                    return true;
+                default:
+                    return false;
             }
         }
     }

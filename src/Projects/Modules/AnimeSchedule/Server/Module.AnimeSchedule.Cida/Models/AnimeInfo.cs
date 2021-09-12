@@ -2,6 +2,7 @@
 
 public class AnimeInfo
 {
+    [System.ComponentModel.DataAnnotations.Schema.DatabaseGenerated(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None)]
     public int Id { get; set; }
     
     public string Identifier { get; set; }

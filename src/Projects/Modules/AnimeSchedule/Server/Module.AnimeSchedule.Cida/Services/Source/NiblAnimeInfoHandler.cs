@@ -83,7 +83,7 @@ public class NiblAnimeInfoHandler : AnimeInfoHandlerBase
         }
         using var dbContext = this.GetContext();
         var dbEpisodes = await AsyncEnumerable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToListAsync(cancellationToken);
-        var filter = await dbContext.AnimeFilters.FindAsync(info.Id, cancellationToken);
+        var filter = await dbContext.AnimeFilters.FindAsync(new object[] { info.Id }, cancellationToken);
         var episodesAddedFromOtherSchedule = dbEpisodes.Where(x => x.Created < DateTime.Now);
         var newEpisodes = temp
             .Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.NiblPackage.Episode.EpisodeNumber))

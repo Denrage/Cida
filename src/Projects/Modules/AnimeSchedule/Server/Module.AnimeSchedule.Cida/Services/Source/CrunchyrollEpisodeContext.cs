@@ -45,6 +45,7 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
         }
         else
         {
+            this.CrunchyrollEpisode.Episode.Created = DateTime.Now;
             await context.Episodes.AddAsync(this.CrunchyrollEpisode.Episode, cancellationToken);
             await context.CrunchyrollEpisodes.AddAsync(this.CrunchyrollEpisode, cancellationToken);
         }
