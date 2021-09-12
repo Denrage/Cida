@@ -244,7 +244,6 @@ public class Module : IModule
         public override async Task<CreateAnimeResponse> CreateAnime(CreateAnimeRequest request, ServerCallContext context)
         {
             using var dbContext = this.getContext();
-            await dbContext.Database.OpenConnectionAsync(context.CancellationToken);
             
             try
             {
@@ -324,9 +323,7 @@ public class Module : IModule
 
                 await dbContext.AnimeInfos.AddAsync(animeInfo, context.CancellationToken);
 
-                var result = await dbContext.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT AnimeInfos ON", context.CancellationToken);
                 await dbContext.SaveChangesAsync(context.CancellationToken);
-                await dbContext.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT AnimeInfos OFF", context.CancellationToken);
 
                 return new CreateAnimeResponse()
                 {
@@ -335,7 +332,6 @@ public class Module : IModule
             }
             catch (Exception ex)
             {
-                await dbContext.Database.CloseConnectionAsync();
                 this.logger.Error(ex);
                 return new CreateAnimeResponse()
                 {

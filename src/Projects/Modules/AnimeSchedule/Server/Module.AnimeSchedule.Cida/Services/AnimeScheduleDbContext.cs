@@ -36,6 +36,7 @@ public class AnimeScheduleDbContext : DbContext
         modelBuilder.Entity<Schedule>().HasKey(e => e.Id);
         modelBuilder.Entity<Schedule>().HasMany(x => x.Animes).WithMany(x => x.Schedules);
         modelBuilder.Entity<Schedule>().HasMany(x => x.DiscordWebhooks).WithMany(x => x.Schedules);
+        modelBuilder.Entity<Schedule>().HasMany(x => x.Episodes).WithMany(x => x.Schedules);
 
         modelBuilder.Entity<AnimeInfo>().HasKey(e => e.Id);
         modelBuilder.Entity<AnimeInfo>().HasMany(x => x.Episodes).WithOne(x => x.Anime);

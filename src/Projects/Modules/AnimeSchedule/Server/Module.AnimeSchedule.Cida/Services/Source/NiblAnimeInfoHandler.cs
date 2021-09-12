@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Anilist4Net;
+using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Interfaces;
 using Module.AnimeSchedule.Cida.Models;
 using NLog;
@@ -55,7 +56,7 @@ public class NiblAnimeInfoHandler : AnimeInfoHandlerBase
         return Enumerable.Empty<NiblAnimeResult>();
     }
 
-    public override async Task<IEnumerable<IActionable>> GetNewEpisodes(AnimeInfo info, CancellationToken cancellationToken)
+    public override async Task<IEnumerable<IActionable>> GetNewEpisodes(AnimeInfo info, int scheduleId, CancellationToken cancellationToken)
     {
         var items = await this.Search(info.Identifier, cancellationToken);
 
@@ -78,19 +79,20 @@ public class NiblAnimeInfoHandler : AnimeInfoHandlerBase
                     BotName = this.Bots[item.BotId],
                 };
 
-                temp.Add(new NiblEpisodeContext(package, this.anilistClient));
+                temp.Add(new NiblEpisodeContext(package, this.anilistClient, scheduleId));
             }
         }
         using var dbContext = this.GetContext();
-        var dbEpisodes = await AsyncEnumerable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToListAsync(cancellationToken);
         var filter = await dbContext.AnimeFilters.FindAsync(new object[] { info.Id }, cancellationToken);
-        var episodesAddedFromOtherSchedule = dbEpisodes.Where(x => x.Created < DateTime.Now);
+        var schedule = await dbContext.Schedules.Include(x => x.Episodes).FirstAsync(x => x.Id == scheduleId, cancellationToken);
+        var missingDbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).Where(x => !schedule.Episodes.Any(y => y.Name == x.CrunchyrollEpisode.Episode.Name)).ToArrayAsync(cancellationToken);
+        var dbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToArrayAsync(cancellationToken);
         var newEpisodes = temp
             .Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.NiblPackage.Episode.EpisodeNumber))
-            .Concat(temp.Where(x => episodesAddedFromOtherSchedule.Select(y => y.EpisodeNumber).Contains(x.NiblPackage.Episode.EpisodeNumber)))
+            .Concat(temp.Where(x => missingDbEpisodes.Any(y => y.Name == x.NiblPackage.Episode.Name)))
             .ToArray();
 
-        foreach (var item in newEpisodes.Where(x => x.NiblPackage.Episode.Created < DateTime.Now))
+        foreach (var item in newEpisodes.Where(x => missingDbEpisodes.Select(x => x.Name).Contains(x.NiblPackage.Episode.Name)))
         {
             item.AlreadyProcessed = true;
         }

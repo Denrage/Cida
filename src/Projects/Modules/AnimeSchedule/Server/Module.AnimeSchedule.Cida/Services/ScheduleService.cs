@@ -90,7 +90,7 @@ public class ScheduleService
                     {
                         var handler = this.GetHandler(item);
                         this.logger.Info($"Checking for new episodes for '{item.Identifier}'");
-                        var newEpisodes = await handler.GetNewEpisodes(item, scheduleContext.CancellationTokenSource.Token);
+                        var newEpisodes = await handler.GetNewEpisodes(item, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
 
                         foreach (var episode in newEpisodes)
                         {

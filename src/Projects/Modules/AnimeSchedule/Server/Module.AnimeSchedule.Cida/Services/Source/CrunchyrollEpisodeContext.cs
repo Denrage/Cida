@@ -7,13 +7,15 @@ namespace Module.AnimeSchedule.Cida.Services.Source;
 public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
 {
     private readonly Anilist4Net.Client anilistClient;
+    private readonly int scheduleId;
 
     public CrunchyrollEpisode CrunchyrollEpisode { get; }
 
-    public CrunchyrollEpisodeContext(CrunchyrollEpisode crunchyrollEpisode, Anilist4Net.Client client)
+    public CrunchyrollEpisodeContext(CrunchyrollEpisode crunchyrollEpisode, Anilist4Net.Client client, int scheduleId)
     {
         this.CrunchyrollEpisode = crunchyrollEpisode;
         this.anilistClient = client;
+        this.scheduleId = scheduleId;
     }
 
     public async Task<Embed> CreateEmbed()
@@ -40,12 +42,12 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
         var episode = await context.Episodes.FindAsync(this.CrunchyrollEpisode.Episode.Name);
         if (episode != null)
         {
-            episode.Created = DateTime.Now;
+            episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
             context.Episodes.Update(episode);
         }
         else
         {
-            this.CrunchyrollEpisode.Episode.Created = DateTime.Now;
+            this.CrunchyrollEpisode.Episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
             await context.Episodes.AddAsync(this.CrunchyrollEpisode.Episode, cancellationToken);
             await context.CrunchyrollEpisodes.AddAsync(this.CrunchyrollEpisode, cancellationToken);
         }

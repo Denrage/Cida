@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Interfaces;
 using Module.AnimeSchedule.Cida.Models;
 using Module.AnimeSchedule.Cida.Models.Source.Crunchyroll;
@@ -87,7 +88,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
         return true;
     }
 
-    public override async Task<IEnumerable<IActionable>> GetNewEpisodes(AnimeInfo info, CancellationToken cancellationToken)
+    public override async Task<IEnumerable<IActionable>> GetNewEpisodes(AnimeInfo info, int scheduleId, CancellationToken cancellationToken)
     {
         if (!await this.RefreshCache(cancellationToken))
         {
@@ -139,15 +140,16 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
                         EpisodeNumber = episodeNumber,
                         Name = episode.SeriesTitle + " - " + "Episode " + episode.EpisodeNumber + " - " + episode.Title,
                     }
-                }, this.anilistClient));
+                }, this.anilistClient, scheduleId));
             }
         }
         using var dbContext = this.GetContext();
-        var dbEpisodes = await AsyncEnumerable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToListAsync(cancellationToken);
-        var episodesAddedFromOtherSchedule = dbEpisodes.Where(x => x.Created < DateTime.Now);
+        var schedule = await dbContext.Schedules.Include(x => x.Episodes).FirstAsync(x => x.Id == scheduleId, cancellationToken);
+        var missingDbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).Where(x => !schedule.Episodes.Any(y => y.Name == x.CrunchyrollEpisode.Episode.Name)).ToArrayAsync(cancellationToken);
+        var dbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToArrayAsync(cancellationToken); 
         var newEpisodes = temp
             .Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.CrunchyrollEpisode.Episode.EpisodeNumber))
-            .Concat(temp.Where(x => episodesAddedFromOtherSchedule.Select(y => y.EpisodeNumber).Contains(x.CrunchyrollEpisode.Episode.EpisodeNumber)))
+            .Concat(temp.Where(x => missingDbEpisodes.Any(y => y.Name == x.CrunchyrollEpisode.Episode.Name)))
             .ToArray();
         this.Logger.Info($"'{newEpisodes.Length}' new episodes found for '{info.Identifier}'");
 

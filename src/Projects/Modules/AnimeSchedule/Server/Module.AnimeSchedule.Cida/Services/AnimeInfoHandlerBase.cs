@@ -15,5 +15,5 @@ public abstract class AnimeInfoHandlerBase
         this.Logger = logger;
     }
 
-    public abstract Task<IEnumerable<IActionable>> GetNewEpisodes(AnimeInfo animeInfo, CancellationToken cancellationToken);
+    public abstract Task<IEnumerable<IActionable>> GetNewEpisodes(AnimeInfo animeInfo, int scheduleId, CancellationToken cancellationToken);
 }

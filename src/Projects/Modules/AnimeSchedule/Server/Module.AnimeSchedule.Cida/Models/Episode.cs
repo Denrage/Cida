@@ -8,11 +8,11 @@ public class Episode
 
     public double EpisodeNumber { get; set; }
 
-    public DateTime Created { get; set; }
-
     public Package Package { get; set; }
 
     public CrunchyrollEpisode CrunchyrollEpisode { get; set; }
 
     public AnimeInfo Anime { get; set; }
+
+    public List<Schedule> Schedules {  get; set; }
 }

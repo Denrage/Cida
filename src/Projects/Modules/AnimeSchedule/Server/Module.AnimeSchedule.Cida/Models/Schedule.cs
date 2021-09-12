@@ -13,4 +13,6 @@ public class Schedule
     public List<AnimeInfo> Animes { get; set; }
 
     public List<DiscordWebhook> DiscordWebhooks { get; set; }
+
+    public List<Episode> Episodes { get; set; }
 }

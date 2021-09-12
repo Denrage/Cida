@@ -8,15 +8,17 @@ namespace Module.AnimeSchedule.Cida.Services.Source;
 public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
 {
     private readonly Client anilistClient;
+    private readonly int scheduleId;
 
     public Package NiblPackage { get; }
 
     public bool AlreadyProcessed { get; set; } = false;
 
-    public NiblEpisodeContext(Package package, Anilist4Net.Client anilistClient)
+    public NiblEpisodeContext(Package package, Anilist4Net.Client anilistClient, int scheduleId)
     {
         this.NiblPackage = package;
         this.anilistClient = anilistClient;
+        this.scheduleId = scheduleId;
     }
 
     public async Task<Embed> CreateEmbed()
@@ -48,14 +50,15 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
 
     public async Task SaveToDatabase(AnimeScheduleDbContext context, CancellationToken cancellationToken)
     {
-        var episode = await context.Episodes.FindAsync(this.NiblPackage.Episode.Name);
+        var episode = await context.Episodes.FindAsync(new object[] { this.NiblPackage.Episode.Name }, cancellationToken);
         if (episode != null)
         {
-            episode.Created = DateTime.Now;
+            episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
             context.Episodes.Update(episode);
         }
         else
         {
+            this.NiblPackage.Episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
             await context.Episodes.AddAsync(this.NiblPackage.Episode, cancellationToken);
             await context.Packages.AddAsync(this.NiblPackage, cancellationToken);
         }
