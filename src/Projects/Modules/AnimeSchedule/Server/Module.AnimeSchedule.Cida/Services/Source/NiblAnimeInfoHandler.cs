@@ -73,6 +73,7 @@ public class NiblAnimeInfoHandler : AnimeInfoHandlerBase
                         AnimeId = info.Id,
                         EpisodeNumber = item.EpisodeNumber,
                         Name = item.Name,
+                        Schedules = new List<Schedule>(),
                     },
                     EpisodeName = item.Name,
                     PackageNumber = (ulong)item.Number,
@@ -85,17 +86,12 @@ public class NiblAnimeInfoHandler : AnimeInfoHandlerBase
         using var dbContext = this.GetContext();
         var filter = await dbContext.AnimeFilters.FindAsync(new object[] { info.Id }, cancellationToken);
         var schedule = await dbContext.Schedules.Include(x => x.Episodes).FirstAsync(x => x.Id == scheduleId, cancellationToken);
-        var missingDbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).Where(x => !schedule.Episodes.Any(y => y.Name == x.CrunchyrollEpisode.Episode.Name)).ToArrayAsync(cancellationToken);
         var dbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToArrayAsync(cancellationToken);
+        var missingDbEpisodes = dbEpisodes.Where(x => !schedule.Episodes.Any(y => y.Name == x.Name));
         var newEpisodes = temp
             .Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.NiblPackage.Episode.EpisodeNumber))
             .Concat(temp.Where(x => missingDbEpisodes.Any(y => y.Name == x.NiblPackage.Episode.Name)))
             .ToArray();
-
-        foreach (var item in newEpisodes.Where(x => missingDbEpisodes.Select(x => x.Name).Contains(x.NiblPackage.Episode.Name)))
-        {
-            item.AlreadyProcessed = true;
-        }
 
         if (filter != null)
         {
@@ -103,6 +99,11 @@ public class NiblAnimeInfoHandler : AnimeInfoHandlerBase
         }
 
         newEpisodes = newEpisodes.Distinct(new NiblAnimeInfoEqualityComparer()).ToArray();
+
+        foreach (var item in newEpisodes.Where(x => missingDbEpisodes.Select(x => x.Name).Contains(x.NiblPackage.Episode.Name)))
+        {
+            item.AlreadyProcessed = true;
+        }
 
         this.Logger.Info($"'{newEpisodes.Length}' new episodes found for '{info.Identifier}'");
 

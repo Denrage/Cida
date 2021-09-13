@@ -139,14 +139,15 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
                         AnimeId = info.Id,
                         EpisodeNumber = episodeNumber,
                         Name = episode.SeriesTitle + " - " + "Episode " + episode.EpisodeNumber + " - " + episode.Title,
+                        Schedules = new List<Schedule>(),
                     }
                 }, this.anilistClient, scheduleId));
             }
         }
         using var dbContext = this.GetContext();
         var schedule = await dbContext.Schedules.Include(x => x.Episodes).FirstAsync(x => x.Id == scheduleId, cancellationToken);
-        var missingDbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).Where(x => !schedule.Episodes.Any(y => y.Name == x.CrunchyrollEpisode.Episode.Name)).ToArrayAsync(cancellationToken);
         var dbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToArrayAsync(cancellationToken); 
+        var missingDbEpisodes = dbEpisodes.Where(x => !schedule.Episodes.Any(y => y.Name == x.Name));
         var newEpisodes = temp
             .Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.CrunchyrollEpisode.Episode.EpisodeNumber))
             .Concat(temp.Where(x => missingDbEpisodes.Any(y => y.Name == x.CrunchyrollEpisode.Episode.Name)))

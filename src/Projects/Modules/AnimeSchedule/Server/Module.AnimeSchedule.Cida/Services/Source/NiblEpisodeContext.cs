@@ -35,14 +35,16 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
         return embedBuilder.Build();
     }
 
-    public async Task<DownloadInformation> GetDownloadInformation()
+    public async Task<DownloadInformation> GetDownloadInformation(Func<AnimeScheduleDbContext> getContext, CancellationToken cancellationToken)
     {
+        using var context = getContext();
+        var dbAnimeFolder = await context.AnimeFolders.FindAsync(new object[] { this.NiblPackage.Episode.AnimeId }, cancellationToken); 
         var animeInfo = await this.anilistClient.GetMediaById((int)this.NiblPackage.Episode.AnimeId);
         return new DownloadInformation()
         {
             AnimeName = animeInfo.RomajiTitle,
             Bot = this.NiblPackage.BotName,
-            DestinationFolderName = this.NiblPackage.Episode.Anime.AnimeFolder.FolderName,
+            DestinationFolderName = dbAnimeFolder.FolderName,
             FileName = this.NiblPackage.EpisodeName,
             PackageNumber = this.NiblPackage.PackageNumber,
         };
@@ -58,8 +60,8 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
         }
         else
         {
-            this.NiblPackage.Episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
             await context.Episodes.AddAsync(this.NiblPackage.Episode, cancellationToken);
+            this.NiblPackage.Episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
             await context.Packages.AddAsync(this.NiblPackage, cancellationToken);
         }
     }

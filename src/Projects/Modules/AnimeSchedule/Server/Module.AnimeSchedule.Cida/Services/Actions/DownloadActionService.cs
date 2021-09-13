@@ -12,13 +12,15 @@ public class DownloadActionService : IMultiActionService
     private readonly ILogger logger;
     private readonly ISettingsService settingsService;
     private readonly DiscordClient discordClient;
+    private readonly Func<AnimeScheduleDbContext> getContext;
 
-    public DownloadActionService(IrcAnimeService.IrcAnimeServiceClient client, ILogger logger, ISettingsService settingsService, DiscordClient discordClient)
+    public DownloadActionService(IrcAnimeService.IrcAnimeServiceClient client, ILogger logger, ISettingsService settingsService, DiscordClient discordClient, Func<AnimeScheduleDbContext> getContext)
     {
         this.client = client;
         this.logger = logger;
         this.settingsService = settingsService;
         this.discordClient = discordClient;
+        this.getContext = getContext;
     }
 
     public async Task Execute(IEnumerable<IActionable> actionables, int scheduleId, CancellationToken cancellationToken)
@@ -29,7 +31,7 @@ public class DownloadActionService : IMultiActionService
             var informations = new List<DownloadInformation>();
             foreach (var item in downloadAnimes)
             {
-                informations.Add(await item.GetDownloadInformation());
+                informations.Add(await item.GetDownloadInformation(this.getContext, cancellationToken));
             }
 
             this.logger.Info($"Initiate download on IrcAnime-Module for '{string.Join(",", informations.Select(x => x.FileName))}'");
@@ -48,6 +50,9 @@ public class DownloadActionService : IMultiActionService
             {
                 toCheck.Add(information.FileName, (information, null));
             }
+
+            var clients = await this.discordClient.GetClients(scheduleId);
+
 
             while (toCheck.Count > 0)
             {
@@ -68,21 +73,15 @@ public class DownloadActionService : IMultiActionService
                             await this.Download(toCheck[statusElement.Filename].DownloadInformation, cancellationToken);
                             this.logger.Info($"Finished moving file '{statusElement.Filename}'.");
                             toCheck.Remove(statusElement.Filename);
+                            foreach (var client in clients)
+                            {
+                                await client.SendMessageAsync($"{statusElement.Filename} is now available!");
+                            }
                         }
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(5));
-            }
-
-            var clients = await this.discordClient.GetClients(scheduleId);
-
-            foreach (var item in informations)
-            {
-                foreach (var client in clients)
-                {
-                    await client.SendMessageAsync($"{item.FileName} is now available!"); 
-                }
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
         }
     }

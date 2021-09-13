@@ -48,7 +48,7 @@ public class Module : IModule
             },
             new IMultiActionService[]
             {
-                new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient),
+                new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient, this.GetContext),
             }, this.GetContext, moduleLogger, moduleLogger.CreateSubLogger("Schedule-Service"));
 
         this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), this.GetContext)), };
