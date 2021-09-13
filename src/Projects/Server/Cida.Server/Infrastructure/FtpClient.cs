@@ -1,6 +1,7 @@
 ﻿using Filesystem = Cida.Api.Models.Filesystem;
 using NLog;
 using Directory = Cida.Api.Models.Filesystem.Directory;
+using Cida.Api;
 
 namespace Cida.Server.Infrastructure;
 
@@ -9,43 +10,13 @@ public class FtpClient : IFtpClient
     private const string Separator = "/";
     private readonly ILogger logger;
     private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "FtpDownloads");
-    private FluentFTP.FtpClient ftpClient;
     private GlobalConfigurationManager.ExternalServerConnectionManager settings = null!;
 
     public FtpClient(GlobalConfigurationService globalConfiguration, ILogger logger)
     {
         this.logger = logger;
 
-        globalConfiguration.ConfigurationChanged += () =>
-        {
-            this.settings = globalConfiguration.ConfigurationManager.Ftp;
-
-            this.ftpClient = new FluentFTP.FtpClient(this.settings.Host, this.settings.Port, this.settings.Username, this.settings.Password);
-            this.ftpClient.OnLogEvent += (traceLevel, message) =>
-            {
-                var logLevel = LogLevel.Info;
-                switch (traceLevel)
-                {
-                    case FluentFTP.FtpTraceLevel.Verbose:
-                        logLevel = LogLevel.Debug;
-                        break;
-                    case FluentFTP.FtpTraceLevel.Info:
-                        logLevel = LogLevel.Info;
-                        break;
-                    case FluentFTP.FtpTraceLevel.Warn:
-                        logLevel = LogLevel.Warn;
-                        break;
-                    case FluentFTP.FtpTraceLevel.Error:
-                        logLevel = LogLevel.Error;
-                        break;
-                    default:
-                        logLevel = LogLevel.Info;
-                        break;
-                }
-
-                this.logger.Log(logLevel, message);
-            };
-        };
+        globalConfiguration.ConfigurationChanged += () => this.settings = globalConfiguration.ConfigurationManager.Ftp;
 
         if (System.IO.Directory.Exists(tempFolder))
         {
@@ -57,20 +28,52 @@ public class FtpClient : IFtpClient
         }
     }
 
-    private async Task<bool> EnsureConnect(CancellationToken cancellationToken)
+    private FluentFTP.FtpClient CreateClient()
     {
-        return await this.ftpClient.AutoConnectAsync(cancellationToken) != null;
+        var client = new FluentFTP.FtpClient(this.settings.Host, this.settings.Port, this.settings.Username, this.settings.Password);
+        client.OnLogEvent += (traceLevel, message) =>
+        {
+            var logLevel = LogLevel.Info;
+            switch (traceLevel)
+            {
+                case FluentFTP.FtpTraceLevel.Verbose:
+                    logLevel = LogLevel.Debug;
+                    break;
+                case FluentFTP.FtpTraceLevel.Info:
+                    logLevel = LogLevel.Info;
+                    break;
+                case FluentFTP.FtpTraceLevel.Warn:
+                    logLevel = LogLevel.Warn;
+                    break;
+                case FluentFTP.FtpTraceLevel.Error:
+                    logLevel = LogLevel.Error;
+                    break;
+                default:
+                    logLevel = LogLevel.Info;
+                    break;
+            }
+
+            this.logger.Log(logLevel, message);
+        };
+
+        return client;
+    }
+
+    private async Task<bool> EnsureConnect(FluentFTP.FtpClient client, CancellationToken cancellationToken)
+    {
+        return await client.AutoConnectAsync(cancellationToken) != null;
     }
 
     public async Task<IEnumerable<string>> GetFilesAsync(Directory directory, CancellationToken cancellationToken)
     {
         this.logger.Info("Getting files for path: {value1}", directory.FullPath(Separator));
-        if (!await this.EnsureConnect(cancellationToken))
+        using var client = this.CreateClient();
+        if (!await this.EnsureConnect(client, cancellationToken))
         {
             this.logger.Warn("Could not ensure connection!");
             return Enumerable.Empty<string>();
         }
-        var items = await this.ftpClient.GetListingAsync(directory.FullPath(Separator), cancellationToken);
+        var items = await client.GetListingAsync(directory.FullPath(Separator), cancellationToken);
 
         return items.Select(x => x.Name);
     }
@@ -78,14 +81,15 @@ public class FtpClient : IFtpClient
     public async Task<Filesystem.File> GetFileAsync(Filesystem.File file, CancellationToken cancellationToken)
     {
         this.logger.Info("Downloading File: {value1}", file.FullPath(Separator));
-        if (!await this.EnsureConnect(cancellationToken))
+        using var client = this.CreateClient();
+        if (!await this.EnsureConnect(client, cancellationToken))
         {
             this.logger.Warn("Could not ensure connection!");
             return Filesystem.File.EmptyFile;
         }
 
         System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
-        var downloadResult = await this.ftpClient.DownloadFileAsync(
+        var downloadResult = await client.DownloadFileAsync(
             Path.Combine(this.tempFolder, file.Name),
             file.FullPath(Separator),
             token: cancellationToken);
@@ -115,7 +119,8 @@ public class FtpClient : IFtpClient
         try
         {
             this.logger.Info("Uploading file: {value1}", file.FullPath(Separator));
-            if (!await this.EnsureConnect(cancellationToken))
+            using var client = this.CreateClient();
+            if (!await this.EnsureConnect(client, cancellationToken))
             {
                 this.logger.Warn("Could not ensure connection!");
             }
@@ -136,7 +141,7 @@ public class FtpClient : IFtpClient
             var tempFile = new Filesystem.File(file.Name, file.Directory, getStream, onDispose);
             await file.CopyToAsync(tempFile, cancellationToken);
 
-            var uploadResult = await this.ftpClient.UploadFileAsync(Path.Combine(this.tempFolder, fileGuid), file.FullPath(Separator));
+            var uploadResult = await client.UploadFileAsync(Path.Combine(this.tempFolder, fileGuid), file.FullPath(Separator), createRemoteDir: true, token: cancellationToken);
 
             if (uploadResult == FluentFTP.FtpStatus.Failed)
             {
