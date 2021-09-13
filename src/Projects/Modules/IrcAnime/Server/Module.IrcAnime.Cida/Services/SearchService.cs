@@ -27,7 +27,6 @@ namespace Module.IrcAnime.Cida.Services
         public SearchService(ILogger logger)
         {
             this.logger = logger;
-            HttpClient.DefaultProxy = null;
             this.httpClient = new HttpClient();
         }
 
