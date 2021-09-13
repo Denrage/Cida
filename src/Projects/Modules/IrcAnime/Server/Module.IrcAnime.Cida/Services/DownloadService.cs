@@ -68,6 +68,11 @@ namespace Module.IrcAnime.Cida.Services
                         {
                             Task.Run(async () => await this.Download(connection, token), token);
                         }
+                        else
+                        {
+                            this.logger.Info($"Releasing IrcConnection for '{connection.Filename}'");
+                            Task.Run(async () => await this.ircConnection.Release(token));
+                        }
                     }
                 });
             });
@@ -110,7 +115,6 @@ namespace Module.IrcAnime.Cida.Services
             var batches = notDownloaded.GroupBy(x => x.BotName);
 
             this.logger.Info($"Acquire IrcConnection for '{downloadIdentifier}'");
-            var ircConnection = await this.ircConnection.Acquire(token);
 
             foreach (var item in batches)
             {
@@ -118,6 +122,7 @@ namespace Module.IrcAnime.Cida.Services
                 bool added = false;
                 foreach (var requestedDownload in item)
                 {
+                    await this.ircConnection.Acquire(token);
                     if (this.requestedDownloads.ContainsKey(requestedDownload.FileName))
                     {
                         this.logger.Info($"Already downloading '{requestedDownload.FileName}'");
@@ -134,12 +139,12 @@ namespace Module.IrcAnime.Cida.Services
                 if (added)
                 {
                     this.logger.Info("Sending DCC message to bot");
+                    var ircConnection = await this.ircConnection.Acquire(token);
                     await ircConnection.Send(IrcCommand.PrivMsg, ircMessage, token);
+                    await this.ircConnection.Release(token);
                 }
                 else
                 {
-                    this.logger.Info($"Releasing IrcConnection for '{downloadIdentifier}'");
-                    await this.ircConnection.Release(token);
                     return;
                 }
             }
