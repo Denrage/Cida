@@ -7,8 +7,6 @@ public class AnimeInfo
     
     public string Identifier { get; set; }
     
-    public int ScheduleId { get; set; }
-    
     public AnimeInfoType Type { get; set; }
     
     public List<Episode> Episodes { get; set; }
