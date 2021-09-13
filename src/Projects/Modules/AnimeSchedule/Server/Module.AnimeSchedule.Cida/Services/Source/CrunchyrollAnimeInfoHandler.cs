@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Globalization;
+using System.IO.Compression;
 using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Interfaces;
 using Module.AnimeSchedule.Cida.Models;
@@ -109,7 +110,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
                 var episodeNumber = 0.0;
                 if (!episode.EpisodeNumber.HasValue)
                 {
-                    if (double.TryParse(episode.Episode, out var parsedEpisodeNumber))
+                    if (double.TryParse(episode.Episode, NumberStyles.Float, CultureInfo.CreateSpecificCulture("en-us"), out var parsedEpisodeNumber))
                     {
                         episodeNumber = parsedEpisodeNumber;
                     }
