@@ -98,7 +98,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
         }
 
         var temp = new List<CrunchyrollEpisodeContext>();
-        foreach (var item in this.cache.Items.Where(x => info.Identifier.ToUpper().Contains(x.Title.ToUpper())))
+        foreach (var item in this.cache.Items.Where(x => x.Title.ToUpper().Contains(info.Identifier.ToUpper())))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var seasonId = await this.GetRelevantSeasonIdAsync(this.cache.Token, item.Id, this.cache.Cms, info.Identifier, cancellationToken);
@@ -233,7 +233,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
 
         if (result != null)
         {
-            return result.Items.Where(x => x.Title.ToUpper() == identifier.ToUpper()).OrderByDescending(x => x.SeasonNumber).First().Id;
+            return result.Items.Where(x => x.Title.ToUpper().Contains(identifier.ToUpper())).OrderByDescending(x => x.SeasonNumber).First().Id;
         }
 
         return string.Empty;

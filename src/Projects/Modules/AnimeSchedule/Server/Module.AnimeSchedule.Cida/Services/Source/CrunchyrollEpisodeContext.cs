@@ -23,7 +23,7 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
         var animeInfo = await this.anilistClient.GetMediaById((int)this.CrunchyrollEpisode.Episode.AnimeId);
         var embedBuilder = new Discord.EmbedBuilder();
         embedBuilder
-            .WithTitle($"Episode {this.CrunchyrollEpisode.Episode.EpisodeNumber}: {this.CrunchyrollEpisode.Episode.Name}")
+            .WithTitle($"Episode {this.CrunchyrollEpisode.Episode.EpisodeNumber}: {this.CrunchyrollEpisode.Title}")
             .WithAuthor($"{animeInfo.RomajiTitle}", iconUrl: "https://upload.wikimedia.org/wikipedia/commons/0/08/Crunchyroll_Logo.png")
             .WithColor(16711680)
             .WithFooter(this.CrunchyrollEpisode.ReleaseDate.ToString("r"))
