@@ -60,8 +60,36 @@ public class ScheduleViewModel : ModuleViewModel
                 ScheduleId = schedule.ScheduleId,
                 Interval = schedule.Interval.ToTimeSpan(),
                 StartDate = schedule.StartDate.ToDateTime().ToLocalTime(),
+                State = ConvertState(schedule.State),
             });
         }
+    }
+
+    public async Task StopSchedule(Schedule schedule)
+    {
+        await this.client.StopScheduleAsync(new StopScheduleRequest()
+        {
+            ScheduleId = schedule.ScheduleId,
+        });
+    }
+
+    public async Task RunSchedule(Schedule schedule)
+    {
+        await this.client.ForceRunScheduleAsync(new ForceRunScheduleRequest()
+        {
+            ScheduleId = schedule.ScheduleId,
+        });
+    }
+
+    private ScheduleState ConvertState(Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState state)
+    {
+        return state switch
+        {
+            Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Running => ScheduleState.Running,
+            Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Stopped => ScheduleState.Stopped,
+            Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Waiting => ScheduleState.Waiting,
+            _ => ScheduleState.Stopped,
+        };
     }
 
     private async Task<IEnumerable<AnimeInfo>> LoadAnimes(int scheduleId)
@@ -163,7 +191,16 @@ public class Schedule
 
     public DateTime StartDate { get; set; }
 
+    public ScheduleState State { get; set; }
+
     public List<AnimeInfo> Animes { get; set; }
+}
+
+public enum ScheduleState
+{
+    Running,
+    Waiting,
+    Stopped,
 }
 
 public class AnimeInfo

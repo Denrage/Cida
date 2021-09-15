@@ -55,38 +55,20 @@ namespace TestApplication
             //    ScheduleId = 1,
             //});
             //Console.WriteLine($"Result: {animeInfoAssignResult.AssignResult}");
-            var request = new DownloadRequest();
-            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
+
+            var schedules = client.GetSchedules(new Animeschedule.GetSchedulesRequest());
+
+            Console.WriteLine(string.Join(",", schedules.Schedules.Select(x => x.State)));
+
+            client.ForceRunSchedule(new Animeschedule.ForceRunScheduleRequest()
             {
-                BotName = "CR-HOLLAND|NEW",
-                FileName = "[SubsPlease] Seirei Gensouki - 01 (1080p) [EC64AE1A].mkv",
-                PackageNumber = 16776,
+                ScheduleId = 1,
             });
-            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
-            {
-                BotName = "CR-HOLLAND|NEW",
-                FileName = "[SubsPlease] Seirei Gensouki - 02 (1080p) [487207A9].mkv",
-                PackageNumber = 16907,
-            });
-            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
-            {
-                BotName = "CR-HOLLAND|NEW",
-                FileName = "[SubsPlease] Seirei Gensouki - 03 (1080p) [B897760D].mkv",
-                PackageNumber = 17046,
-            });
-            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
-            {
-                BotName = "CR-HOLLAND|NEW",
-                FileName = "[SubsPlease] Seirei Gensouki - 04 (1080p) [A27AA2EF].mkv",
-                PackageNumber = 17177,
-            });
-            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
-            {
-                BotName = "CR-HOLLAND|NEW",
-                FileName = "[SubsPlease] Seirei Gensouki - 05 (1080p) [6ABAB137].mkv",
-                PackageNumber = 17337,
-            });
-            var result = ircAnimeClient.Download(request);
+
+            schedules = client.GetSchedules(new Animeschedule.GetSchedulesRequest());
+
+            Console.WriteLine(string.Join(",", schedules.Schedules.Select(x => x.State)));
+
 
             Console.WriteLine("Done");
             Console.ReadLine();
