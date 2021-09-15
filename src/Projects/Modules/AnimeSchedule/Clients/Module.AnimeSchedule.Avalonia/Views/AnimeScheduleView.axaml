@@ -8,6 +8,7 @@
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="*"/>
+        <RowDefinition Height="20"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Visible">
@@ -28,7 +29,8 @@
           </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>
       </ScrollViewer>
-      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible">
+      <Border Grid.Row="1" Background="LightGray" BorderThickness="3" BorderBrush="Black"/>
+      <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible">
         <ItemsRepeater Items="{Binding NotInScheduleAnime}">
           <ItemsRepeater.ItemTemplate>
             <DataTemplate>

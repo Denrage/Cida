@@ -8,8 +8,8 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="Cida.Client.Avalonia">
     <Design.DataContext>
-    <vm:MainWindowViewModel/>
-  </Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
     <ContentControl Grid.Column="1" Content="{Binding Content}"/>
 
 

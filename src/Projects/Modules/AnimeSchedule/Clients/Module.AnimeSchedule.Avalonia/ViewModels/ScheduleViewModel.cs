@@ -58,6 +58,8 @@ public class ScheduleViewModel : ModuleViewModel
             {
                 Name = schedule.Name,
                 ScheduleId = schedule.ScheduleId,
+                Interval = schedule.Interval.ToTimeSpan(),
+                StartDate = schedule.StartDate.ToDateTime().ToLocalTime(),
             });
         }
     }
@@ -156,6 +158,10 @@ public class Schedule
     public string Name { get; set; }
 
     public int ScheduleId { get; set; }
+
+    public TimeSpan Interval { get; set; }
+
+    public DateTime StartDate { get; set; }
 
     public List<AnimeInfo> Animes { get; set; }
 }
