@@ -210,7 +210,7 @@ message StartScheduleRequest {
 message StartScheduleResponse {
         enum Result {
         SUCCESS = 0;
-        NOTEXISTS = 1;
+        NOTEXISTSORRUNNING = 1;
         UNKNOWN = 2;
     }
     Result StartResult = 1;

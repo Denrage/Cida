@@ -81,6 +81,14 @@ public class ScheduleViewModel : ModuleViewModel
         });
     }
 
+    public async Task StartSchedule(Schedule schedule)
+    {
+        await this.client.StartScheduleAsync(new StartScheduleRequest()
+        {
+            ScheduleId = schedule.ScheduleId,
+        });
+    }
+
     private ScheduleState ConvertState(Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState state)
     {
         return state switch

@@ -568,7 +568,7 @@ public class Module : IModule
 
         public override async Task<StartScheduleResponse> StartSchedule(StartScheduleRequest request, ServerCallContext context)
         {
-            this.logger.Info($"Stopped schedule: {request.ScheduleId}");
+            this.logger.Info($"Start schedule: {request.ScheduleId}");
             try
             {
 
@@ -576,7 +576,7 @@ public class Module : IModule
 
                 return new StartScheduleResponse()
                 {
-                    StartResult = result ? StartScheduleResponse.Types.Result.Success : StartScheduleResponse.Types.Result.Notexists,
+                    StartResult = result ? StartScheduleResponse.Types.Result.Success : StartScheduleResponse.Types.Result.Notexistsorrunning,
                 };
 
             }
