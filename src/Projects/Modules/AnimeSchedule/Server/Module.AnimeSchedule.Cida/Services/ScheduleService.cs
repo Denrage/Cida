@@ -51,6 +51,11 @@ public class ScheduleService
     {
         if (this.schedules.TryGetValue(scheduleId, out var existingSchedule))
         {
+            if (existingSchedule.ScheduleTask.Status == TaskStatus.Running)
+            {
+                return false;
+            }
+
             existingSchedule.CancellationTokenSource = new CancellationTokenSource();
             existingSchedule.ForceRunTokenSource = new CancellationTokenSource();
             existingSchedule.State = ScheduleState.Running;
@@ -116,67 +121,74 @@ public class ScheduleService
 
     private async Task Schedule(ScheduleContext scheduleContext)
     {
-        var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(scheduleContext.CancellationTokenSource.Token, scheduleContext.ForceRunTokenSource.Token);
-        while (true)
+        try
         {
-            var context = this.getContext();
-            var schedule = await context.Schedules.Include(x => x.Animes).FirstOrDefaultAsync(x => x.Id == scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
-            context.Dispose();
-
-            scheduleContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
-
-            if (DateTime.Now > schedule.StartDate)
+            var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(scheduleContext.CancellationTokenSource.Token, scheduleContext.ForceRunTokenSource.Token);
+            while (true)
             {
-                scheduleContext.State = ScheduleState.Running;
-                this.logger.Info($"Run Schedule '{schedule.Name}'");
+                var context = this.getContext();
+                var schedule = await context.Schedules.Include(x => x.Animes).FirstOrDefaultAsync(x => x.Id == scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
+                context.Dispose();
 
-                await this.scheduleSemaphore.WaitAsync(scheduleContext.CancellationTokenSource.Token);
-                try
+                scheduleContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                if (DateTime.Now > schedule.StartDate)
                 {
+                    scheduleContext.State = ScheduleState.Running;
+                    this.logger.Info($"Run Schedule '{schedule.Name}'");
 
-                    foreach (var item in schedule.Animes)
+                    await this.scheduleSemaphore.WaitAsync(scheduleContext.CancellationTokenSource.Token);
+                    try
                     {
-                        var handler = this.GetHandler(item);
-                        this.logger.Info($"Checking for new episodes for '{item.Identifier}'");
-                        var newEpisodes = await handler.GetNewEpisodes(item, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
 
-                        foreach (var episode in newEpisodes)
+                        foreach (var item in schedule.Animes)
                         {
-                            foreach (var actionService in this.actionServices)
+                            var handler = this.GetHandler(item);
+                            this.logger.Info($"Checking for new episodes for '{item.Identifier}'");
+                            var newEpisodes = await handler.GetNewEpisodes(item, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
+
+                            foreach (var episode in newEpisodes)
                             {
-                                await actionService.Execute(episode, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
+                                foreach (var actionService in this.actionServices)
+                                {
+                                    await actionService.Execute(episode, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
+                                }
+                            }
+
+                            foreach (var multiActionService in this.multiActionServices)
+                            {
+                                await multiActionService.Execute(newEpisodes, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
                             }
                         }
-
-                        foreach (var multiActionService in this.multiActionServices)
-                        {
-                            await multiActionService.Execute(newEpisodes, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
-                        }
+                    }
+                    finally
+                    {
+                        this.scheduleSemaphore.Release();
                     }
                 }
-                finally
-                {
-                    this.scheduleSemaphore.Release();
-                }
-            }
 
-            scheduleContext.State = ScheduleState.Waiting;
-            try
-            {
-                await Task.Delay(schedule.Interval, combinedCancellationToken.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                if (scheduleContext.CancellationTokenSource.IsCancellationRequested)
+                scheduleContext.State = ScheduleState.Waiting;
+                try
                 {
-                    throw;
+                    await Task.Delay(schedule.Interval, combinedCancellationToken.Token);
                 }
-                else
+                catch (OperationCanceledException)
                 {
-                    scheduleContext.ForceRunTokenSource = new CancellationTokenSource();
-                    combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(scheduleContext.CancellationTokenSource.Token, scheduleContext.ForceRunTokenSource.Token);
+                    if (scheduleContext.CancellationTokenSource.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        scheduleContext.ForceRunTokenSource = new CancellationTokenSource();
+                        combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(scheduleContext.CancellationTokenSource.Token, scheduleContext.ForceRunTokenSource.Token);
+                    }
                 }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore this bc, ScheduleTasks are cancelable.
         }
     }
 
