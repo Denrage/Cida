@@ -16,6 +16,7 @@ namespace TestApplication
         {
             var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
             var client = new Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient(channel);
+            var ircAnimeClient = new Ircanime.IrcAnimeService.IrcAnimeServiceClient(channel);
             //var scheduleResult = client.CreateSchedule(new Animeschedule.CreateScheduleRequest()
             //{
             //    Interval = Duration.FromTimeSpan(TimeSpan.FromMinutes(10)),
@@ -38,22 +39,54 @@ namespace TestApplication
             //});
             //Console.WriteLine($"Result: {webhookAssignResult.AssignResult}");
 
-            var animeInfoResult = client.CreateAnime(new Animeschedule.CreateAnimeRequest()
-            {
-                Id = 126546,
-                Identifier = "Seirei Gensouki",
-                Type = Animeschedule.CreateAnimeRequest.Types.AnimeInfoType.Nibl,
-                Filter = "1080",
-                Folder = "Seirei Gensouki",
-            });
-            Console.WriteLine($"Result: {animeInfoResult.CreateResult}");
+            //var animeInfoResult = client.CreateAnime(new Animeschedule.CreateAnimeRequest()
+            //{
+            //    Id = 126546,
+            //    Identifier = "Seirei Gensouki",
+            //    Type = Animeschedule.CreateAnimeRequest.Types.AnimeInfoType.Nibl,
+            //    Filter = "1080",
+            //    Folder = "Seirei Gensouki",
+            //});
+            //Console.WriteLine($"Result: {animeInfoResult.CreateResult}");
 
-            var animeInfoAssignResult = client.AssignAnimeInfoToSchedule(new Animeschedule.AssignAnimeInfoToScheduleRequest()
+            //var animeInfoAssignResult = client.AssignAnimeInfoToSchedule(new Animeschedule.AssignAnimeInfoToScheduleRequest()
+            //{
+            //    AnimeId = 126546,
+            //    ScheduleId = 1,
+            //});
+            //Console.WriteLine($"Result: {animeInfoAssignResult.AssignResult}");
+            var request = new DownloadRequest();
+            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
             {
-                AnimeId = 126546,
-                ScheduleId = 1,
+                BotName = "CR-HOLLAND|NEW",
+                FileName = "[SubsPlease] Seirei Gensouki - 01 (1080p) [EC64AE1A].mkv",
+                PackageNumber = 16776,
             });
-            Console.WriteLine($"Result: {animeInfoAssignResult.AssignResult}");
+            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
+            {
+                BotName = "CR-HOLLAND|NEW",
+                FileName = "[SubsPlease] Seirei Gensouki - 02 (1080p) [487207A9].mkv",
+                PackageNumber = 16907,
+            });
+            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
+            {
+                BotName = "CR-HOLLAND|NEW",
+                FileName = "[SubsPlease] Seirei Gensouki - 03 (1080p) [B897760D].mkv",
+                PackageNumber = 17046,
+            });
+            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
+            {
+                BotName = "CR-HOLLAND|NEW",
+                FileName = "[SubsPlease] Seirei Gensouki - 04 (1080p) [A27AA2EF].mkv",
+                PackageNumber = 17177,
+            });
+            request.DownloadRequest_.Add(new DownloadRequest.Types.Request()
+            {
+                BotName = "CR-HOLLAND|NEW",
+                FileName = "[SubsPlease] Seirei Gensouki - 05 (1080p) [6ABAB137].mkv",
+                PackageNumber = 17337,
+            });
+            var result = ircAnimeClient.Download(request);
 
             Console.WriteLine("Done");
             Console.ReadLine();

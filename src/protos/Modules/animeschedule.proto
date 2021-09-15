@@ -12,6 +12,7 @@ service AnimeScheduleService {
     rpc AssignWebhookToSchedule (AssignWebhookToScheduleRequest) returns (AssignWebhookToScheduleResponse);
     rpc CreateAnime (CreateAnimeRequest) returns (CreateAnimeResponse);
     rpc AssignAnimeInfoToSchedule (AssignAnimeInfoToScheduleRequest) returns (AssignAnimeInfoToScheduleResponse);
+    rpc UnassignAnimeInfoToSchedule (UnassignAnimeInfoToScheduleRequest) returns (UnassignAnimeInfoToScheduleResponse);
     rpc GetSchedules (GetSchedulesRequest) returns (GetSchedulesResponse);
     rpc GetAnimesBySchedule (GetAnimesByScheduleRequest) returns (GetAnimesByScheduleResponse);
     rpc GetAnimes (GetAnimesRequest) returns (GetAnimesResponse);
@@ -104,6 +105,20 @@ message AssignAnimeInfoToScheduleResponse {
         ANIMEINFONOTFOUND = 2;
         SCHEDULENOTFOUND = 3;
         UNKNOWN = 4;
+    }
+    Result AssignResult = 1;
+}
+
+message UnassignAnimeInfoToScheduleRequest {
+    int32 AnimeId = 1;
+    int32 ScheduleId = 2;
+}
+
+message UnassignAnimeInfoToScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
     }
     Result AssignResult = 1;
 }

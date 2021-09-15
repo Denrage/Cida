@@ -31,6 +31,14 @@
     <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\AnimeScheduleView.axaml.cs">
+      <DependentUpon>AnimeScheduleView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\ScheduleView.axaml.cs">
+      <DependentUpon>ScheduleView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <None Update="PackagesInfo.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

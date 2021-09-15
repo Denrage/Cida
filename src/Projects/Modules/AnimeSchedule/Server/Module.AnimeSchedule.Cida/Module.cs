@@ -392,6 +392,50 @@ public class Module : IModule
             }
         }
 
+        public override async Task<UnassignAnimeInfoToScheduleResponse> UnassignAnimeInfoToSchedule(UnassignAnimeInfoToScheduleRequest request, ServerCallContext context)
+        {
+            try
+            {
+                using var dbContext = this.getContext();
+                var schedule = await dbContext.Schedules.Include(x => x.Animes).FirstOrDefaultAsync(x => x.Id == request.ScheduleId, context.CancellationToken);
+                if (schedule == null)
+                {
+                    return new UnassignAnimeInfoToScheduleResponse()
+                    {
+                        AssignResult = UnassignAnimeInfoToScheduleResponse.Types.Result.Notexists,
+                    };
+                }
+
+                var anime = schedule.Animes.FirstOrDefault(x => x.Id == request.AnimeId);
+
+                if (anime == null)
+                {
+                    return new UnassignAnimeInfoToScheduleResponse()
+                    {
+                        AssignResult = UnassignAnimeInfoToScheduleResponse.Types.Result.Notexists,
+                    };
+                }
+
+                dbContext.Update(schedule);
+                schedule.Animes.Remove(anime);
+
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                return new UnassignAnimeInfoToScheduleResponse()
+                {
+                    AssignResult = UnassignAnimeInfoToScheduleResponse.Types.Result.Success,
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return new UnassignAnimeInfoToScheduleResponse()
+                {
+                    AssignResult = UnassignAnimeInfoToScheduleResponse.Types.Result.Unknown,
+                };
+            }
+        }
+
         public override async Task<GetSchedulesResponse> GetSchedules(GetSchedulesRequest request, ServerCallContext context)
         {
             using var dbContext = this.getContext();

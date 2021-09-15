@@ -4,13 +4,48 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.AnimeSchedule.Avalonia.Views.AnimeScheduleView">
-  <ItemsRepeater Items="{Binding Schedules}">
-    <ItemsRepeater.ItemTemplate>
-      <DataTemplate>
-        <StackPanel>
-          <TextBlock Text="{Binding Path=Name}"></TextBlock>
-        </StackPanel>
-      </DataTemplate>
-    </ItemsRepeater.ItemTemplate>
-  </ItemsRepeater>
+  <Grid>
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Visible">
+        <ItemsRepeater Items="{Binding ScheduleAnimes}">
+          <ItemsRepeater.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.9*" />
+                    <ColumnDefinition Width="0.1*" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="{Binding Identifier}"/>
+                  <Button VerticalAlignment="Center" Grid.Column="1" Content="-" Command="{Binding $parent[UserControl].DataContext.UnassignAnime}" CommandParameter="{Binding .}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+      </ScrollViewer>
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible">
+        <ItemsRepeater Items="{Binding NotInScheduleAnime}">
+          <ItemsRepeater.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.9*" />
+                    <ColumnDefinition Width="0.1*" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="{Binding Identifier}"/>
+                  <Button VerticalAlignment="Center" Grid.Column="1" Content="+" CommandParameter="{Binding .}" Command="{Binding $parent[UserControl].DataContext.AssignAnime}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
 </UserControl>
