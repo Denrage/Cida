@@ -51,7 +51,7 @@ public class Module : IModule
                 new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient, this.GetContext),
             }, this.GetContext, moduleLogger, moduleLogger.CreateSubLogger("Schedule-Service"));
 
-        this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), this.GetContext)), };
+        this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), this.GetContext, scheduleService)), };
 
         // HACK: Add a after loaded all modules method to execute this without a delay
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -69,12 +69,14 @@ public class Module : IModule
     {
         private readonly ILogger logger;
         private readonly Func<AnimeScheduleDbContext> getContext;
+        private readonly ScheduleService scheduleService;
         private readonly Anilist4Net.Client anilistClient = new();
 
-        public ScheduleAnimeImplementation(ILogger logger, Func<AnimeScheduleDbContext> getContext)
+        public ScheduleAnimeImplementation(ILogger logger, Func<AnimeScheduleDbContext> getContext, ScheduleService scheduleService)
         {
             this.logger = logger;
             this.getContext = getContext;
+            this.scheduleService = scheduleService;
         }
 
         public override async Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
@@ -84,6 +86,7 @@ public class Module : IModule
 
         public override async Task<CreateScheduleResponse> CreateSchedule(CreateScheduleRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Create/Edit schedule: {request.Name} - {request.Interval} - {request.StartDate} - {request.Override}");
             try
             {
                 using var dbContext = this.getContext();
@@ -154,6 +157,7 @@ public class Module : IModule
 
         public override async Task<CreateWebhookResponse> CreateDiscordWebhook(CreateDiscordWebhookRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Create webhook: {request.WebhookId} - {request.WebhookToken}");
             try
             {
                 using var dbContext = this.getContext();
@@ -191,6 +195,7 @@ public class Module : IModule
 
         public override async Task<AssignWebhookToScheduleResponse> AssignWebhookToSchedule(AssignWebhookToScheduleRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Assign webhook: {request.WebhookId} - {request.ScheduleId}");
             try
             {
                 using var dbContext = this.getContext();
@@ -243,6 +248,7 @@ public class Module : IModule
 
         public override async Task<CreateAnimeResponse> CreateAnime(CreateAnimeRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Create/Edit anime: {request.Id} - {request.Identifier} - {request.Type} - {request.Filter} - {request.Folder} - {request.Override}");
             using var dbContext = this.getContext();
 
             try
@@ -342,6 +348,8 @@ public class Module : IModule
 
         public override async Task<AssignAnimeInfoToScheduleResponse> AssignAnimeInfoToSchedule(AssignAnimeInfoToScheduleRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Assign anime: {request.ScheduleId} - {request.AnimeId}");
+
             try
             {
                 using var dbContext = this.getContext();
@@ -394,6 +402,8 @@ public class Module : IModule
 
         public override async Task<UnassignAnimeInfoToScheduleResponse> UnassignAnimeInfoToSchedule(UnassignAnimeInfoToScheduleRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Unassign anime: {request.ScheduleId} - {request.AnimeId}");
+
             try
             {
                 using var dbContext = this.getContext();
@@ -438,6 +448,7 @@ public class Module : IModule
 
         public override async Task<GetSchedulesResponse> GetSchedules(GetSchedulesRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Get Schedules");
             using var dbContext = this.getContext();
             var schedules = await dbContext.Schedules.AsQueryable().ToArrayAsync(context.CancellationToken);
             var response = new GetSchedulesResponse();
@@ -454,6 +465,8 @@ public class Module : IModule
 
         public override async Task<GetAnimesByScheduleResponse> GetAnimesBySchedule(GetAnimesByScheduleRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Get Animes by Schedule: {request.ScheduleId}");
+
             using var dbContext = this.getContext();
             var animeInfos = await dbContext.AnimeInfos
                 .Include(x => x.Schedules)
@@ -477,6 +490,8 @@ public class Module : IModule
 
         public override async Task<GetAnimesResponse> GetAnimes(GetAnimesRequest request, ServerCallContext context)
         {
+            this.logger.Info($"Get animes");
+
             using var dbContext = this.getContext();
             var animeInfos = await dbContext.AnimeInfos
                 .Include(x => x.AnimeFilter)
@@ -494,6 +509,78 @@ public class Module : IModule
             }));
 
             return response;
+        }
+
+        public override Task<ForceRunScheduleResponse> ForceRunSchedule(ForceRunScheduleRequest request, ServerCallContext context)
+        {
+            this.logger.Info($"Force start schedule: {request.ScheduleId}");
+            try
+            {
+
+                var result = this.scheduleService.ForceRunSchedule(request.ScheduleId);
+
+                return Task.FromResult(new ForceRunScheduleResponse()
+                {
+                    ForceRunResult = result ? ForceRunScheduleResponse.Types.Result.Success : ForceRunScheduleResponse.Types.Result.Notexists,
+                });
+
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return Task.FromResult(new ForceRunScheduleResponse()
+                {
+                    ForceRunResult = ForceRunScheduleResponse.Types.Result.Unknown,
+                });
+            }
+        }
+
+        public override Task<StopScheduleResponse> StopSchedule(StopScheduleRequest request, ServerCallContext context)
+        {
+            this.logger.Info($"Stopped schedule: {request.ScheduleId}");
+            try
+            {
+
+                var result = this.scheduleService.StopSchedule(request.ScheduleId);
+
+                return Task.FromResult(new StopScheduleResponse()
+                {
+                    StopResult = result ? StopScheduleResponse.Types.Result.Success : StopScheduleResponse.Types.Result.Notexists,
+                });
+
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return Task.FromResult(new StopScheduleResponse()
+                {
+                    StopResult = StopScheduleResponse.Types.Result.Unknown,
+                });
+            }
+        }
+
+        public override async Task<StartScheduleResponse> StartSchedule(StartScheduleRequest request, ServerCallContext context)
+        {
+            this.logger.Info($"Stopped schedule: {request.ScheduleId}");
+            try
+            {
+
+                var result = await this.scheduleService.StartSchedule(request.ScheduleId);
+
+                return new StartScheduleResponse()
+                {
+                    StartResult = result ? StartScheduleResponse.Types.Result.Success : StartScheduleResponse.Types.Result.Notexists,
+                };
+
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return new StartScheduleResponse()
+                {
+                    StartResult = StartScheduleResponse.Types.Result.Unknown,
+                };
+            }
         }
 
         private static bool ValidForFolder(Animeschedule.AnimeInfoType type)

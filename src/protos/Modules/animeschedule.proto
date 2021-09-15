@@ -16,6 +16,9 @@ service AnimeScheduleService {
     rpc GetSchedules (GetSchedulesRequest) returns (GetSchedulesResponse);
     rpc GetAnimesBySchedule (GetAnimesByScheduleRequest) returns (GetAnimesByScheduleResponse);
     rpc GetAnimes (GetAnimesRequest) returns (GetAnimesResponse);
+    rpc StopSchedule (StopScheduleRequest) returns (StopScheduleResponse);
+    rpc ForceRunSchedule (ForceRunScheduleRequest) returns (ForceRunScheduleResponse);
+    rpc StartSchedule (StartScheduleRequest) returns (StartScheduleResponse);
 }
 
 enum AnimeInfoType {
@@ -168,7 +171,44 @@ message GetAnimesResponse {
     repeated AnimeItem Animes = 1;
 }
 
+message StopScheduleRequest {
+    int32 ScheduleId = 1;
+}
 
+message StopScheduleResponse {
+        enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
+    }
+    Result StopResult = 1;
+}
+
+message ForceRunScheduleRequest {
+    int32 ScheduleId = 1;
+}
+
+message ForceRunScheduleResponse {
+        enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
+    }
+    Result ForceRunResult = 1;
+}
+
+message StartScheduleRequest {
+    int32 ScheduleId = 1;
+}
+
+message StartScheduleResponse {
+        enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
+    }
+    Result StartResult = 1;
+}
 
 
 message VersionRequest {

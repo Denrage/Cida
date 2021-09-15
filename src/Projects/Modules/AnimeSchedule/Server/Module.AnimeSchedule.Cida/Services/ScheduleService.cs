@@ -15,7 +15,8 @@ public class ScheduleService
     private readonly Dictionary<AnimeInfoType, AnimeInfoHandlerBase> handlers;
     private readonly List<IActionService> actionServices;
     private readonly List<IMultiActionService> multiActionServices;
-    private readonly List<(int scheduleId, Task task)> schedules = new();
+    private readonly Dictionary<int, ScheduleContext> schedules = new();
+    //private readonly List<(int scheduleId, Task task)> schedules = new();
     private readonly SemaphoreSlim scheduleSemaphore = new(1);
 
     //public IReadOnlyList<Schedule> Schedules => this.schedules.Select(x => x.schedule).ToList().AsReadOnly();
@@ -42,11 +43,11 @@ public class ScheduleService
         var schedules = await AsyncEnumerable.Select(context.Schedules, x => x.Id).ToArrayAsync(cancellationToken);
         foreach (var schedule in schedules)
         {
-            this.StartSchedule(schedule);
+            await this.StartSchedule(schedule);
         }
     }
 
-    public async void StartSchedule(int scheduleId)
+    public async Task<bool> StartSchedule(int scheduleId)
     {
         using var context = this.getContext();
 
@@ -55,21 +56,47 @@ public class ScheduleService
             var scheduleContext = new ScheduleContext()
             {
                 CancellationTokenSource = new CancellationTokenSource(),
+                ForceRunTokenSource = new CancellationTokenSource(),
                 ScheduleId = scheduleId,
             };
             var scheduleTask = new Task(async () => await this.Schedule(scheduleContext), scheduleContext.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
             scheduleTask.Start();
-            this.schedules.Add((scheduleId, scheduleTask));
+            scheduleContext.ScheduleTask = scheduleTask;
+            this.schedules.Add(scheduleId, scheduleContext);
+            return true;
         }
         else
         {
             this.logger.Warn($"Schedule with id '{scheduleId}' not found! This schedule will be ignored and wont be started!");
+            return false;
         }
 
     }
 
+    public bool StopSchedule(int scheduleId)
+    {
+        if (this.schedules.TryGetValue(scheduleId, out var scheduleContext))
+        {
+            scheduleContext.CancellationTokenSource.Cancel();
+            return true;
+        }
+        return false;
+    }
+
+    public bool ForceRunSchedule(int scheduleId)
+    {
+        if (this.schedules.TryGetValue(scheduleId, out var scheduleContext))
+        {
+            scheduleContext.ForceRunTokenSource.Cancel();
+            return true;
+        }
+
+        return false;
+    }
+
     private async Task Schedule(ScheduleContext scheduleContext)
     {
+        var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(scheduleContext.CancellationTokenSource.Token, scheduleContext.ForceRunTokenSource.Token);
         while (true)
         {
             var context = this.getContext();
@@ -82,7 +109,7 @@ public class ScheduleService
             {
                 this.logger.Info($"Run Schedule '{schedule.Name}'");
 
-                await this.scheduleSemaphore.WaitAsync();
+                await this.scheduleSemaphore.WaitAsync(scheduleContext.CancellationTokenSource.Token);
                 try
                 {
 
@@ -112,7 +139,7 @@ public class ScheduleService
                 }
             }
 
-            await Task.Delay(schedule.Interval);
+            await Task.Delay(schedule.Interval, combinedCancellationToken.Token);
         }
     }
 
