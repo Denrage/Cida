@@ -24,5 +24,16 @@ namespace Module.AnimeSchedule.Cida.Extensions
                 _ => AnimeS.AnimeInfoType.Crunchyroll,
             };
         }
+
+        public static AnimeS.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState ToGrpc(this ScheduleState data)
+        {
+            return data switch
+            {
+                ScheduleState.Running => AnimeS.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Running,
+                ScheduleState.Waiting => AnimeS.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Waiting,
+                ScheduleState.Stopped => AnimeS.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Stopped,
+                _ => AnimeS.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Stopped,
+            };
+        }
     }
 }

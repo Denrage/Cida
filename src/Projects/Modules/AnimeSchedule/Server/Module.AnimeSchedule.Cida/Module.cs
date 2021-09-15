@@ -452,12 +452,19 @@ public class Module : IModule
             using var dbContext = this.getContext();
             var schedules = await dbContext.Schedules.AsQueryable().ToArrayAsync(context.CancellationToken);
             var response = new GetSchedulesResponse();
-            response.Schedules.AddRange(schedules.Select(x => new GetSchedulesResponse.Types.ScheduleItem()
+
+            response.Schedules.AddRange(schedules.Select(x =>
             {
-                Name = x.Name,
-                Interval = x.Interval.ToDuration(),
-                StartDate = x.StartDate.ToUniversalTime().ToTimestamp(),
-                ScheduleId = x.Id,
+                var state = this.scheduleService.GetScheduleState(x.Id) ?? ScheduleState.Stopped;
+
+                return new GetSchedulesResponse.Types.ScheduleItem()
+                {
+                    Name = x.Name,
+                    Interval = x.Interval.ToDuration(),
+                    StartDate = x.StartDate.ToUniversalTime().ToTimestamp(),
+                    ScheduleId = x.Id,
+                    State = state.ToGrpc(),
+                };
             }));
 
             return response;

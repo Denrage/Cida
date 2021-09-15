@@ -1,4 +1,6 @@
-﻿namespace Module.AnimeSchedule.Cida.Services;
+﻿using Module.AnimeSchedule.Cida.Models;
+
+namespace Module.AnimeSchedule.Cida.Services;
 
 public class ScheduleContext
 {
@@ -9,4 +11,6 @@ public class ScheduleContext
     public CancellationTokenSource ForceRunTokenSource { get; set; }
 
     public Task ScheduleTask {  get; set; }
+
+    public ScheduleState State { get; set; }
 }

@@ -49,15 +49,27 @@ public class ScheduleService
 
     public async Task<bool> StartSchedule(int scheduleId)
     {
+        if (this.schedules.TryGetValue(scheduleId, out var existingSchedule))
+        {
+            existingSchedule.CancellationTokenSource = new CancellationTokenSource();
+            existingSchedule.ForceRunTokenSource = new CancellationTokenSource();
+            existingSchedule.State = ScheduleState.Running;
+            var scheduleTask = new Task(async () => await this.Schedule(existingSchedule), existingSchedule.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+            scheduleTask.Start();
+            existingSchedule.ScheduleTask = scheduleTask;
+            return true;
+        }
+
         using var context = this.getContext();
 
-        if (await EntityFrameworkQueryableExtensions.AnyAsync(context.Schedules, x => x.Id == scheduleId))
+        if (await context.Schedules.AsQueryable().AnyAsync(x => x.Id == scheduleId))
         {
             var scheduleContext = new ScheduleContext()
             {
                 CancellationTokenSource = new CancellationTokenSource(),
                 ForceRunTokenSource = new CancellationTokenSource(),
                 ScheduleId = scheduleId,
+                State = ScheduleState.Running,
             };
             var scheduleTask = new Task(async () => await this.Schedule(scheduleContext), scheduleContext.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
             scheduleTask.Start();
@@ -65,12 +77,9 @@ public class ScheduleService
             this.schedules.Add(scheduleId, scheduleContext);
             return true;
         }
-        else
-        {
-            this.logger.Warn($"Schedule with id '{scheduleId}' not found! This schedule will be ignored and wont be started!");
-            return false;
-        }
 
+        this.logger.Warn($"Schedule with id '{scheduleId}' not found! This schedule will be ignored and wont be started!");
+        return false;
     }
 
     public bool StopSchedule(int scheduleId)
@@ -78,6 +87,7 @@ public class ScheduleService
         if (this.schedules.TryGetValue(scheduleId, out var scheduleContext))
         {
             scheduleContext.CancellationTokenSource.Cancel();
+            scheduleContext.State = ScheduleState.Stopped;
             return true;
         }
         return false;
@@ -94,6 +104,16 @@ public class ScheduleService
         return false;
     }
 
+    public ScheduleState? GetScheduleState(int scheduleId)
+    {
+        if (this.schedules.TryGetValue(scheduleId, out var scheduleContext))
+        {
+            return scheduleContext.State;
+        }
+
+        return null;
+    }
+
     private async Task Schedule(ScheduleContext scheduleContext)
     {
         var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(scheduleContext.CancellationTokenSource.Token, scheduleContext.ForceRunTokenSource.Token);
@@ -107,6 +127,7 @@ public class ScheduleService
 
             if (DateTime.Now > schedule.StartDate)
             {
+                scheduleContext.State = ScheduleState.Running;
                 this.logger.Info($"Run Schedule '{schedule.Name}'");
 
                 await this.scheduleSemaphore.WaitAsync(scheduleContext.CancellationTokenSource.Token);
@@ -139,7 +160,23 @@ public class ScheduleService
                 }
             }
 
-            await Task.Delay(schedule.Interval, combinedCancellationToken.Token);
+            scheduleContext.State = ScheduleState.Waiting;
+            try
+            {
+                await Task.Delay(schedule.Interval, combinedCancellationToken.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                if (scheduleContext.CancellationTokenSource.IsCancellationRequested)
+                {
+                    throw;
+                }
+                else
+                {
+                    scheduleContext.ForceRunTokenSource = new CancellationTokenSource();
+                    combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(scheduleContext.CancellationTokenSource.Token, scheduleContext.ForceRunTokenSource.Token);
+                }
+            }
         }
     }
 

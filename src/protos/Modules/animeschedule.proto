@@ -131,10 +131,16 @@ message GetSchedulesRequest {
 
 message GetSchedulesResponse {
     message ScheduleItem {
+        enum ScheduleState {
+            Running = 0;
+            Stopped = 1;
+            Waiting = 2;
+        }
         int32 ScheduleId = 1;
         string Name = 2;
         google.protobuf.Timestamp StartDate = 3;
         google.protobuf.Duration Interval = 4;
+        ScheduleState State = 5;
     }
 
     repeated ScheduleItem Schedules = 1;
