@@ -49,6 +49,17 @@ public class ScheduleService
 
     public async Task<bool> StartSchedule(int scheduleId)
     {
+        ScheduleContext initializeContext(ScheduleContext context)
+        {
+            context.ScheduleId = scheduleId;
+            context.CancellationTokenSource = new CancellationTokenSource();
+            context.ForceRunTokenSource = new CancellationTokenSource();
+            context.State = ScheduleState.Running;
+            var scheduleTask = new Task(() => this.Schedule(context).Wait(), context.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+            scheduleTask.Start();
+            context.ScheduleTask = scheduleTask;
+            return context;
+        }
         if (this.schedules.TryGetValue(scheduleId, out var existingSchedule))
         {
             if (existingSchedule.ScheduleTask.Status == TaskStatus.Running)
@@ -56,12 +67,8 @@ public class ScheduleService
                 return false;
             }
 
-            existingSchedule.CancellationTokenSource = new CancellationTokenSource();
-            existingSchedule.ForceRunTokenSource = new CancellationTokenSource();
-            existingSchedule.State = ScheduleState.Running;
-            var scheduleTask = new Task(async () => await this.Schedule(existingSchedule), existingSchedule.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
-            scheduleTask.Start();
-            existingSchedule.ScheduleTask = scheduleTask;
+            initializeContext(existingSchedule);
+
             return true;
         }
 
@@ -69,17 +76,7 @@ public class ScheduleService
 
         if (await context.Schedules.AsQueryable().AnyAsync(x => x.Id == scheduleId))
         {
-            var scheduleContext = new ScheduleContext()
-            {
-                CancellationTokenSource = new CancellationTokenSource(),
-                ForceRunTokenSource = new CancellationTokenSource(),
-                ScheduleId = scheduleId,
-                State = ScheduleState.Running,
-            };
-            var scheduleTask = new Task(async () => await this.Schedule(scheduleContext), scheduleContext.CancellationTokenSource.Token, TaskCreationOptions.LongRunning);
-            scheduleTask.Start();
-            scheduleContext.ScheduleTask = scheduleTask;
-            this.schedules.Add(scheduleId, scheduleContext);
+            this.schedules.Add(scheduleId, initializeContext(new ScheduleContext()));
             return true;
         }
 
