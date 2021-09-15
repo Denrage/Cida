@@ -5,13 +5,23 @@ namespace Module.AnimeSchedule.Cida.Extensions
 {
     public static class GrpcConversionExtensions
     {
-        public static AnimeInfoType FromGrpc(this AnimeS.CreateAnimeRequest.Types.AnimeInfoType data)
+        public static AnimeInfoType FromGrpc(this AnimeS.AnimeInfoType data)
         {
             return data switch
             {
-                AnimeS.CreateAnimeRequest.Types.AnimeInfoType.Crunchyroll => AnimeInfoType.Crunchyroll,
-                AnimeS.CreateAnimeRequest.Types.AnimeInfoType.Nibl => AnimeInfoType.Nibl,
+                AnimeS.AnimeInfoType.Crunchyroll => AnimeInfoType.Crunchyroll,
+                AnimeS.AnimeInfoType.Nibl => AnimeInfoType.Nibl,
                 _ => AnimeInfoType.Crunchyroll,
+            };
+        }
+
+        public static AnimeS.AnimeInfoType ToGrpc(this AnimeInfoType data)
+        {
+            return data switch
+            {
+                AnimeInfoType.Crunchyroll => AnimeS.AnimeInfoType.Crunchyroll,
+                AnimeInfoType.Nibl => AnimeS.AnimeInfoType.Crunchyroll,
+                _ => AnimeS.AnimeInfoType.Crunchyroll,
             };
         }
     }

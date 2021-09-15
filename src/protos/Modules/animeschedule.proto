@@ -12,6 +12,14 @@ service AnimeScheduleService {
     rpc AssignWebhookToSchedule (AssignWebhookToScheduleRequest) returns (AssignWebhookToScheduleResponse);
     rpc CreateAnime (CreateAnimeRequest) returns (CreateAnimeResponse);
     rpc AssignAnimeInfoToSchedule (AssignAnimeInfoToScheduleRequest) returns (AssignAnimeInfoToScheduleResponse);
+    rpc GetSchedules (GetSchedulesRequest) returns (GetSchedulesResponse);
+    rpc GetAnimesBySchedule (GetAnimesByScheduleRequest) returns (GetAnimesByScheduleResponse);
+    rpc GetAnimes (GetAnimesRequest) returns (GetAnimesResponse);
+}
+
+enum AnimeInfoType {
+    CRUNCHYROLL = 0;
+    NIBL = 1;
 }
 
 message CreateScheduleRequest {
@@ -66,10 +74,6 @@ message AssignWebhookToScheduleResponse {
 message CreateAnimeRequest {
     int32 Id = 1;
     string Identifier = 2;
-    enum AnimeInfoType {
-        CRUNCHYROLL = 0;
-        NIBL = 1;
-    }
     AnimeInfoType Type = 3;
     string Folder = 4;
     string Filter = 5;
@@ -103,6 +107,53 @@ message AssignAnimeInfoToScheduleResponse {
     }
     Result AssignResult = 1;
 }
+
+message GetSchedulesRequest {
+}
+
+message GetSchedulesResponse {
+    message ScheduleItem {
+        int32 ScheduleId = 1;
+        string Name = 2;
+        google.protobuf.Timestamp StartDate = 3;
+        google.protobuf.Duration Interval = 4;
+    }
+
+    repeated ScheduleItem Schedules = 1;
+}
+
+message GetAnimesByScheduleRequest {
+    int32 ScheduleId = 1;
+}
+
+message GetAnimesByScheduleResponse {
+    message AnimeItem {
+        int32 Id = 1;
+        string Identifier = 2;
+        AnimeInfoType Type = 3;
+        string Folder = 4; // Only valid value if Type == NIBL
+        string Filter = 5;
+    }
+
+    repeated AnimeItem Animes = 1;
+}
+
+message GetAnimesRequest {
+}
+
+message GetAnimesResponse {
+    message AnimeItem {
+        int32 Id = 1;
+        string Identifier = 2;
+        AnimeInfoType Type = 3;
+        string Folder = 4; // Only valid value if Type == NIBL
+        string Filter = 5;
+    }
+
+    repeated AnimeItem Animes = 1;
+}
+
+
 
 
 message VersionRequest {

@@ -101,7 +101,10 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
         foreach (var item in this.cache.Items.Where(x => x.Title.ToUpper().Contains(info.Identifier.ToUpper())))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var seasonId = await this.GetRelevantSeasonIdAsync(this.cache.Token, item.Id, this.cache.Cms, info.Identifier, cancellationToken);
+            var tempDbContext = this.GetContext();
+            var filter = (await tempDbContext.AnimeFilters.FindAsync(new object[] { info.Id }, cancellationToken))?.Filter ?? string.Empty;
+            var seasonId = await this.GetRelevantSeasonIdAsync(filter, item.Id, this.cache.Cms, info.Identifier, cancellationToken);
+            await tempDbContext.DisposeAsync();
             var episodes = await this.GetEpisodesAsync(this.cache.Token, seasonId, this.cache.Cms, cancellationToken);
 
             foreach (var episode in episodes)
@@ -219,7 +222,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
         return Enumerable.Empty<EpisodeItem>();
     }
 
-    private async Task<string> GetRelevantSeasonIdAsync(string token, string seriesId, Cms cms, string identifier, CancellationToken cancellationToken)
+    private async Task<string> GetRelevantSeasonIdAsync(string seasonFilter, string seriesId, Cms cms, string identifier, CancellationToken cancellationToken)
     {
         var request = new HttpRequestMessage()
         {
@@ -233,7 +236,12 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
 
         if (result != null)
         {
-            return result.Items.Where(x => x.Title.ToUpper().Contains(identifier.ToUpper())).OrderByDescending(x => x.SeasonNumber).First().Id;
+            var seasons = result.Items.Where(x => x.Title.ToUpper().Contains(identifier.ToUpper())).ToArray();
+            if (!string.IsNullOrEmpty(seasonFilter))
+            {
+                seasons = seasons.Where(x => x.Title.ToUpper().Contains(seasonFilter.ToUpper())).ToArray();
+            }
+            return seasons.OrderByDescending(x => x.SeasonNumber).First().Id;
         }
 
         return string.Empty;

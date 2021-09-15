@@ -244,7 +244,7 @@ public class Module : IModule
         public override async Task<CreateAnimeResponse> CreateAnime(CreateAnimeRequest request, ServerCallContext context)
         {
             using var dbContext = this.getContext();
-            
+
             try
             {
 
@@ -295,7 +295,7 @@ public class Module : IModule
                     Type = request.Type.FromGrpc(),
                 };
 
-                if (ValidForFilter(request.Type))
+                if (!string.IsNullOrEmpty(request.Filter))
                 {
                     animeInfo.AnimeFilter = new AnimeFilter()
                     {
@@ -392,26 +392,73 @@ public class Module : IModule
             }
         }
 
-        private static bool ValidForFilter(CreateAnimeRequest.Types.AnimeInfoType type)
+        public override async Task<GetSchedulesResponse> GetSchedules(GetSchedulesRequest request, ServerCallContext context)
         {
-            switch (type)
+            using var dbContext = this.getContext();
+            var schedules = await dbContext.Schedules.AsQueryable().ToArrayAsync(context.CancellationToken);
+            var response = new GetSchedulesResponse();
+            response.Schedules.AddRange(schedules.Select(x => new GetSchedulesResponse.Types.ScheduleItem()
             {
-                case CreateAnimeRequest.Types.AnimeInfoType.Crunchyroll:
-                    return false;
-                case CreateAnimeRequest.Types.AnimeInfoType.Nibl:
-                    return true;
-                default:
-                    return false;
-            }
+                Name = x.Name,
+                Interval = x.Interval.ToDuration(),
+                StartDate = x.StartDate.ToUniversalTime().ToTimestamp(),
+                ScheduleId = x.Id,
+            }));
+
+            return response;
         }
 
-        private static bool ValidForFolder(CreateAnimeRequest.Types.AnimeInfoType type)
+        public override async Task<GetAnimesByScheduleResponse> GetAnimesBySchedule(GetAnimesByScheduleRequest request, ServerCallContext context)
+        {
+            using var dbContext = this.getContext();
+            var animeInfos = await dbContext.AnimeInfos
+                .Include(x => x.Schedules)
+                .Include(x => x.AnimeFilter)
+                .Include(x => x.AnimeFolder)
+                .Where(x => x.Schedules.Select(y => y.Id).Contains(request.ScheduleId))
+                .AsQueryable()
+                .ToArrayAsync(context.CancellationToken);
+            var response = new GetAnimesByScheduleResponse();
+            response.Animes.AddRange(animeInfos.Select(x => new GetAnimesByScheduleResponse.Types.AnimeItem()
+            {
+                Id = x.Id,
+                Filter = x.AnimeFilter?.Filter ?? string.Empty,
+                Folder = x.AnimeFolder?.FolderName ?? string.Empty,
+                Identifier = x.Identifier,
+                Type = x.Type.ToGrpc(),
+            }));
+
+            return response;
+        }
+
+        public override async Task<GetAnimesResponse> GetAnimes(GetAnimesRequest request, ServerCallContext context)
+        {
+            using var dbContext = this.getContext();
+            var animeInfos = await dbContext.AnimeInfos
+                .Include(x => x.AnimeFilter)
+                .Include(x => x.AnimeFolder)
+                .AsQueryable()
+                .ToArrayAsync(context.CancellationToken);
+            var response = new GetAnimesResponse();
+            response.Animes.AddRange(animeInfos.Select(x => new GetAnimesResponse.Types.AnimeItem()
+            {
+                Id = x.Id,
+                Filter = x.AnimeFilter?.Filter ?? string.Empty,
+                Folder = x.AnimeFolder?.FolderName ?? string.Empty,
+                Identifier = x.Identifier,
+                Type = x.Type.ToGrpc(),
+            }));
+
+            return response;
+        }
+
+        private static bool ValidForFolder(Animeschedule.AnimeInfoType type)
         {
             switch (type)
             {
-                case CreateAnimeRequest.Types.AnimeInfoType.Crunchyroll:
+                case Animeschedule.AnimeInfoType.Crunchyroll:
                     return false;
-                case CreateAnimeRequest.Types.AnimeInfoType.Nibl:
+                case Animeschedule.AnimeInfoType.Nibl:
                     return true;
                 default:
                     return false;
