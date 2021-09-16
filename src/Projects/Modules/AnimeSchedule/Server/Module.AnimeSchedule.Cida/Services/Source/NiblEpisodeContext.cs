@@ -1,5 +1,6 @@
 ﻿using Anilist4Net;
 using Discord;
+using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Interfaces;
 using Module.AnimeSchedule.Cida.Models;
 
@@ -52,7 +53,7 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
 
     public async Task SaveToDatabase(AnimeScheduleDbContext context, CancellationToken cancellationToken)
     {
-        var episode = await context.Episodes.FindAsync(new object[] { this.NiblPackage.Episode.Name }, cancellationToken);
+        var episode = await context.Episodes.Include(x => x.Schedules).FirstOrDefaultAsync( x => x.Name == this.NiblPackage.Episode.Name, cancellationToken);
         if (episode != null)
         {
             episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));

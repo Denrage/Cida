@@ -169,6 +169,7 @@ public class ScheduleService
                                 await multiActionService.Execute(newEpisodes, scheduleContext.ScheduleId, scheduleContext.CancellationTokenSource.Token);
                             }
                         }
+                        this.logger.Info($"Finished Schedule '{schedule.Name}'");
                     }
                     finally
                     {

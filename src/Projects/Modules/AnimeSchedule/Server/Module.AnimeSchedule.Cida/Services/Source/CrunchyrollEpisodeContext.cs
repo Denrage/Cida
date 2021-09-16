@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Interfaces;
 using Module.AnimeSchedule.Cida.Models;
 
@@ -39,7 +40,7 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
 
     public async Task SaveToDatabase(AnimeScheduleDbContext context, CancellationToken cancellationToken)
     {
-        var episode = await context.Episodes.FindAsync(this.CrunchyrollEpisode.Episode.Name);
+        var episode = await context.Episodes.Include(x => x.Schedules).FirstOrDefaultAsync(x => x.Name == this.CrunchyrollEpisode.Episode.Name, cancellationToken);
         if (episode != null)
         {
             episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
