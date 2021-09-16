@@ -60,6 +60,7 @@ public class ScheduleService
             context.ScheduleTask = scheduleTask;
             return context;
         }
+
         if (this.schedules.TryGetValue(scheduleId, out var existingSchedule))
         {
             if (existingSchedule.ScheduleTask.Status == TaskStatus.Running)
@@ -73,9 +74,14 @@ public class ScheduleService
         }
 
         using var context = this.getContext();
-
-        if (await context.Schedules.AsQueryable().AnyAsync(x => x.Id == scheduleId))
+        var dbSchedule = await context.Schedules.AsQueryable().FirstOrDefaultAsync(x => x.Id == scheduleId);
+        if (dbSchedule != null)
         {
+            if (dbSchedule.StartDate.Equals(DateTime.MaxValue))
+            {
+                this.logger.Info($"Skipping schedule {dbSchedule.Id} - {dbSchedule.Name} bc it is deactivated");
+                return false;
+            }
             this.schedules.Add(scheduleId, initializeContext(new ScheduleContext()));
             return true;
         }
@@ -128,6 +134,12 @@ public class ScheduleService
                 context.Dispose();
 
                 scheduleContext.CancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                if (schedule.StartDate.Equals(DateTime.MaxValue))
+                {
+                    this.logger.Info($"Stopping schedule {schedule.Id} - {schedule.Name} bc it was deactivated");
+                    return;
+                }
 
                 if (DateTime.Now > schedule.StartDate)
                 {
