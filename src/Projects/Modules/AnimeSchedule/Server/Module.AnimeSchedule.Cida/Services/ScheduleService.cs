@@ -200,6 +200,10 @@ public class ScheduleService
         {
             // Ignore this bc, ScheduleTasks are cancelable.
         }
+        catch (Exception ex)
+        {
+            this.logger.Error(ex, $"An exception occured during execution of schedule {scheduleContext.ScheduleId}. Schedule will be stopped.");
+        }
     }
 
     private AnimeInfoHandlerBase GetHandler(AnimeInfo animeInfo)

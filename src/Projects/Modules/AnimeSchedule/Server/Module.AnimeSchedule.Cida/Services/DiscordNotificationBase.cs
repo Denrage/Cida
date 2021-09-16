@@ -44,7 +44,9 @@ public class DiscordClient
                 return result;
             }
 
-            throw new InvalidOperationException("Clients for schedule '{scheduleId}' not found!");
+            this.Logger.Info($"Clients for schedule '{scheduleId}' not found!");
+
+            return Enumerable.Empty<DiscordWebhookClient>();
         }
         finally
         {
