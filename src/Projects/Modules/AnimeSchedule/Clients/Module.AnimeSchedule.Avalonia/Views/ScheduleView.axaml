@@ -9,40 +9,54 @@
       <ColumnDefinition Width="0.8*"/>
       <ColumnDefinition Width="*"/>
     </Grid.ColumnDefinitions>
-    <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled">
-      <ListBox Items="{Binding Schedules}" SelectedItem="{Binding SelectedSchedule}" >
-        <ListBox.ItemTemplate>
-          <DataTemplate>
-            <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-              <Grid Height="48">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="0.7*" />
-                  <ColumnDefinition Width="0.1*" />
-                  <ColumnDefinition Width="0.1*" />
-                  <ColumnDefinition Width="0.1*" />
-                  <ColumnDefinition Width="0.1*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="*"/>
-                  <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
-                  <TextBlock Text="{Binding Name}"/>
-                  <TextBlock Margin="20,0,0,0" Text="{Binding State}"/>
-                </StackPanel>
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Interval}"/>
-                <Button Grid.Column="1" Grid.RowSpan="2" Content="Start" Command="{Binding $parent[UserControl].DataContext.StartSchedule}" CommandParameter="{Binding .}" />
-                <Button Grid.Column="2" Grid.RowSpan="2" Content="Stop" Command="{Binding $parent[UserControl].DataContext.StopSchedule}" CommandParameter="{Binding .}" />
-                <Button Grid.Column="3" Grid.RowSpan="2" Content="Run" Command="{Binding $parent[UserControl].DataContext.RunSchedule}" CommandParameter="{Binding .}" />
-                <Button Grid.Column="4" Grid.RowSpan="2" Content="Edit" />
-              </Grid>
-            </Border>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
-    </ScrollViewer>
+    <Grid Grid.Column="0">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled">
+        <ListBox Items="{Binding Schedules}" SelectedItem="{Binding SelectedSchedule}" >
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                <Grid Height="48">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.7*" />
+                    <ColumnDefinition Width="0.1*" />
+                    <ColumnDefinition Width="0.1*" />
+                    <ColumnDefinition Width="0.1*" />
+                    <ColumnDefinition Width="0.1*" />
+                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                  </Grid.RowDefinitions>
+                  <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="{Binding Name}"/>
+                    <TextBlock Margin="20,0,0,0" Text="{Binding State}"/>
+                  </StackPanel>
+                  <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Interval}"/>
+                  <Button Grid.Column="1" Grid.RowSpan="2" Content="Start" Command="{Binding $parent[UserControl].DataContext.StartSchedule}" CommandParameter="{Binding .}" />
+                  <Button Grid.Column="2" Grid.RowSpan="2" Content="Stop" Command="{Binding $parent[UserControl].DataContext.StopSchedule}" CommandParameter="{Binding .}" />
+                  <Button Grid.Column="3" Grid.RowSpan="2" Content="Run" Command="{Binding $parent[UserControl].DataContext.RunSchedule}" CommandParameter="{Binding .}" />
+                  <Button Grid.Column="4" Grid.RowSpan="2" Content="Edit" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </ScrollViewer>
+      <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Button Grid.Column="0" Content="Create" Command="{Binding Create}"/>
+        <Button Grid.Column="1" Content="Edit" Command="{Binding Edit}"/>
+      </Grid>
+    </Grid>
     <Grid Grid.Column="1">
-      <ContentControl Grid.Column="1" Content="{Binding SelectedAnimeSchedule}"/>
+      <ContentControl IsVisible="{Binding SubViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Column="1" Content="{Binding SubViewModel}"/>
     </Grid>
   </Grid>
 </UserControl>

@@ -32,6 +32,9 @@
     <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\EditScheduleView.axaml.cs">
+      <DependentUpon>EditScheduleView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\AnimeScheduleView.axaml.cs">
       <DependentUpon>AnimeScheduleView.axaml</DependentUpon>
     </Compile>
