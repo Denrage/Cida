@@ -1,4 +1,7 @@
 ﻿using Cida.Client.Avalonia.Api;
+using Module.AnimeSchedule.Avalonia.ViewModels.Animes;
+using Module.AnimeSchedule.Avalonia.ViewModels.Schedules;
+using Module.AnimeSchedule.Avalonia.ViewModels.Webhooks;
 
 namespace Module.AnimeSchedule.Avalonia.ViewModels;
 
@@ -14,14 +17,14 @@ public class AnimeScheduleViewModel : ModuleViewModel
 
     public AnimeScheduleViewModel(Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient client)
     {
-        this.Schedules = new ScheduleViewModel(client);
-        this.Animes =  new AnimeViewModel(client);
-        this.Webhooks = new WebhookViewModel();
+        Schedules = new ScheduleViewModel(client);
+        Animes = new AnimeViewModel(client);
+        Webhooks = new WebhookViewModel();
     }
 
     public override async Task LoadAsync()
     {
-        await this.Schedules.LoadAsync();
-        await this.Animes.LoadAsync();
+        await Schedules.LoadAsync();
+        await Animes.LoadAsync();
     }
 }

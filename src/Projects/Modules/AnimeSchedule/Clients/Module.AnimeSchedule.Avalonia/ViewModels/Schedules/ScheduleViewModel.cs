@@ -4,7 +4,7 @@ using Cida.Client.Avalonia.Api;
 using Module.AnimeSchedule.Avalonia.Models;
 using ReactiveUI;
 
-namespace Module.AnimeSchedule.Avalonia.ViewModels;
+namespace Module.AnimeSchedule.Avalonia.ViewModels.Schedules;
 
 public class ScheduleViewModel : ViewModelBase
 {
@@ -19,20 +19,20 @@ public class ScheduleViewModel : ViewModelBase
         get => selectedSchedule;
         set
         {
-            if (this.selectedSchedule != value)
+            if (selectedSchedule != value)
             {
-                this.selectedSchedule = value;
+                selectedSchedule = value;
                 this.RaisePropertyChanged();
                 Task.Run(async () =>
                 {
-                    if (this.selectedSchedule != null)
+                    if (selectedSchedule != null)
                     {
-                        this.selectedSchedule.Animes = (await this.LoadAnimes(this.selectedSchedule.ScheduleId)).ToList();
-                        this.SubViewModel = new ScheduleAnimesViewModel(this.client, this.selectedSchedule);
+                        selectedSchedule.Animes = (await LoadAnimes(selectedSchedule.ScheduleId)).ToList();
+                        SubViewModel = new ScheduleAnimesViewModel(client, selectedSchedule);
                     }
                     else
                     {
-                        this.SubViewModel = null;
+                        SubViewModel = null;
                     }
                 });
             }
@@ -42,7 +42,7 @@ public class ScheduleViewModel : ViewModelBase
     public ViewModelBase SubViewModel
     {
         get => subViewModel;
-        set => this.RaiseAndSetIfChanged(ref this.subViewModel, value);
+        set => this.RaiseAndSetIfChanged(ref subViewModel, value);
     }
 
     public ScheduleViewModel(AnimeScheduleService.AnimeScheduleServiceClient client)
@@ -52,11 +52,11 @@ public class ScheduleViewModel : ViewModelBase
 
     public async Task LoadAsync()
     {
-        var schedules = await this.client.GetSchedulesAsync(new GetSchedulesRequest());
-        this.Schedules.Clear();
+        var schedules = await client.GetSchedulesAsync(new GetSchedulesRequest());
+        Schedules.Clear();
         foreach (var schedule in schedules.Schedules)
         {
-            this.Schedules.Add(new Schedule()
+            Schedules.Add(new Schedule()
             {
                 Name = schedule.Name,
                 ScheduleId = schedule.ScheduleId,
@@ -69,7 +69,7 @@ public class ScheduleViewModel : ViewModelBase
 
     public async Task StopSchedule(Schedule schedule)
     {
-        await this.client.StopScheduleAsync(new StopScheduleRequest()
+        await client.StopScheduleAsync(new StopScheduleRequest()
         {
             ScheduleId = schedule.ScheduleId,
         });
@@ -77,7 +77,7 @@ public class ScheduleViewModel : ViewModelBase
 
     public async Task RunSchedule(Schedule schedule)
     {
-        await this.client.ForceRunScheduleAsync(new ForceRunScheduleRequest()
+        await client.ForceRunScheduleAsync(new ForceRunScheduleRequest()
         {
             ScheduleId = schedule.ScheduleId,
         });
@@ -85,7 +85,7 @@ public class ScheduleViewModel : ViewModelBase
 
     public async Task StartSchedule(Schedule schedule)
     {
-        await this.client.StartScheduleAsync(new StartScheduleRequest()
+        await client.StartScheduleAsync(new StartScheduleRequest()
         {
             ScheduleId = schedule.ScheduleId,
         });
@@ -93,49 +93,49 @@ public class ScheduleViewModel : ViewModelBase
 
     public void Edit()
     {
-        var editViewModel = new EditScheduleViewModel(this.client, this.selectedSchedule);
+        var editViewModel = new EditScheduleViewModel(client, selectedSchedule);
         editViewModel.OnClose += OnEditClose;
 
-        this.SubViewModel = editViewModel;
+        SubViewModel = editViewModel;
 
     }
 
     public void Create()
     {
-        var editViewModel = new EditScheduleViewModel(this.client, new Schedule());
+        var editViewModel = new EditScheduleViewModel(client, new Schedule());
         editViewModel.OnClose += OnEditClose;
 
-        this.SubViewModel = editViewModel;
+        SubViewModel = editViewModel;
 
     }
 
     private async void OnEditClose(Schedule schedule)
     {
-        await this.LoadAsync();
+        await LoadAsync();
         if (schedule.ScheduleId != default)
         {
-            this.SelectedSchedule = this.Schedules.FirstOrDefault(x => x.ScheduleId == schedule.ScheduleId);
+            SelectedSchedule = Schedules.FirstOrDefault(x => x.ScheduleId == schedule.ScheduleId);
         }
         else
         {
-            this.SelectedSchedule = null;
+            SelectedSchedule = null;
         }
     }
 
-    private ScheduleState ConvertState(Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState state)
+    private ScheduleState ConvertState(GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState state)
     {
         return state switch
         {
-            Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Running => ScheduleState.Running,
-            Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Stopped => ScheduleState.Stopped,
-            Animeschedule.GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Waiting => ScheduleState.Waiting,
+            GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Running => ScheduleState.Running,
+            GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Stopped => ScheduleState.Stopped,
+            GetSchedulesResponse.Types.ScheduleItem.Types.ScheduleState.Waiting => ScheduleState.Waiting,
             _ => ScheduleState.Stopped,
         };
     }
 
     private async Task<IEnumerable<AnimeInfo>> LoadAnimes(int scheduleId)
     {
-        var animes = await this.client.GetAnimesByScheduleAsync(new GetAnimesByScheduleRequest()
+        var animes = await client.GetAnimesByScheduleAsync(new GetAnimesByScheduleRequest()
         {
             ScheduleId = scheduleId,
         });

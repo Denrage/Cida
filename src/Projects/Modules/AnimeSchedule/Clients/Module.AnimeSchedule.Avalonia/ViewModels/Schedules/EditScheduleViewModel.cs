@@ -3,7 +3,7 @@ using Cida.Client.Avalonia.Api;
 using Google.Protobuf.WellKnownTypes;
 using Module.AnimeSchedule.Avalonia.Models;
 
-namespace Module.AnimeSchedule.Avalonia.ViewModels;
+namespace Module.AnimeSchedule.Avalonia.ViewModels.Schedules;
 
 public class EditScheduleViewModel : ViewModelBase
 {
@@ -12,18 +12,18 @@ public class EditScheduleViewModel : ViewModelBase
 
     public event Action<Schedule> OnClose;
 
-    public Schedule Schedule => this.schedule;
+    public Schedule Schedule => schedule;
 
-    public DateTimeOffset? SelectedDate 
-    {  
-        get => DateTime.SpecifyKind(this.Schedule.StartDate, DateTimeKind.Local);
-        set => this.schedule.StartDate = value.HasValue ? value.Value.DateTime : DateTime.MaxValue;
+    public DateTimeOffset? SelectedDate
+    {
+        get => DateTime.SpecifyKind(Schedule.StartDate, DateTimeKind.Local);
+        set => schedule.StartDate = value.HasValue ? value.Value.DateTime : DateTime.MaxValue;
     }
 
     public TimeSpan? SelectedTime
     {
-        get => this.schedule.Interval;
-        set => this.schedule.Interval = value.HasValue ? value.Value : TimeSpan.FromMinutes(30);
+        get => schedule.Interval;
+        set => schedule.Interval = value.HasValue ? value.Value : TimeSpan.FromMinutes(30);
     }
 
     public EditScheduleViewModel(AnimeScheduleService.AnimeScheduleServiceClient client, Schedule schedule)
@@ -35,17 +35,17 @@ public class EditScheduleViewModel : ViewModelBase
     public async Task Save()
     {
         var edit = false;
-        if (this.schedule.ScheduleId != default)
+        if (schedule.ScheduleId != default)
         {
             edit = true;
         }
 
-        var createResult = await this.client.CreateScheduleAsync(new CreateScheduleRequest()
+        var createResult = await client.CreateScheduleAsync(new CreateScheduleRequest()
         {
-            Interval = this.schedule.Interval.ToDuration(),
-            Name = this.schedule.Name,
-            ScheduleId = this.schedule.ScheduleId,
-            StartDate = this.schedule.StartDate.ToUniversalTime().ToTimestamp(),
+            Interval = schedule.Interval.ToDuration(),
+            Name = schedule.Name,
+            ScheduleId = schedule.ScheduleId,
+            StartDate = schedule.StartDate.ToUniversalTime().ToTimestamp(),
             Override = edit,
         });
 
@@ -55,19 +55,19 @@ public class EditScheduleViewModel : ViewModelBase
         }
         else
         {
-            this.schedule.ScheduleId = createResult.ScheduleId;
+            schedule.ScheduleId = createResult.ScheduleId;
         }
 
-        this.Close();
+        Close();
     }
 
     public void Cancel()
     {
-        this.Close();
+        Close();
     }
 
     public void Close()
     {
-        Task.Run(() => this.OnClose?.Invoke(this.schedule));
+        Task.Run(() => OnClose?.Invoke(schedule));
     }
 }

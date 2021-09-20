@@ -4,7 +4,7 @@ using Cida.Client.Avalonia.Api;
 using Module.AnimeSchedule.Avalonia.Models;
 using ReactiveUI;
 
-namespace Module.AnimeSchedule.Avalonia.ViewModels;
+namespace Module.AnimeSchedule.Avalonia.ViewModels.Schedules;
 
 public class ScheduleAnimesViewModel : ViewModelBase
 {
@@ -17,19 +17,19 @@ public class ScheduleAnimesViewModel : ViewModelBase
         get => schedule;
         set
         {
-            if (this.schedule != value)
+            if (schedule != value)
             {
-                this.schedule = value;
+                schedule = value;
                 this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(this.ScheduleAnimes));
-                this.RaisePropertyChanged(nameof(this.NotInScheduleAnime));
+                this.RaisePropertyChanged(nameof(ScheduleAnimes));
+                this.RaisePropertyChanged(nameof(NotInScheduleAnime));
             }
         }
     }
 
-    public AvaloniaList<AnimeInfo> ScheduleAnimes => new AvaloniaList<AnimeInfo>(this.Schedule?.Animes ?? Enumerable.Empty<AnimeInfo>());
+    public AvaloniaList<AnimeInfo> ScheduleAnimes => new AvaloniaList<AnimeInfo>(Schedule?.Animes ?? Enumerable.Empty<AnimeInfo>());
 
-    public AvaloniaList<AnimeInfo> NotInScheduleAnime => new AvaloniaList<AnimeInfo>(this.allAnimes.Where(x => !this.ScheduleAnimes.Select(y => y.Id).Contains(x.Id)));
+    public AvaloniaList<AnimeInfo> NotInScheduleAnime => new AvaloniaList<AnimeInfo>(allAnimes.Where(x => !ScheduleAnimes.Select(y => y.Id).Contains(x.Id)));
 
     public ScheduleAnimesViewModel(AnimeScheduleService.AnimeScheduleServiceClient client, Schedule schedule)
     {
@@ -39,44 +39,44 @@ public class ScheduleAnimesViewModel : ViewModelBase
         {
             var animes = await this.client.GetAnimesAsync(new GetAnimesRequest());
 
-            this.allAnimes.AddRange(animes.Animes.Select(x => new AnimeInfo()
+            allAnimes.AddRange(animes.Animes.Select(x => new AnimeInfo()
             {
                 Identifier = x.Identifier,
                 Id = x.Id,
             }));
-            this.RaisePropertyChanged(nameof(this.NotInScheduleAnime));
+            this.RaisePropertyChanged(nameof(NotInScheduleAnime));
         });
     }
 
     public async Task AssignAnime(AnimeInfo animeInfo)
     {
-        var assignResult = await this.client.AssignAnimeInfoToScheduleAsync(new AssignAnimeInfoToScheduleRequest()
+        var assignResult = await client.AssignAnimeInfoToScheduleAsync(new AssignAnimeInfoToScheduleRequest()
         {
             AnimeId = animeInfo.Id,
-            ScheduleId = this.Schedule.ScheduleId,
+            ScheduleId = Schedule.ScheduleId,
         });
 
         if (assignResult.AssignResult == AssignAnimeInfoToScheduleResponse.Types.Result.Success)
         {
-            this.Schedule.Animes.Add(animeInfo);
-            this.RaisePropertyChanged(nameof(this.ScheduleAnimes));
-            this.RaisePropertyChanged(nameof(this.NotInScheduleAnime));
+            Schedule.Animes.Add(animeInfo);
+            this.RaisePropertyChanged(nameof(ScheduleAnimes));
+            this.RaisePropertyChanged(nameof(NotInScheduleAnime));
         }
     }
 
     public async Task UnassignAnime(AnimeInfo animeInfo)
     {
-        var unassignResult = await this.client.UnassignAnimeInfoToScheduleAsync(new UnassignAnimeInfoToScheduleRequest()
+        var unassignResult = await client.UnassignAnimeInfoToScheduleAsync(new UnassignAnimeInfoToScheduleRequest()
         {
             AnimeId = animeInfo.Id,
-            ScheduleId = this.Schedule.ScheduleId,
+            ScheduleId = Schedule.ScheduleId,
         });
 
         if (unassignResult.AssignResult == UnassignAnimeInfoToScheduleResponse.Types.Result.Success)
         {
-            this.Schedule.Animes.Remove(animeInfo);
-            this.RaisePropertyChanged(nameof(this.ScheduleAnimes));
-            this.RaisePropertyChanged(nameof(this.NotInScheduleAnime));
+            Schedule.Animes.Remove(animeInfo);
+            this.RaisePropertyChanged(nameof(ScheduleAnimes));
+            this.RaisePropertyChanged(nameof(NotInScheduleAnime));
         }
     }
 }

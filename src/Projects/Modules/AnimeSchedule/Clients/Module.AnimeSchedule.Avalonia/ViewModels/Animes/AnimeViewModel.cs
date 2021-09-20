@@ -4,7 +4,7 @@ using Cida.Client.Avalonia.Api;
 using Module.AnimeSchedule.Avalonia.Extensions;
 using Module.AnimeSchedule.Avalonia.Models;
 
-namespace Module.AnimeSchedule.Avalonia.ViewModels;
+namespace Module.AnimeSchedule.Avalonia.ViewModels.Animes;
 
 public class AnimeViewModel : ViewModelBase
 {
@@ -14,17 +14,17 @@ public class AnimeViewModel : ViewModelBase
 
     public AnimeInfo SelectedAnime { get; set; }
 
-    public AnimeViewModel(Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient client)
+    public AnimeViewModel(AnimeScheduleService.AnimeScheduleServiceClient client)
     {
         this.client = client;
     }
 
     public async Task LoadAsync()
     {
-        this.Animes.Clear();
+        Animes.Clear();
 
-        var result = await this.client.GetAnimesAsync(new GetAnimesRequest());
-        this.Animes.AddRange(result.Animes.Select(x => new AnimeInfo()
+        var result = await client.GetAnimesAsync(new GetAnimesRequest());
+        Animes.AddRange(result.Animes.Select(x => new AnimeInfo()
         {
             Id = x.Id,
             Identifier = x.Identifier,

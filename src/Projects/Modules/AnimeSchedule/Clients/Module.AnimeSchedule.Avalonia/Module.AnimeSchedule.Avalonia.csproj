@@ -35,16 +35,16 @@
     <Compile Update="Views\AnimeScheduleView.axaml.cs">
       <DependentUpon>AnimeScheduleView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\EditScheduleView.axaml.cs">
+    <Compile Update="Views\Schedules\EditScheduleView.axaml.cs">
       <DependentUpon>EditScheduleView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\AnimeView.axaml.cs">
+    <Compile Update="Views\Animes\AnimeView.axaml.cs">
       <DependentUpon>AnimeView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\ScheduleAnimesView.axaml.cs">
+    <Compile Update="Views\Schedules\ScheduleAnimesView.axaml.cs">
       <DependentUpon>ScheduleAnimesView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\ScheduleView.axaml.cs">
+    <Compile Update="Views\Schedules\ScheduleView.axaml.cs">
       <DependentUpon>ScheduleView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>

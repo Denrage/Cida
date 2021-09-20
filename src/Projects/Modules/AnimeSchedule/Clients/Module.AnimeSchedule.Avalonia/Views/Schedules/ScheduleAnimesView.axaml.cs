@@ -2,11 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Module.AnimeSchedule.Avalonia.Views
+namespace Module.AnimeSchedule.Avalonia.Views.Schedules
 {
-    public partial class ScheduleView : UserControl
+    public partial class ScheduleAnimesView : UserControl
     {
-        public ScheduleView()
+        public ScheduleAnimesView()
         {
             InitializeComponent();
         }
