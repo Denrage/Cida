@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.IrcAnime.Avalonia.Views.IrcAnimeView">
     <UserControl.Styles>
-        <StyleInclude Source="avares://Module.IrcAnime.Avalonia/Assets/SideBar.xaml"/>
+        <StyleInclude Source="avares://Cida.Client.Avalonia/Assets/SideBar.xaml"/>
     </UserControl.Styles>
   <UserControl.Resources>
     <ResourceDictionary>

@@ -4,50 +4,25 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.AnimeSchedule.Avalonia.Views.AnimeScheduleView">
-  <Grid>
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="*"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="*"/>
-      </Grid.RowDefinitions>
-      <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Visible">
-        <ItemsRepeater Items="{Binding ScheduleAnimes}">
-          <ItemsRepeater.ItemTemplate>
-            <DataTemplate>
-              <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.9*" />
-                    <ColumnDefinition Width="0.1*" />
-                  </Grid.ColumnDefinitions>
-                  <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="{Binding Identifier}"/>
-                  <Button VerticalAlignment="Center" Grid.Column="1" Content="-" Command="{Binding $parent[UserControl].DataContext.UnassignAnime}" CommandParameter="{Binding .}" />
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsRepeater.ItemTemplate>
-        </ItemsRepeater>
-      </ScrollViewer>
-      <Border Grid.Row="1" Background="LightGray" BorderThickness="3" BorderBrush="Black"/>
-      <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible">
-        <ItemsRepeater Items="{Binding NotInScheduleAnime}">
-          <ItemsRepeater.ItemTemplate>
-            <DataTemplate>
-              <Border Padding="5" BorderBrush="Black" BorderThickness="2">
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.9*" />
-                    <ColumnDefinition Width="0.1*" />
-                  </Grid.ColumnDefinitions>
-                  <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="{Binding Identifier}"/>
-                  <Button VerticalAlignment="Center" Grid.Column="1" Content="+" CommandParameter="{Binding .}" Command="{Binding $parent[UserControl].DataContext.AssignAnime}" />
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsRepeater.ItemTemplate>
-        </ItemsRepeater>
-      </ScrollViewer>
-    </Grid>
-  </Grid>
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Cida.Client.Avalonia/Assets/SideBar.xaml"/>
+  </UserControl.Styles>
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude  Source="avares://Module.IrcAnime.Avalonia/Icons/Icons.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <TabControl Classes="sidebar" Name="Sidebar" Grid.Column="0">
+    <TabItem Header="Schedules">
+      <ContentControl Content="{Binding Schedules}"/>
+    </TabItem>
+    <TabItem Header="Animes">
+      <ContentControl Content="{Binding Animes}"/>
+    </TabItem>
+    <TabItem Header="Webhooks">
+      <ContentControl Content="{Binding Webhooks}"/>
+    </TabItem>
+  </TabControl>
 </UserControl>

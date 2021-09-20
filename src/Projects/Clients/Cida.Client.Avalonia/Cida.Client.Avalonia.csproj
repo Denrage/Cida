@@ -21,6 +21,7 @@
     <AvaloniaResource Remove="Views\Launcher\StatusScreenView.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Assets\SideBar.xaml" />
     <None Remove="Views\LauncherWindow.xaml" />
     <None Remove="Views\Launcher\ConnectionScreenView.xaml" />
     <None Remove="Views\Launcher\ModuleSelectScreenView.xaml" />
@@ -60,6 +61,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Update="Assets\SideBar.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Views\Launcher\ConnectionScreenView - Copy.xaml.cs">

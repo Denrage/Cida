@@ -20,7 +20,7 @@ namespace Module.AnimeSchedule.Cida.Extensions
             return data switch
             {
                 AnimeInfoType.Crunchyroll => AnimeS.AnimeInfoType.Crunchyroll,
-                AnimeInfoType.Nibl => AnimeS.AnimeInfoType.Crunchyroll,
+                AnimeInfoType.Nibl => AnimeS.AnimeInfoType.Nibl,
                 _ => AnimeS.AnimeInfoType.Crunchyroll,
             };
         }

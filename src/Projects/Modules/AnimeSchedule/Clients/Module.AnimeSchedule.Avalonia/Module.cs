@@ -18,7 +18,7 @@ namespace Module.AnimeSchedule.Avalonia
         public Task LoadAsync(Channel channel, ISettingsFactory settingsFactory)
         {
             this.client = new AnimeScheduleService.AnimeScheduleServiceClient(channel);
-            this.ViewModel = new ScheduleViewModel(client);
+            this.ViewModel = new AnimeScheduleViewModel(client);
             return Task.CompletedTask;
         }
     }
