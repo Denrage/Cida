@@ -7,4 +7,8 @@ public class AnimeInfo
     public string Identifier { get; set; }
     
     public AnimeType Type { get; set; }
+
+    public string AnimeFolder { get; set; }
+
+    public string Filter {  get; set; }
 }

@@ -35,6 +35,12 @@
     <Compile Update="Views\AnimeScheduleView.axaml.cs">
       <DependentUpon>AnimeScheduleView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\Animes\AnimeEditView.axaml.cs">
+      <DependentUpon>AnimeEditView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Animes\AnimeDetailView.axaml.cs">
+      <DependentUpon>AnimeDetailView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\Schedules\EditScheduleView.axaml.cs">
       <DependentUpon>EditScheduleView.axaml</DependentUpon>
     </Compile>

@@ -14,9 +14,12 @@ public class AnimeViewModel : ViewModelBase
 
     public AnimeInfo SelectedAnime { get; set; }
 
+    public ViewModelBase SubViewModel { get; set; }
+
     public AnimeViewModel(AnimeScheduleService.AnimeScheduleServiceClient client)
     {
         this.client = client;
+        this.SubViewModel = new AnimeDetailViewModel(client, new AnimeInfo());
     }
 
     public async Task LoadAsync()

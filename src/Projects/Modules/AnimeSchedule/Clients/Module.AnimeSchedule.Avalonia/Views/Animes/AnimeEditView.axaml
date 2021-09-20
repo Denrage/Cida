@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converter="clr-namespace:Module.AnimeSchedule.Avalonia.Converter"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Module.AnimeSchedule.Avalonia.Views.Animes.AnimeEditView">
+  <StackPanel>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Anilist ID"/>
+      <TextBox Text="{Binding Anime.Id}"/>
+    </StackPanel>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Identifier"/>
+      <TextBox Text="{Binding Anime.Identifier}"/>
+    </StackPanel>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Type"/>
+      <ComboBox SelectedItem="{Binding Anime.Type}" Items="{Binding PossibleTypes}" />
+    </StackPanel>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Anime Folder"/>
+      <TextBox Text="{Binding Anime.AnimeFolder}"/>
+    </StackPanel>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Filter"/>
+      <TextBox Text="{Binding Anime.Filter}"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>
