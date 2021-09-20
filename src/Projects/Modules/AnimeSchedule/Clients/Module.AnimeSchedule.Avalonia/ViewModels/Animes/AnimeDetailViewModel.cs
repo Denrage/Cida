@@ -8,7 +8,7 @@ public class AnimeDetailViewModel : ViewModelBase
     public AnimeDetailViewModel(Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient client, AnimeInfo animeInfo)
     {
         this.AnimeEdit = new AnimeEditViewModel(animeInfo);
-        this.AnimeTestResult = new AnimeTestResultViewModel();
+        this.AnimeTestResult = new AnimeTestResultViewModel(client, animeInfo);
     }
 
     public async Task Save()
