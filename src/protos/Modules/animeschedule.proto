@@ -19,6 +19,7 @@ service AnimeScheduleService {
     rpc StopSchedule (StopScheduleRequest) returns (StopScheduleResponse);
     rpc ForceRunSchedule (ForceRunScheduleRequest) returns (ForceRunScheduleResponse);
     rpc StartSchedule (StartScheduleRequest) returns (StartScheduleResponse);
+    rpc TestAnime (TestAnimeRequest) returns (TestAnimeResponse);
 }
 
 enum AnimeInfoType {
@@ -182,7 +183,7 @@ message StopScheduleRequest {
 }
 
 message StopScheduleResponse {
-        enum Result {
+    enum Result {
         SUCCESS = 0;
         NOTEXISTS = 1;
         UNKNOWN = 2;
@@ -195,7 +196,7 @@ message ForceRunScheduleRequest {
 }
 
 message ForceRunScheduleResponse {
-        enum Result {
+    enum Result {
         SUCCESS = 0;
         NOTEXISTS = 1;
         UNKNOWN = 2;
@@ -208,12 +209,30 @@ message StartScheduleRequest {
 }
 
 message StartScheduleResponse {
-        enum Result {
+    enum Result {
         SUCCESS = 0;
         NOTEXISTSORRUNNING = 1;
         UNKNOWN = 2;
     }
     Result StartResult = 1;
+}
+
+message TestAnimeRequest {
+    int32 Id = 1;
+    string Identifier = 2;
+    AnimeInfoType Type = 3;
+    string Filter = 5;
+}
+
+message TestAnimeResponse {
+    message AnimeItem {
+        string EpisodeName = 1;
+        double EpisodeNumber = 2;
+        string SeasonTitle = 3;
+        string SeriesTitle = 4;
+    }
+
+    repeated AnimeItem Animes = 1;
 }
 
 

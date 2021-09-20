@@ -110,6 +110,43 @@ public class NiblAnimeInfoHandler : AnimeInfoHandlerBase
         return newEpisodes;
     }
 
+    public override async Task<IEnumerable<ITestable>> GetTestResults(AnimeInfo animeInfo, CancellationToken cancellationToken)
+    {
+        var items = await this.Search(animeInfo.Identifier, cancellationToken);
+
+        var temp = new List<NiblEpisodeContext>();
+        foreach (var item in items)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (this.IsMatchingIdentifier(item.Name, animeInfo.Identifier))
+            {
+                var package = new Package()
+                {
+                    Episode = new Episode()
+                    {
+                        AnimeId = animeInfo.Id,
+                        EpisodeNumber = item.EpisodeNumber,
+                        Name = item.Name,
+                        Schedules = new List<Schedule>(),
+                    },
+                    EpisodeName = item.Name,
+                    PackageNumber = (ulong)item.Number,
+                    BotName = this.Bots[item.BotId],
+                };
+
+                temp.Add(new NiblEpisodeContext(package, this.anilistClient, -1));
+            }
+        }
+        var newEpisodes = temp.AsEnumerable();
+        newEpisodes = newEpisodes.Where(x => x.NiblPackage.Episode.Name.Contains(animeInfo.AnimeFilter.Filter)).ToArray();
+        newEpisodes = newEpisodes.Distinct(new NiblAnimeInfoEqualityComparer()).ToArray();
+
+        return newEpisodes;
+    }
+
+    private bool IsMatchingIdentifier(string title, string identifier)
+        => title.ToUpper().Contains(identifier.ToUpper());
+
     private class NiblAnimeInfoEqualityComparer : IEqualityComparer<NiblEpisodeContext>
     {
         public bool Equals(NiblEpisodeContext x, NiblEpisodeContext y) => x.NiblPackage.Episode.EpisodeNumber.Equals(y.NiblPackage.Episode.EpisodeNumber);

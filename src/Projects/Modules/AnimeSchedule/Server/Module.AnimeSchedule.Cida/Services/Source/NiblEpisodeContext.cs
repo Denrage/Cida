@@ -6,7 +6,7 @@ using Module.AnimeSchedule.Cida.Models;
 
 namespace Module.AnimeSchedule.Cida.Services.Source;
 
-public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
+public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable, ITestable
 {
     private readonly Client anilistClient;
     private readonly int scheduleId;
@@ -65,5 +65,14 @@ public class NiblEpisodeContext : INotifyable, IDownloadable, IDatabaseSavable
             this.NiblPackage.Episode.Schedules.Add(await context.Schedules.FindAsync(new object[] { this.scheduleId }, cancellationToken));
             await context.Packages.AddAsync(this.NiblPackage, cancellationToken);
         }
+    }
+
+    public AnimeTestResult GetTestResult()
+    {
+        return new AnimeTestResult()
+        {
+            EpisodeName = this.NiblPackage.Episode.Name,
+            EpisodeNumber = this.NiblPackage.Episode.EpisodeNumber,
+        };
     }
 }

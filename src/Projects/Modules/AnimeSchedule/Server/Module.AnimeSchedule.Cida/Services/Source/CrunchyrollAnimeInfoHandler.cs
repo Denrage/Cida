@@ -98,7 +98,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
         }
 
         var temp = new List<CrunchyrollEpisodeContext>();
-        foreach (var item in this.cache.Items.Where(x => x.Title.ToUpper().Contains(info.Identifier.ToUpper())))
+        foreach (var item in this.cache.Items.Where(x => this.IsMatchingIdentifier(x.Title, info.Identifier)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var tempDbContext = this.GetContext();
@@ -150,7 +150,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
         }
         using var dbContext = this.GetContext();
         var schedule = await dbContext.Schedules.Include(x => x.Episodes).FirstAsync(x => x.Id == scheduleId, cancellationToken);
-        var dbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToArrayAsync(cancellationToken); 
+        var dbEpisodes = await Queryable.Where(dbContext.Episodes, x => x.AnimeId == info.Id).ToArrayAsync(cancellationToken);
         var missingDbEpisodes = dbEpisodes.Where(x => !schedule.Episodes.Any(y => y.Name == x.Name));
         var newEpisodes = temp
             .Where(x => !dbEpisodes.Select(y => y.EpisodeNumber).Contains(x.CrunchyrollEpisode.Episode.EpisodeNumber))
@@ -160,6 +160,66 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
 
         return newEpisodes;
     }
+
+    public override async Task<IEnumerable<ITestable>> GetTestResults(AnimeInfo info, CancellationToken cancellationToken)
+    {
+        if (!await this.RefreshCache(cancellationToken))
+        {
+            this.Logger.Warn("Couldn't refresh cache, skip test");
+            return Enumerable.Empty<ITestable>();
+        }
+
+        var temp = new List<CrunchyrollEpisodeContext>();
+        foreach (var item in this.cache.Items.Where(x => this.IsMatchingIdentifier(x.Title, info.Identifier)))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var filter = info.AnimeFilter.Filter;
+            var seasonId = await this.GetRelevantSeasonIdAsync(filter, item.Id, this.cache.Cms, info.Identifier, cancellationToken);
+            var episodes = await this.GetEpisodesAsync(this.cache.Token, seasonId, this.cache.Cms, cancellationToken);
+
+            foreach (var episode in episodes)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var episodeNumber = 0.0;
+                if (!episode.EpisodeNumber.HasValue)
+                {
+                    if (double.TryParse(episode.Episode, NumberStyles.Float, CultureInfo.CreateSpecificCulture("en-us"), out var parsedEpisodeNumber))
+                    {
+                        episodeNumber = parsedEpisodeNumber;
+                    }
+                    else
+                    {
+                        episodeNumber = 0;
+                    }
+                }
+                else
+                {
+                    episodeNumber = episode.EpisodeNumber.Value;
+                }
+
+                temp.Add(new CrunchyrollEpisodeContext(new CrunchyrollEpisode()
+                {
+                    Title = episode.Title,
+                    SeriesTitle = episode.SeriesTitle,
+                    SeasonTitle = episode.SeasonTitle,
+                    ReleaseDate = episode.ReleaseDate,
+                    SeasonNumber = episode.SeasonNumber,
+                    Episode = new Episode()
+                    {
+                        AnimeId = info.Id,
+                        EpisodeNumber = episodeNumber,
+                        Name = episode.SeriesTitle + " - " + "Episode " + episode.EpisodeNumber + " - " + episode.Title,
+                        Schedules = new List<Schedule>(),
+                    }
+                }, this.anilistClient, -1));
+            }
+        }
+
+        return temp;
+    }
+
+    private bool IsMatchingIdentifier(string title, string identifier)
+        => title.ToUpper().Contains(identifier.ToUpper());
 
     private async Task<TokenResult> GetTokenAsync(CancellationToken cancellationToken, string refreshToken = null)
     {

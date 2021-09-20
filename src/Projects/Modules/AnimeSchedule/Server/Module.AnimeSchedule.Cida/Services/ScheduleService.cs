@@ -206,6 +206,13 @@ public class ScheduleService
         }
     }
 
+    public async Task<IEnumerable<AnimeTestResult>> TestAnime(AnimeInfo info, CancellationToken cancellationToken)
+    {
+        var handler = this.GetHandler(info);
+        var testResults = await handler.GetTestResults(info, cancellationToken);
+        return testResults.Select(x => x.GetTestResult());
+    }
+
     private AnimeInfoHandlerBase GetHandler(AnimeInfo animeInfo)
     {
         if (this.handlers.TryGetValue(animeInfo.Type, out var handler))

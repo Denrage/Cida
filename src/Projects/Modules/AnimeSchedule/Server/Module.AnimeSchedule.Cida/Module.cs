@@ -590,6 +590,29 @@ public class Module : IModule
             }
         }
 
+        public override async Task<TestAnimeResponse> TestAnime(TestAnimeRequest request, ServerCallContext context)
+        {
+            this.logger.Info($"Test Anime {request.Identifier}");
+            var results = await this.scheduleService.TestAnime(new AnimeInfo()
+            {
+                AnimeFilter = new AnimeFilter() { Filter = request.Filter },
+                Id = request.Id,
+                Identifier = request.Identifier,
+                Type = request.Type.FromGrpc(),
+            }, context.CancellationToken);
+
+            var response = new TestAnimeResponse();
+            response.Animes.AddRange(results.Select(x => new TestAnimeResponse.Types.AnimeItem()
+            {
+                EpisodeName = x.EpisodeName,
+                EpisodeNumber = x.EpisodeNumber,
+                SeasonTitle = x.SeasonTitle,
+                SeriesTitle = x.SeriesTitle,
+            }));
+
+            return response;
+        }
+
         private static bool ValidForFolder(Animeschedule.AnimeInfoType type)
         {
             switch (type)

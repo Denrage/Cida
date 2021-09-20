@@ -16,4 +16,6 @@ public abstract class AnimeInfoHandlerBase
     }
 
     public abstract Task<IEnumerable<IActionable>> GetNewEpisodes(AnimeInfo animeInfo, int scheduleId, CancellationToken cancellationToken);
+
+    public abstract Task<IEnumerable<ITestable>> GetTestResults(AnimeInfo animeInfo, CancellationToken cancellationToken);
 }

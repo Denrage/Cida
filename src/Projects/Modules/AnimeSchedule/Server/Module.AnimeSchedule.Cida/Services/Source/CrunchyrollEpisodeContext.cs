@@ -5,7 +5,7 @@ using Module.AnimeSchedule.Cida.Models;
 
 namespace Module.AnimeSchedule.Cida.Services.Source;
 
-public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
+public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable, ITestable
 {
     private readonly Anilist4Net.Client anilistClient;
     private readonly int scheduleId;
@@ -32,7 +32,7 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
             .WithFields(
                 new[]
                 {
-                        new EmbedFieldBuilder().WithName($"Season {this.CrunchyrollEpisode.SeasonNumber}").WithValue(this.CrunchyrollEpisode.SeasonTitle).WithIsInline(true),
+                    new EmbedFieldBuilder().WithName($"Season {this.CrunchyrollEpisode.SeasonNumber}").WithValue(this.CrunchyrollEpisode.SeasonTitle).WithIsInline(true),
                 });
 
         return embedBuilder.Build();
@@ -52,5 +52,16 @@ public class CrunchyrollEpisodeContext : INotifyable, IDatabaseSavable
             await context.Episodes.AddAsync(this.CrunchyrollEpisode.Episode, cancellationToken);
             await context.CrunchyrollEpisodes.AddAsync(this.CrunchyrollEpisode, cancellationToken);
         }
+    }
+
+    public AnimeTestResult GetTestResult()
+    {
+        return new AnimeTestResult()
+        {
+            EpisodeName = this.CrunchyrollEpisode.Title,
+            EpisodeNumber = this.CrunchyrollEpisode.Episode.EpisodeNumber,
+            SeasonTitle = this.CrunchyrollEpisode.SeasonTitle,
+            SeriesTitle = this.CrunchyrollEpisode.SeriesTitle,
+        };
     }
 }
