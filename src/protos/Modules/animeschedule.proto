@@ -92,7 +92,8 @@ message CreateAnimeResponse {
         ANIMEINFONOTFOUND = 2; // Only returned if Override was true
         ANIMENOTFOUND = 3;
         MISSINGFOLDER = 4;
-        UNKNOWN = 5;
+        TYPECHANGED = 5;
+        UNKNOWN = 6;
     }
     Result CreateResult = 1;
 }

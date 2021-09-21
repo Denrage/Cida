@@ -256,12 +256,55 @@ public class Module : IModule
 
                 if (request.Override)
                 {
-                    var existingeAnimeInfo = await dbContext.AnimeInfos.FindAsync(new object[] { request.Id }, context.CancellationToken);
+                    var existingeAnimeInfo = await dbContext.AnimeInfos.Include(x => x.AnimeFilter).Include(x => x.AnimeFolder).FirstOrDefaultAsync(x => x.Id == request.Id, context.CancellationToken);
 
                     if (existingeAnimeInfo != null)
                     {
+                        if (existingeAnimeInfo.Type != request.Type.FromGrpc())
+                        {
+                            return new CreateAnimeResponse()
+                            {
+                                CreateResult = CreateAnimeResponse.Types.Result.Typechanged,
+                            };
+                        }
+
                         dbContext.Update(existingeAnimeInfo);
                         existingeAnimeInfo.Identifier = request.Identifier;
+
+                        if (string.IsNullOrEmpty(request.Filter))
+                        {
+                            if (existingeAnimeInfo.AnimeFilter != null)
+                            {
+                                dbContext.Remove(existingeAnimeInfo.AnimeFilter);
+                            }
+                        }
+                        else
+                        {
+                            if (existingeAnimeInfo.AnimeFilter == null)
+                            {
+                                existingeAnimeInfo.AnimeFilter = new AnimeFilter();
+                            }
+
+                            existingeAnimeInfo.AnimeFilter.Filter = request.Filter;
+                        }
+
+                        if (ValidForFolder(request.Type))
+                        {
+                            if (string.IsNullOrEmpty(request.Folder))
+                            {
+                                return new CreateAnimeResponse()
+                                {
+                                    CreateResult = CreateAnimeResponse.Types.Result.Missingfolder,
+                                };
+                            }
+                            else
+                            {
+                                existingeAnimeInfo.AnimeFolder.FolderName = request.Folder;
+                            }
+                        }
+
+                        
+
                         await dbContext.SaveChangesAsync(context.CancellationToken);
 
                         return new CreateAnimeResponse()
