@@ -27,7 +27,9 @@ public class WebhookViewModel : ViewModelBase
                     if (this.selectedWebhook != null)
                     {
                         this.selectedWebhook.Schedules = (await LoadSchedules(this.selectedWebhook.Id)).ToList();
-                        SubViewModel = new WebhookDetailViewModel(client, this.selectedWebhook);
+                        var viewModel = new WebhookDetailViewModel(client, this.selectedWebhook);
+                        viewModel.OnSave += async () => await this.LoadAsync();
+                        SubViewModel = viewModel;
                     }
                     else
                     {
@@ -52,6 +54,7 @@ public class WebhookViewModel : ViewModelBase
     public void Create()
     {
         var editViewModel = new WebhookDetailViewModel(client, new Webhook());
+        editViewModel.OnSave += async () => await this.LoadAsync();
         SubViewModel = editViewModel;
     }
 

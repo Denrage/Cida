@@ -7,6 +7,8 @@ public class WebhookDetailViewModel : ViewModelBase
     private readonly AnimeScheduleService.AnimeScheduleServiceClient client;
     private readonly Webhook webhook;
 
+    public event Action OnSave;
+
     public WebhookEditViewModel WebhookEdit { get; set; }
     public WebhookSchedulesViewModel WebhookSchedules { get; set; }
 
@@ -27,6 +29,8 @@ public class WebhookDetailViewModel : ViewModelBase
             WebhookId = this.webhook.Id,
             WebhookToken = this.webhook.Token,
         });
+
+        Task.Run(() => this.OnSave?.Invoke());
     }
 
 }

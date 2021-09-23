@@ -8,6 +8,8 @@ public class AnimeDetailViewModel : ViewModelBase
     private readonly AnimeScheduleService.AnimeScheduleServiceClient client;
     private readonly AnimeInfo animeInfo;
 
+    public event Action OnSave;
+
     public AnimeEditViewModel AnimeEdit { get; set; }
     public AnimeTestResultViewModel AnimeTestResult { get; set; }
 
