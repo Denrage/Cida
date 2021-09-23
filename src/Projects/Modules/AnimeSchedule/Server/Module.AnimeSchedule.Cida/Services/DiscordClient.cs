@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Discord.Webhook;
+﻿using Discord.Webhook;
 using Microsoft.EntityFrameworkCore;
-using Module.AnimeSchedule.Cida.Interfaces;
 using NLog;
 
 namespace Module.AnimeSchedule.Cida.Services;
@@ -57,17 +51,16 @@ public class DiscordClient
     public async Task InitializeClients(CancellationToken cancellationToken)
     {
         await this.settingsSemaphore.WaitAsync();
-
-        foreach (var item in this.clients)
-        {
-            item.Value.Dispose();
-        }
-
-        this.clients.Clear();
-        this.scheduleClientMapping.Clear();
-
         try
         {
+            foreach (var item in this.clients)
+            {
+                item.Value.Dispose();
+            }
+
+            this.clients.Clear();
+            this.scheduleClientMapping.Clear();
+
             using var context = this.getContext();
             var schedules = await context.Schedules.Include(x => x.DiscordWebhooks).ToArrayAsync(cancellationToken);
             var webhooks = await context.DiscordWebhooks.Include(x => x.Schedules).ToArrayAsync(cancellationToken);

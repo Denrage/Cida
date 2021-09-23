@@ -56,6 +56,18 @@
     <Compile Update="Views\Schedules\ScheduleView.axaml.cs">
       <DependentUpon>ScheduleView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\Webhooks\WebhookView.axaml.cs">
+      <DependentUpon>WebhookView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Webhooks\WebhookDetailView.axaml.cs">
+      <DependentUpon>WebhookDetailView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Webhooks\WebhookEditView.axaml.cs">
+      <DependentUpon>WebhookEditView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Webhooks\WebhookSchedulesView.axaml.cs">
+      <DependentUpon>WebhookSchedulesView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Update="PackagesInfo.json">

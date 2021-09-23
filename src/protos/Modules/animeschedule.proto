@@ -10,6 +10,7 @@ service AnimeScheduleService {
     rpc CreateSchedule (CreateScheduleRequest) returns (CreateScheduleResponse);
     rpc CreateDiscordWebhook (CreateDiscordWebhookRequest) returns (CreateWebhookResponse);
     rpc AssignWebhookToSchedule (AssignWebhookToScheduleRequest) returns (AssignWebhookToScheduleResponse);
+    rpc UnassignWebhookToSchedule (UnassignWebhookToScheduleRequest) returns (UnassignWebhookToScheduleResponse);
     rpc CreateAnime (CreateAnimeRequest) returns (CreateAnimeResponse);
     rpc AssignAnimeInfoToSchedule (AssignAnimeInfoToScheduleRequest) returns (AssignAnimeInfoToScheduleResponse);
     rpc UnassignAnimeInfoToSchedule (UnassignAnimeInfoToScheduleRequest) returns (UnassignAnimeInfoToScheduleResponse);
@@ -20,6 +21,8 @@ service AnimeScheduleService {
     rpc ForceRunSchedule (ForceRunScheduleRequest) returns (ForceRunScheduleResponse);
     rpc StartSchedule (StartScheduleRequest) returns (StartScheduleResponse);
     rpc TestAnime (TestAnimeRequest) returns (TestAnimeResponse);
+    rpc GetWebhooks (GetWebhooksRequest) returns (GetWebhooksResponse);
+    rpc GetSchedulesByWebhook (GetSchedulesByWebhookRequest) returns (GetSchedulesByWebhookResponse);
 }
 
 enum AnimeInfoType {
@@ -72,6 +75,21 @@ message AssignWebhookToScheduleResponse {
         WEBHOOKNOTFOUND = 2;
         SCHEDULENOTFOUND = 3;
         UNKNOWN = 4;
+    }
+    Result AssignResult = 1;
+}
+
+
+message UnassignWebhookToScheduleRequest {
+    uint64 WebhookId = 1;
+    int32 ScheduleId = 2;
+}
+
+message UnassignWebhookToScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
     }
     Result AssignResult = 1;
 }
@@ -234,6 +252,39 @@ message TestAnimeResponse {
     }
 
     repeated AnimeItem Animes = 1;
+}
+
+message GetWebhooksRequest {
+}
+
+message GetWebhooksResponse {
+    message WebhhokItem {
+        uint64 WebhookId = 1;
+        string WebhookToken = 2;
+    }
+
+    repeated WebhhokItem Webhooks = 1;
+}
+
+message GetSchedulesByWebhookRequest {
+    uint64 WebhookId = 1;
+}
+
+message GetSchedulesByWebhookResponse {
+    message ScheduleItem {
+        enum ScheduleState {
+            Running = 0;
+            Stopped = 1;
+            Waiting = 2;
+        }
+        int32 ScheduleId = 1;
+        string Name = 2;
+        google.protobuf.Timestamp StartDate = 3;
+        google.protobuf.Duration Interval = 4;
+        ScheduleState State = 5;
+    }
+
+    repeated ScheduleItem Schedules = 1;
 }
 
 

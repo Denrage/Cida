@@ -51,7 +51,7 @@ public class Module : IModule
                 new DownloadActionService(ircAnimeClient, moduleLogger.CreateSubLogger("Download-Action"), settingsService, discordClient, this.GetContext),
             }, this.GetContext, moduleLogger, moduleLogger.CreateSubLogger("Schedule-Service"));
 
-        this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), this.GetContext, scheduleService)), };
+        this.GrpcServices = new[] { AnimeScheduleService.BindService(new ScheduleAnimeImplementation(moduleLogger.CreateSubLogger("GRPC-Implementation"), this.GetContext, scheduleService, discordClient)), };
 
         // HACK: Add a after loaded all modules method to execute this without a delay
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -70,13 +70,15 @@ public class Module : IModule
         private readonly ILogger logger;
         private readonly Func<AnimeScheduleDbContext> getContext;
         private readonly ScheduleService scheduleService;
+        private readonly DiscordClient discordClient;
         private readonly Anilist4Net.Client anilistClient = new();
 
-        public ScheduleAnimeImplementation(ILogger logger, Func<AnimeScheduleDbContext> getContext, ScheduleService scheduleService)
+        public ScheduleAnimeImplementation(ILogger logger, Func<AnimeScheduleDbContext> getContext, ScheduleService scheduleService, DiscordClient discordClient)
         {
             this.logger = logger;
             this.getContext = getContext;
             this.scheduleService = scheduleService;
+            this.discordClient = discordClient;
         }
 
         public override async Task<VersionResponse> Version(VersionRequest request, ServerCallContext context)
@@ -230,6 +232,7 @@ public class Module : IModule
                 schedule.DiscordWebhooks.Add(webhook);
 
                 await dbContext.SaveChangesAsync(context.CancellationToken);
+                await this.discordClient.InitializeClients(context.CancellationToken);
 
                 return new AssignWebhookToScheduleResponse()
                 {
@@ -651,6 +654,93 @@ public class Module : IModule
                 EpisodeNumber = x.EpisodeNumber,
                 SeasonTitle = x.SeasonTitle,
                 SeriesTitle = x.SeriesTitle,
+            }));
+
+            return response;
+        }
+
+        public override async Task<GetWebhooksResponse> GetWebhooks(GetWebhooksRequest request, ServerCallContext context)
+        {
+            this.logger.Info($"Get webhooks");
+
+            using var dbContext = this.getContext();
+            var webhooks = await dbContext.DiscordWebhooks
+                .AsQueryable()
+                .ToArrayAsync(context.CancellationToken);
+            var response = new GetWebhooksResponse();
+            response.Webhooks.AddRange(webhooks.Select(x => new GetWebhooksResponse.Types.WebhhokItem()
+            {
+                WebhookId = x.WebhookId,
+                WebhookToken = x.WebhookToken,
+            }));
+
+            return response;
+        }
+
+        public override async Task<UnassignWebhookToScheduleResponse> UnassignWebhookToSchedule(UnassignWebhookToScheduleRequest request, ServerCallContext context)
+        {
+            this.logger.Info($"Unassign webhook: {request.ScheduleId} - {request.WebhookId}");
+
+            try
+            {
+                using var dbContext = this.getContext();
+                var schedule = await dbContext.Schedules.Include(x => x.DiscordWebhooks).FirstOrDefaultAsync(x => x.Id == request.ScheduleId, context.CancellationToken);
+                if (schedule == null)
+                {
+                    return new UnassignWebhookToScheduleResponse()
+                    {
+                        AssignResult = UnassignWebhookToScheduleResponse.Types.Result.Notexists,
+                    };
+                }
+
+                var webhook = schedule.DiscordWebhooks.FirstOrDefault(x => x.WebhookId == request.WebhookId);
+
+                if (webhook == null)
+                {
+                    return new UnassignWebhookToScheduleResponse()
+                    {
+                        AssignResult = UnassignWebhookToScheduleResponse.Types.Result.Notexists,
+                    };
+                }
+
+                dbContext.Update(schedule);
+                schedule.DiscordWebhooks.Remove(webhook);
+
+                await dbContext.SaveChangesAsync(context.CancellationToken);
+
+                await this.discordClient.InitializeClients(context.CancellationToken);
+
+                return new UnassignWebhookToScheduleResponse()
+                {
+                    AssignResult = UnassignWebhookToScheduleResponse.Types.Result.Success,
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return new UnassignWebhookToScheduleResponse()
+                {
+                    AssignResult = UnassignWebhookToScheduleResponse.Types.Result.Unknown,
+                };
+            }
+        }
+
+        public override async Task<GetSchedulesByWebhookResponse> GetSchedulesByWebhook(GetSchedulesByWebhookRequest request, ServerCallContext context)
+        {
+            this.logger.Info($"Get Schedules by Webhook: {request.WebhookId}");
+
+            using var dbContext = this.getContext();
+            var animeInfos = await dbContext.Schedules
+                .Include(x => x.DiscordWebhooks)
+                .Where(x => x.DiscordWebhooks.Select(y => y.WebhookId).Contains(request.WebhookId))
+                .AsQueryable()
+                .ToArrayAsync(context.CancellationToken);
+            var response = new GetSchedulesByWebhookResponse();
+            response.Schedules.AddRange(animeInfos.Select(x => new GetSchedulesByWebhookResponse.Types.ScheduleItem()
+            {
+                ScheduleId = x.Id,
+                Name = x.Name,
+                // TODO: Add rest
             }));
 
             return response;

@@ -17,14 +17,15 @@ public class AnimeScheduleViewModel : ModuleViewModel
 
     public AnimeScheduleViewModel(Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient client)
     {
-        Schedules = new ScheduleViewModel(client);
-        Animes = new AnimeViewModel(client);
-        Webhooks = new WebhookViewModel();
+        this.Schedules = new ScheduleViewModel(client);
+        this.Animes = new AnimeViewModel(client);
+        this.Webhooks = new WebhookViewModel(client);
     }
 
     public override async Task LoadAsync()
     {
-        await Schedules.LoadAsync();
-        await Animes.LoadAsync();
+        await this.Schedules.LoadAsync();
+        await this.Animes.LoadAsync();
+        await this.Webhooks.LoadAsync();
     }
 }
