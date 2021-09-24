@@ -4,22 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Module.AnimeSchedule.Avalonia.Views.Schedules.EditScheduleView">
-  <Grid RowDefinitions="*,Auto">
-    <StackPanel>
-      <StackPanel Orientation="Horizontal">
-        <TextBlock Text="Id"/>
-        <TextBlock Text="{Binding Schedule.ScheduleId}"/>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal">
-        <TextBlock Text="Name"/>
-        <TextBox Text="{Binding Schedule.Name}"/>
-      </StackPanel>
-      <DatePicker Header="StartDate" SelectedDate="{Binding SelectedDate}"/>
-      <TimePicker Header="Interval" ClockIdentifier="24HourClock" SelectedTime="{Binding SelectedTime}"/>
+  <StackPanel>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Id"/>
+      <TextBlock Text="{Binding Item.ScheduleId}"/>
     </StackPanel>
-    <Grid Grid.Row="1" ColumnDefinitions="*,*">
-      <Button Grid.Column="0" Content="Save" Command="{Binding Save}"/>
-      <Button Grid.Column="1" Content="Cancel" Command="{Binding Cancel}"/>
-    </Grid>
-  </Grid>
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Name"/>
+      <TextBox Text="{Binding Item.Name}"/>
+    </StackPanel>
+    <DatePicker Header="StartDate" SelectedDate="{Binding SelectedDate}"/>
+    <TimePicker Header="Interval" ClockIdentifier="24HourClock" SelectedTime="{Binding SelectedTime}"/>
+  </StackPanel>
 </UserControl>

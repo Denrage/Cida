@@ -1,80 +1,67 @@
 ﻿using Animeschedule;
 using Avalonia.Collections;
 using ReactiveUI;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Module.AnimeSchedule.Avalonia.ViewModels.Webhooks;
 
-public class WebhookSchedulesViewModel : ViewModelBase
+public class ScheduleComparer : IEqualityComparer<Schedule>
 {
-    private readonly List<Schedule> allSchedules = new();
+    public bool Equals(Schedule x, Schedule y)
+        => x.ScheduleId.Equals(y.ScheduleId);
+
+    public int GetHashCode([DisallowNull] Schedule obj)
+        => obj.ScheduleId.GetHashCode();
+}
+
+public class WebhookSchedulesViewModel : AssignmentViewModel<Webhook, Schedule, ScheduleComparer>
+{
     private readonly AnimeScheduleService.AnimeScheduleServiceClient client;
-    private Webhook webhook;
 
-    public Webhook Webhook
-    {
-        get => this.webhook;
-        set
-        {
-            if (this.webhook != value)
-            {
-                this.webhook = value;
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(this.WebhookSchedules));
-                this.RaisePropertyChanged(nameof(this.NotInWebhookSchedule));
-            }
-        }
-    }
-
-    public AvaloniaList<Schedule> WebhookSchedules => new AvaloniaList<Schedule>(this.Webhook?.Schedules ?? Enumerable.Empty<Schedule>());
-
-    public AvaloniaList<Schedule> NotInWebhookSchedule => new AvaloniaList<Schedule>(this.allSchedules.Where(x => !this.WebhookSchedules.Select(y => y.ScheduleId).Contains(x.ScheduleId)));
-
-    public WebhookSchedulesViewModel(AnimeScheduleService.AnimeScheduleServiceClient client, Webhook webhook)
+    public WebhookSchedulesViewModel(AnimeScheduleService.AnimeScheduleServiceClient client, Webhook item)
+         : base(item)
     {
         this.client = client;
-        this.webhook = webhook;
-        Task.Run(async () =>
-        {
-            var schedules = await this.client.GetSchedulesAsync(new GetSchedulesRequest());
-
-            this.allSchedules.AddRange(schedules.Schedules.Select(x => new Schedule()
-            {
-                ScheduleId = x.ScheduleId,
-                Name = x.Name,
-            }));
-            this.RaisePropertyChanged(nameof(this.NotInWebhookSchedule));
-        });
     }
 
-    public async Task AssignSchedule(Schedule schedule)
+    protected override void Add(Schedule item) => this.Item.Schedules.Add(item);
+
+    protected override async Task<bool> AssignInternal(Schedule item)
     {
-        var assignResult = await client.AssignWebhookToScheduleAsync(new AssignWebhookToScheduleRequest()
+        var assignResult = await this.client.AssignWebhookToScheduleAsync(new AssignWebhookToScheduleRequest()
         {
-            ScheduleId = schedule.ScheduleId,
-            WebhookId = this.Webhook.Id,
+            ScheduleId = item.ScheduleId,
+            WebhookId = this.Item.Id,
         });
 
-        if (assignResult.AssignResult == AssignWebhookToScheduleResponse.Types.Result.Success)
-        {
-            this.Webhook.Schedules.Add(schedule);
-            this.RaisePropertyChanged(nameof(this.WebhookSchedules));
-            this.RaisePropertyChanged(nameof(this.NotInWebhookSchedule));
-        }
+        return assignResult.AssignResult == AssignWebhookToScheduleResponse.Types.Result.Success;
     }
 
-    public async Task UnassignSchedule(Schedule schedule)
+    protected override async Task<IEnumerable<Schedule>> GetAssignableItems()
+    {
+        var schedules = await this.client.GetSchedulesAsync(new GetSchedulesRequest());
+
+        return schedules.Schedules.Select(x => new Schedule()
+        {
+            ScheduleId = x.ScheduleId,
+            Name = x.Name,
+        });
+    }
+
+    protected override IEnumerable<Schedule> GetAssignedItems()
+        => this.Item.Schedules;
+
+    protected override void Remove(Schedule item)
+        => this.Item.Schedules.Remove(item);
+
+    protected override async Task<bool> UnassignInternal(Schedule item)
     {
         var unassignResult = await client.UnassignWebhookToScheduleAsync(new UnassignWebhookToScheduleRequest()
         {
-            ScheduleId = schedule.ScheduleId,
-            WebhookId = this.Webhook.Id,
+            ScheduleId = item.ScheduleId,
+            WebhookId = this.Item.Id,
         });
 
-        if (unassignResult.AssignResult == UnassignWebhookToScheduleResponse.Types.Result.Success)
-        {
-            this.Webhook.Schedules.Remove(schedule);
-            this.RaisePropertyChanged(nameof(this.WebhookSchedules));
-            this.RaisePropertyChanged(nameof(this.NotInWebhookSchedule));
-        }
+        return unassignResult.AssignResult == UnassignWebhookToScheduleResponse.Types.Result.Success;
     }
 }

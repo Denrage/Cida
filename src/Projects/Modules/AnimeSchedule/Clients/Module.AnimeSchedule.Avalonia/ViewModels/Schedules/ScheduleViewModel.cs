@@ -28,7 +28,7 @@ public class ScheduleViewModel : ViewModelBase
                     if (selectedSchedule != null)
                     {
                         selectedSchedule.Animes = (await LoadAnimes(selectedSchedule.ScheduleId)).ToList();
-                        SubViewModel = new ScheduleAnimesViewModel(client, selectedSchedule);
+                        SubViewModel = new ScheduleDetailViewModel(client, selectedSchedule, OnEditClose);
                     }
                     else
                     {
@@ -91,22 +91,9 @@ public class ScheduleViewModel : ViewModelBase
         });
     }
 
-    public void Edit()
-    {
-        var editViewModel = new EditScheduleViewModel(client, selectedSchedule);
-        editViewModel.OnClose += OnEditClose;
-
-        SubViewModel = editViewModel;
-
-    }
-
     public void Create()
     {
-        var editViewModel = new EditScheduleViewModel(client, new Schedule());
-        editViewModel.OnClose += OnEditClose;
-
-        SubViewModel = editViewModel;
-
+        SubViewModel = new ScheduleDetailViewModel(client, new Schedule(), this.OnEditClose);
     }
 
     private async void OnEditClose(Schedule schedule)

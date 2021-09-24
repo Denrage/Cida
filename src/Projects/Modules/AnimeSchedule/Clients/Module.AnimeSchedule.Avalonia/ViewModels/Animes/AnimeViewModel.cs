@@ -29,9 +29,7 @@ public class AnimeViewModel : ViewModelBase
                 {
                     if (selectedAnime != null)
                     {
-                        var viewModel = new AnimeDetailViewModel(client, selectedAnime);
-                        viewModel.OnSave += async () => await this.LoadAsync();
-                        SubViewModel = viewModel;
+                        SubViewModel = new AnimeDetailViewModel(client, selectedAnime, this.OnChange);
                     }
                     else
                     {
@@ -55,9 +53,7 @@ public class AnimeViewModel : ViewModelBase
 
     public void Create()
     {
-        var editViewModel = new AnimeDetailViewModel(client, new AnimeInfo());
-        editViewModel.OnSave += async () => await this.LoadAsync();
-        SubViewModel = editViewModel;
+        SubViewModel = new AnimeDetailViewModel(client, new AnimeInfo(), this.OnChange);
     }
 
     public async Task LoadAsync()
@@ -73,5 +69,18 @@ public class AnimeViewModel : ViewModelBase
             AnimeFolder = x.Folder,
             Filter = x.Filter,
         }));
+    }
+
+    private async void OnChange(AnimeInfo animeInfo)
+    {
+        await this.LoadAsync();
+        if (animeInfo.Id != default)
+        {
+            this.SelectedAnime = this.Animes.FirstOrDefault(x => x.Id == animeInfo.Id);
+        }
+        else
+        {
+            this.SelectedAnime = null;
+        }
     }
 }

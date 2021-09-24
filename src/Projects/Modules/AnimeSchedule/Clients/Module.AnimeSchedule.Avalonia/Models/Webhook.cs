@@ -6,5 +6,5 @@ public class Webhook
 
     public string Token { get; set; }
 
-    public List<Schedule> Schedules { get; set; }
+    public List<Schedule> Schedules { get; set; } = new();
 }

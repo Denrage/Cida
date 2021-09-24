@@ -12,5 +12,5 @@ public class Schedule
 
     public ScheduleState State { get; set; }
 
-    public List<AnimeInfo> Animes { get; set; }
+    public List<AnimeInfo> Animes { get; set; } = new();
 }

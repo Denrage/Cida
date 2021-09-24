@@ -27,9 +27,7 @@ public class WebhookViewModel : ViewModelBase
                     if (this.selectedWebhook != null)
                     {
                         this.selectedWebhook.Schedules = (await LoadSchedules(this.selectedWebhook.Id)).ToList();
-                        var viewModel = new WebhookDetailViewModel(client, this.selectedWebhook);
-                        viewModel.OnSave += async () => await this.LoadAsync();
-                        SubViewModel = viewModel;
+                        SubViewModel = new WebhookDetailViewModel(client, this.selectedWebhook, this.OnChange);
                     }
                     else
                     {
@@ -53,9 +51,7 @@ public class WebhookViewModel : ViewModelBase
 
     public void Create()
     {
-        var editViewModel = new WebhookDetailViewModel(client, new Webhook());
-        editViewModel.OnSave += async () => await this.LoadAsync();
-        SubViewModel = editViewModel;
+        SubViewModel = new WebhookDetailViewModel(client, new Webhook(), this.OnChange);
     }
 
     private async Task<IEnumerable<Schedule>> LoadSchedules(ulong webhookId)
@@ -71,6 +67,19 @@ public class WebhookViewModel : ViewModelBase
             ScheduleId = x.ScheduleId,
             // TODO: Add rest
         });
+    }
+
+    private async void OnChange(Webhook webhook)
+    {
+        await LoadAsync();
+        if (webhook.Id != default)
+        {
+            this.SelectedWebhook = this.Webhooks.FirstOrDefault(x => x.Id == webhook.Id);
+        }
+        else
+        {
+            this.SelectedWebhook = null;
+        }
     }
 
     public async Task LoadAsync()

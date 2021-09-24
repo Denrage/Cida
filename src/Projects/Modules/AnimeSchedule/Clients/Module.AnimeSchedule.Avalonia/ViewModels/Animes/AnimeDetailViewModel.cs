@@ -7,18 +7,18 @@ public class AnimeDetailViewModel : ViewModelBase
 {
     private readonly AnimeScheduleService.AnimeScheduleServiceClient client;
     private readonly AnimeInfo animeInfo;
-
-    public event Action OnSave;
+    private readonly Action<AnimeInfo> onChange;
 
     public AnimeEditViewModel AnimeEdit { get; set; }
     public AnimeTestResultViewModel AnimeTestResult { get; set; }
 
-    public AnimeDetailViewModel(Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient client, AnimeInfo animeInfo)
+    public AnimeDetailViewModel(Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient client, AnimeInfo animeInfo, Action<AnimeInfo> onChange)
     {
         this.AnimeEdit = new AnimeEditViewModel(animeInfo);
         this.AnimeTestResult = new AnimeTestResultViewModel(client, animeInfo);
         this.client = client;
         this.animeInfo = animeInfo;
+        this.onChange = onChange;
     }
 
     public async Task Save()
@@ -34,6 +34,8 @@ public class AnimeDetailViewModel : ViewModelBase
             Type = this.animeInfo.Type.ToGrpc(),
             Override = existingAnime != null,
         });
+
+        this.onChange(this.animeInfo);
     }
 
     public async Task Test()

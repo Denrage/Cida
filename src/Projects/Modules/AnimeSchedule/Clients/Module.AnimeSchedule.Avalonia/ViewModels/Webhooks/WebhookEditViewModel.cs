@@ -1,13 +1,9 @@
 ﻿namespace Module.AnimeSchedule.Avalonia.ViewModels.Webhooks;
 
-public class WebhookEditViewModel : ViewModelBase
+public class WebhookEditViewModel : EditViewModel<Webhook>
 {
-    private readonly Webhook webhook;
-
-    public Webhook Webhook => this.webhook;
-
     public WebhookEditViewModel(Webhook webhook)
+        : base(webhook)
     {
-        this.webhook = webhook;
     }
 }

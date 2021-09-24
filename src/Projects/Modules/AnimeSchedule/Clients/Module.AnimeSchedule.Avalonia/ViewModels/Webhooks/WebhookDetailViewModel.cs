@@ -6,18 +6,18 @@ public class WebhookDetailViewModel : ViewModelBase
 {
     private readonly AnimeScheduleService.AnimeScheduleServiceClient client;
     private readonly Webhook webhook;
-
-    public event Action OnSave;
+    private readonly Action<Webhook> onChange;
 
     public WebhookEditViewModel WebhookEdit { get; set; }
     public WebhookSchedulesViewModel WebhookSchedules { get; set; }
 
-    public WebhookDetailViewModel(AnimeScheduleService.AnimeScheduleServiceClient client, Webhook webhook)
+    public WebhookDetailViewModel(AnimeScheduleService.AnimeScheduleServiceClient client, Webhook webhook, Action<Webhook> onChange)
     {
         this.WebhookEdit = new WebhookEditViewModel(webhook);
         this.WebhookSchedules = new WebhookSchedulesViewModel(client, webhook);
         this.client = client;
         this.webhook = webhook;
+        this.onChange = onChange;
     }
 
     public async Task Save()
@@ -30,7 +30,7 @@ public class WebhookDetailViewModel : ViewModelBase
             WebhookToken = this.webhook.Token,
         });
 
-        Task.Run(() => this.OnSave?.Invoke());
+        this.onChange(this.webhook);
     }
 
 }

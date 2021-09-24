@@ -12,7 +12,7 @@
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Visible">
-        <ItemsRepeater Items="{Binding ScheduleAnimes}">
+        <ItemsRepeater Items="{Binding Assigned}">
           <ItemsRepeater.ItemTemplate>
             <DataTemplate>
               <Border Padding="5" BorderBrush="Black" BorderThickness="2">
@@ -22,7 +22,7 @@
                     <ColumnDefinition Width="0.1*" />
                   </Grid.ColumnDefinitions>
                   <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="{Binding Identifier}"/>
-                  <Button VerticalAlignment="Center" Grid.Column="1" Content="-" Command="{Binding $parent[UserControl].DataContext.UnassignAnime}" CommandParameter="{Binding .}" />
+                  <Button VerticalAlignment="Center" Grid.Column="1" Content="-" Command="{Binding $parent[UserControl].DataContext.Unassign}" CommandParameter="{Binding .}" />
                 </Grid>
               </Border>
             </DataTemplate>
@@ -31,7 +31,7 @@
       </ScrollViewer>
       <Border Grid.Row="1" Background="LightGray" BorderThickness="3" BorderBrush="Black"/>
       <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Visible">
-        <ItemsRepeater Items="{Binding NotInScheduleAnime}">
+        <ItemsRepeater Items="{Binding NotAssigned}">
           <ItemsRepeater.ItemTemplate>
             <DataTemplate>
               <Border Padding="5" BorderBrush="Black" BorderThickness="2">
@@ -41,7 +41,7 @@
                     <ColumnDefinition Width="0.1*" />
                   </Grid.ColumnDefinitions>
                   <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="{Binding Identifier}"/>
-                  <Button VerticalAlignment="Center" Grid.Column="1" Content="+" CommandParameter="{Binding .}" Command="{Binding $parent[UserControl].DataContext.AssignAnime}" />
+                  <Button VerticalAlignment="Center" Grid.Column="1" Content="+" CommandParameter="{Binding .}" Command="{Binding $parent[UserControl].DataContext.Assign}" />
                 </Grid>
               </Border>
             </DataTemplate>
