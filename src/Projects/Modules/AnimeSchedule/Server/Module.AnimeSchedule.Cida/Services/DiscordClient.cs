@@ -48,6 +48,20 @@ public class DiscordClient
         }
     }
 
+    public bool TestWebhook(ulong webhook, string token)
+    {
+        try
+        {
+            var client = new DiscordWebhookClient(webhook, token);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public async Task InitializeClients(CancellationToken cancellationToken)
     {
         await this.settingsSemaphore.WaitAsync();

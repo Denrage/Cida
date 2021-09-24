@@ -58,7 +58,8 @@ message CreateWebhookResponse {
     enum Result {
         SUCCESS = 0;
         ALREADYEXISTS = 1;
-        UNKNOWN = 2;
+        INVALIDWEBHOOK = 2;
+        UNKNOWN = 3;
     }
     Result CreateResult = 1;
 }

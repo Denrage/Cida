@@ -162,6 +162,14 @@ public class Module : IModule
             this.logger.Info($"Create webhook: {request.WebhookId} - {request.WebhookToken}");
             try
             {
+                if (!this.discordClient.TestWebhook(request.WebhookId, request.WebhookToken))
+                {
+                    return new CreateWebhookResponse()
+                    {
+                        CreateResult = CreateWebhookResponse.Types.Result.Invalidwebhook,
+                    };
+                }
+
                 using var dbContext = this.getContext();
 
                 if ((await dbContext.DiscordWebhooks.FindAsync(new object[] { request.WebhookId }, context.CancellationToken)) != null)
