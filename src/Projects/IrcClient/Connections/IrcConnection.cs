@@ -84,8 +84,7 @@ namespace IrcClient.Connections
 
             this.receiverCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            // TODO: use CancellationToken for socket when it's implemented in .net
-            await this.socket.ConnectAsync(this.host, this.port).ConfigureAwait(false);
+            await this.socket.ConnectAsync(this.host, this.port, token).ConfigureAwait(false);
 
             this.receiver = Task.Factory.StartNew(async () =>
             {
