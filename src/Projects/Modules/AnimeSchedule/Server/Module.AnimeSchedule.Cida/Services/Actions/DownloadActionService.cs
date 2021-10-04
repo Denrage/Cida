@@ -125,5 +125,7 @@ public class DownloadActionService : IMultiActionService
             // TODO: DO SOMETHING HERE
             this.logger.Warn($"File '{animeInfo.FileName}' has not a correct hash and can be incomplete/altered");
         }
+
+        this.logger.Info($"Downloaded anime '{animeInfo.AnimeName}' to '{directory}'");
     }
 }
