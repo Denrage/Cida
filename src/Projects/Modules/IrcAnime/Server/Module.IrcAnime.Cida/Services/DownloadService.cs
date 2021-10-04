@@ -46,6 +46,8 @@ namespace Module.IrcAnime.Cida.Services
             this.ftpClient = ftpClient;
             this.downloadDirectory = downloadDirectory;
 
+            Directory.CreateDirectory(this.tempFolder);
+
             this.InitializeIrcConnection(host, port, moduleLogger.CreateSubLogger("IrcClient"));
         }
 
