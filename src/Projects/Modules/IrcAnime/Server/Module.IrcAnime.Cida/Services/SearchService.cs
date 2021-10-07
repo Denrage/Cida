@@ -21,21 +21,20 @@ namespace Module.IrcAnime.Cida.Services
         private const string BotPart = "/bots";
         private const string SearchPart = "/search?query=";
         private readonly ILogger logger;
-        private DateTime lastBotUpdate;
+        private readonly HttpClient httpClient;
         private List<BotData.Bot> Bots;
 
         public SearchService(ILogger logger)
         {
             this.logger = logger;
+            this.httpClient = new HttpClient();
         }
 
         public async Task<SearchResult[]> SearchAsync(string searchTerm, CancellationToken cancellationToken)
         {
             this.logger.Info($"Searching on nibl for '{searchTerm}'");
             await this.EnsureBotListAsync(cancellationToken);
-            var webClient = new WebClient { Proxy = null };
-            cancellationToken.Register(() => webClient.CancelAsync());
-            var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + SearchPart + searchTerm}")).ConfigureAwait(false);
+            var page = await this.httpClient.GetStringAsync($"{BaseUrl + SearchPart + searchTerm}", cancellationToken).ConfigureAwait(false);
             var result = this.Parse(page).ToArray();
             this.logger.Info($"Found {result.Length} items for '{searchTerm}");
             return result;
@@ -68,48 +67,13 @@ namespace Module.IrcAnime.Cida.Services
             }
         }
 
-        public SearchResult[] Search(string searchTerm)
-        {
-            this.logger.Info($"Searching on nibl for '{searchTerm}'");
-            this.EnsureBotList();
-            var webClient = new WebClient { Proxy = null };
-            var page = webClient.DownloadString(new Uri($"{BaseUrl + SearchPart + searchTerm}"));
-            var result = this.Parse(page).ToArray();
-            this.logger.Info($"Found {result.Length} items for '{searchTerm}");
-            return result;
-        }
-
         private async Task EnsureBotListAsync(CancellationToken cancellationToken)
         {
             this.logger.Info("Ensuring botlist");
             if (this.Bots == null)
             {
                 this.logger.Info("bot list out of date, refreshing");
-                var webClient = new WebClient { Proxy = null };
-                cancellationToken.Register(() => webClient.CancelAsync());
-                var page = await webClient.DownloadStringTaskAsync(new Uri($"{BaseUrl + BotPart}")).ConfigureAwait(false);
-                var result = JsonSerializer.Deserialize<BotData>(page);
-                this.Bots = new List<BotData.Bot>();
-                if (result.Status == "OK")
-                {
-                    this.Bots.AddRange(result.Bots);
-                    this.logger.Info($"found {this.Bots.Count} bots");
-                }
-                else
-                {
-                    this.logger.Error($"Error on refreshing botlist. Result Code: {result.Status}");
-                }
-            }
-        }
-
-        private void EnsureBotList()
-        {
-            this.logger.Info("Ensuring botlist");
-            if (this.Bots == null)
-            {
-                this.logger.Info("bot list out of date, refreshing");
-                var webClient = new WebClient { Proxy = null };
-                var page = webClient.DownloadString(new Uri($"{BaseUrl + BotPart}"));
+                var page = await this.httpClient.GetStringAsync($"{BaseUrl + BotPart}", cancellationToken).ConfigureAwait(false);
                 var result = JsonSerializer.Deserialize<BotData>(page);
                 this.Bots = new List<BotData.Bot>();
                 if (result.Status == "OK")

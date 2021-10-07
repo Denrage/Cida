@@ -1,249 +1,294 @@
-﻿using Filesystem = Cida.Api.Models.Filesystem;
-using Google.Protobuf.WellKnownTypes;
-using IrcClient;
-using IrcClient.Connections;
-using IrcClient.Handlers;
-using IrcClient.Commands;
-using IrcClient.Clients;
-using Microsoft.EntityFrameworkCore;
-using Module.IrcAnime.Cida.Models;
-using Module.IrcAnime.Cida.Models.Database;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http.Headers;
-using System.Text;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Cida.Api;
-using System.Security.Cryptography;
-using System.Linq;
-using System.Collections.Immutable;
+using IrcClient.Clients;
+using IrcClient.Commands;
+using IrcClient.Connections;
+using IrcClient.Handlers;
+using Module.IrcAnime.Cida.Models;
+using Module.IrcAnime.Cida.Models.Database;
 using NLog;
+using Filesystem = Cida.Api.Models.Filesystem;
 
 namespace Module.IrcAnime.Cida.Services
 {
-    public partial class DownloadService
+    public class DownloadService
     {
-        public static string Separator = "/";
+        private const string Separator = "/";
         private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "IrcDownloads");
-        private readonly RefCounted<IrcConnection> ircConnection;
-        private readonly ConcurrentDictionary<string, CreateDownloaderContext> requestedDownloads;
-        private readonly ConcurrentDictionary<string, DownloadProgress> downloadStatus;
+        private readonly ILogger logger;
         private readonly Func<IrcAnimeDbContext> getContext;
         private readonly IFtpClient ftpClient;
         private readonly Filesystem.Directory downloadDirectory;
-        private readonly SemaphoreSlim ircConnectSemaphore = new SemaphoreSlim(1);
-        private readonly SemaphoreSlim ircDownloadQueueSemaphore = new SemaphoreSlim(1);
-        private readonly ILogger logger;
+        private readonly ConcurrentDictionary<string, CancellationToken> requestedDownloads = new ConcurrentDictionary<string, CancellationToken>();
+        private readonly ConcurrentDictionary<string, DownloadProgress> downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
+
+        private RefCounted<IrcConnection> ircConnection;
 
         public IReadOnlyDictionary<string, DownloadProgress> CurrentDownloadStatus => this.downloadStatus.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-        public DownloadService(string host, int port, Func<IrcAnimeDbContext> getContext, IFtpClient ftpClient, Filesystem.Directory downloadDirectory, IModuleLogger moduleLogger)
+        public DownloadService(
+            string host,
+            int port,
+            Func<IrcAnimeDbContext> getContext,
+            IFtpClient ftpClient,
+            Filesystem.Directory downloadDirectory,
+            IModuleLogger moduleLogger)
         {
             this.logger = moduleLogger.CreateSubLogger("Download-Service");
-            this.requestedDownloads = new ConcurrentDictionary<string, CreateDownloaderContext>();
-            this.downloadStatus = new ConcurrentDictionary<string, DownloadProgress>();
+            this.getContext = getContext;
+            this.ftpClient = ftpClient;
+            this.downloadDirectory = downloadDirectory;
 
-            var ircClient = new IrcClient.Clients.IrcClient(
-                (c) =>
-                {
-                    c.MessageReceived += (m) => this.logger.Log(LogLevel.Debug, $"Received \"{m}\"");
-                    c.MessageSent += (m) => this.logger.Log(LogLevel.Debug, $"Sent \"{m}\"");
+            Directory.CreateDirectory(this.tempFolder);
 
-                    c.AddHandler(new IrcHandler(c));
-                    c.AddHandler(new CtcpHandler(c));
-                    c.AddHandler(
-                        new DccHandler(c)
-                        {
-                            FileReceived = (c) =>
-                            {
-                                this.logger.Info($"Received incoming filedownload '{c.Filename}'");
-                                if (this.requestedDownloads.TryGetValue(c.Filename, out var context))
-                                {
-                                    context.Downloader = c;
-                                    context.ManualResetEvent.Set();
-                                }
-                            }
-                        }
-                    );
-                }
-            );
+            this.InitializeIrcConnection(host, port, moduleLogger.CreateSubLogger("IrcClient"));
+        }
 
+        private void InitializeIrcConnection(string host, int port, ILogger ircClientLogger)
+        {
             string name = "ad_" + Guid.NewGuid();
+            var ircClient = new IrcClient.Clients.IrcClient(ircConnection =>
+            {
+                ircConnection.MessageReceived += message => ircClientLogger.Debug($"Received message - {message}");
+                ircConnection.MessageSent += message => ircClientLogger.Debug($"Sent message - {message}");
+
+                ircConnection.AddHandler(new IrcHandler(ircConnection));
+                ircConnection.AddHandler(new CtcpHandler(ircConnection));
+                ircConnection.AddHandler(new DccHandler(ircConnection)
+                {
+                    FileReceived = connection =>
+                    {
+                        ircClientLogger.Info($"Received incoming filedownload '{connection.Filename}'");
+                        if (this.requestedDownloads.TryGetValue(connection.Filename, out var token))
+                        {
+                            Task.Run(async () => await this.Download(connection, token), token);
+                        }
+                        else
+                        {
+                            this.logger.Info($"Releasing IrcConnection for '{connection.Filename}'");
+                            Task.Run(async () => await this.ircConnection.Release(token));
+                        }
+                    }
+                });
+            });
+
             this.ircConnection = new RefCounted<IrcConnection>(
                 async token =>
                 {
-                    var c = ircClient.GetConnection(host, port);
+                    var connection = ircClient.GetConnection(host, port);
+                    ircClientLogger.Info($"Connecting to IRC-Server at '{host}:{port}'");
+                    await connection.Connect(token);
+                    await connection.Send(IrcCommand.Nick, name, token);
+                    await connection.Send(IrcCommand.User, $"{name} 0 * :realname", token);
+                    await connection.WaitUntilMotdReceived();
+                    await connection.Send(IrcCommand.Join, "#nibl", token);
 
-                    this.logger.Info("Connecting to IRC-Server");
-                    await c.Connect();
-                    await c.Send(IrcCommand.Nick, name);
-                    await c.Send(IrcCommand.User, $"{name} 0 * :realname");
-                    await c.WaitUntilMotdReceived();
-                    await c.Send(IrcCommand.Join, "#nibl");
+                    return connection;
+                });
+        }
 
-                    return c;
-                }
-            );
+        public async Task InitiateDownload(IEnumerable<DownloadRequest> downloadRequests, CancellationToken token)
+        {
+            var downloadIdentifier = Guid.NewGuid();
+            this.logger.Info($"Incoming download requests. Guid: '{downloadIdentifier.ToString() + Environment.NewLine}' {string.Join(Environment.NewLine, downloadRequests.Select(x => $"Name: '{x.FileName}' Bot: '{x.BotName}' PackageNumber: '{x.PackageNumber}'"))}");
 
-            this.downloadDirectory = downloadDirectory;
+            var notDownloaded = new List<DownloadRequest>();
 
-            this.getContext = getContext;
-            this.ftpClient = ftpClient;
-
-            if (System.IO.Directory.Exists(tempFolder))
+            foreach (var item in downloadRequests)
             {
-                logger.Info($"Clearing irc temp folder : '{tempFolder}'");
-                foreach (var file in System.IO.Directory.GetFiles(tempFolder))
+                if (!(await this.AlreadyDownloaded(item, token)))
                 {
-                    File.Delete(file);
+                    notDownloaded.Add(item);
+                }
+            }
+
+            if (!notDownloaded.Any())
+            {
+                return;
+            }
+
+            var batches = notDownloaded.GroupBy(x => x.BotName);
+
+            this.logger.Info($"Acquire IrcConnection for '{downloadIdentifier}'");
+
+            foreach (var item in batches)
+            {
+                var ircMessage = $"{item.Key} :xdcc batch {string.Join(",", item.Select(x => x.PackageNumber))}";
+                bool added = false;
+                foreach (var requestedDownload in item)
+                {
+                    await this.ircConnection.Acquire(token);
+                    if (this.requestedDownloads.ContainsKey(requestedDownload.FileName))
+                    {
+                        this.logger.Info($"Already downloading '{requestedDownload.FileName}'");
+                    }
+                    else
+                    {
+                        if (this.requestedDownloads.TryAdd(requestedDownload.FileName, token))
+                        {
+                            added = true;
+                        }
+                    }
+                }
+
+                if (added)
+                {
+                    this.logger.Info("Sending DCC message to bot");
+                    var ircConnection = await this.ircConnection.Acquire(token);
+                    await ircConnection.Send(IrcCommand.PrivMsg, ircMessage, token);
+                    await this.ircConnection.Release(token);
+                }
+                else
+                {
+                    return;
                 }
             }
         }
 
-        public async Task CreateDownloader(DownloadRequest downloadRequest, CancellationToken cancellationToken)
+        private async Task Download(DccClient downloadClient, CancellationToken token)
         {
-            this.logger.Info($"Incoming download request. Name: '{downloadRequest.FileName}' Bot: '{downloadRequest.BotName}' PackageNumber: '{downloadRequest.PackageNumber}'");
-            using (var context = this.getContext())
-            {
-                if ((await context.Downloads.FindAsync(new[] { downloadRequest.FileName }, cancellationToken)) != null)
-                {
-                    this.logger.Info($"Already downloaded '{downloadRequest.FileName}'");
-                    return;
-                }
-            }
-
-            var createDownloaderContext = new CreateDownloaderContext()
-            {
-                Filename = downloadRequest.FileName,
-            };
-            var dccDownloaderTask = new Task<DccClient>(() =>
-            {
-                createDownloaderContext.ManualResetEvent.Wait(cancellationToken);
-                return createDownloaderContext.Downloader;
-            }, TaskCreationOptions.LongRunning);
-
-            if (!await this.ircDownloadQueueSemaphore.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken))
-            {
-                this.logger.Warn("Download Lock took longer than 10 seconds to free!");
-            }
-
-            var ircConnection = await this.ircConnection.Acquire();
             try
             {
-                if (this.requestedDownloads.ContainsKey(downloadRequest.FileName))
+                this.logger.Info($"Prepare DCC Download for '{downloadClient.Filename}'");
+                if (this.downloadStatus.TryAdd(downloadClient.Filename, new DownloadProgress() { Size = downloadClient.Filesize }))
                 {
-                    this.logger.Info($"Already downloading '{downloadRequest.FileName}'");
-                    return;
-                }
-                if (this.requestedDownloads.TryAdd(downloadRequest.FileName, createDownloaderContext))
-                {
-                    await ircConnection.Send(IrcCommand.PrivMsg, $"{downloadRequest.BotName} :xdcc send #{downloadRequest.PackageNumber}");
-                }
-            }
-            finally
-            {
-                await this.ircConnection.Release();
-                this.ircDownloadQueueSemaphore.Release();
-            }
-
-            this.logger.Info($"Starting download '{downloadRequest.FileName}'");
-            dccDownloaderTask.Start();
-            var downloader = await dccDownloaderTask;
-
-            using (var context = this.getContext())
-            {
-                context.ChangeTracker.AutoDetectChangesEnabled = false;
-                await context.Downloads.AddAsync(new Download()
-                {
-                    Name = downloader.Filename,
-                    Size = downloader.Filesize,
-                    DownloadStatus = DownloadStatus.Downloading,
-                }, cancellationToken);
-
-                context.ChangeTracker.DetectChanges();
-                await context.SaveChangesAsync(cancellationToken);
-            }
-
-            this.logger.Info($"Download preparations complete. Initiate download '{downloadRequest.FileName}'");
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(async () => await this.DownloadFile(downloader, cancellationToken), cancellationToken);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        }
-
-        private async Task DownloadFile(DccClient downloader, CancellationToken cancellationToken)
-        {
-            if (this.downloadStatus.TryAdd(downloader.Filename, new DownloadProgress() { Size = downloader.Filesize }))
-            {
-                var previousPercent = 0.0;
-                DateTime start = default;
-                downloader.Progress += (downloadedBytes, size) =>
-                {
-                    var percent = Math.Round((double)downloadedBytes / (double)size, 4) * 100.0;
-                    if (percent % 2 == 0 && previousPercent != percent)
+                    var previousPercent = 0.0;
+                    DateTime start = default;
+                    downloadClient.Progress += (downloadedBytes, size) =>
                     {
-                        previousPercent = percent;
-                        var speed = (downloadedBytes / 1024) / (DateTime.Now - start).TotalSeconds;
-                        this.logger.Info($"{downloader.Filename}: {Math.Round(percent, 2)}% {string.Format("{0:n}", speed)} KB/s");
+                        var percent = Math.Round((double)downloadedBytes / (double)size, 4) * 100.0;
+                        if (percent % 2 == 0 && previousPercent != percent)
+                        {
+                            previousPercent = percent;
+                            var speed = (downloadedBytes / 1024) / (DateTime.Now - start).TotalSeconds;
+                            this.logger.Info($"{downloadClient.Filename}: {Math.Round(percent, 2)}% {string.Format("{0:n}", speed)} KB/s");
+                        }
+                        UpdateProgress(downloadClient, downloadedBytes);
+                    };
+
+                    if (File.Exists(Path.Combine(this.tempFolder, downloadClient.Filename)))
+                    {
+                        this.logger.Info($"deleting already existing file '{downloadClient.Filename}'");
+                        File.Delete(Path.Combine(this.tempFolder, downloadClient.Filename));
                     }
-                    UpdateProgress(downloader, downloadedBytes);
-                };
 
-                this.logger.Info($"Start download '{downloader.Filename}'");
-                start = DateTime.Now;
-                this.logger.Info($"Download finished '{downloader.Filename}'");
+                    async Task<Stream> getStream(CancellationToken cancellationToken)
+                        => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, downloadClient.Filename), FileMode.OpenOrCreate, FileAccess.ReadWrite));
 
-                this.downloadStatus.TryRemove(downloader.Filename, out _);
-
-                async Task<Stream> getStream(CancellationToken cancellationToken)
-                    => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, downloader.Filename), FileMode.Open, FileAccess.Read));
-
-                void onDispose()
-                {
-                    if (File.Exists(Path.Combine(this.tempFolder, downloader.Filename)))
+                    void onDispose()
                     {
-                        this.logger.Info($"deleting temporary file '{downloader.Filename}'");
-                        File.Delete(Path.Combine(this.tempFolder, downloader.Filename));
+                        if (File.Exists(Path.Combine(this.tempFolder, downloadClient.Filename)))
+                        {
+                            this.logger.Info($"deleting temporary file '{downloadClient.Filename}'");
+                            File.Delete(Path.Combine(this.tempFolder, downloadClient.Filename));
+                        }
                     }
-                }
 
-                using var file = new Filesystem.File(
-                    downloader.Filename,
-                    this.downloadDirectory,
-                    getStream,
-                    onDispose);
-
-                using (var stream = await file.GetStreamAsync(cancellationToken))
-                {
-                    await downloader.WriteToStream(stream, cancellationToken);
-                }
-
-                using (var context = this.getContext())
-                {
-                    context.ChangeTracker.AutoDetectChangesEnabled = false;
-                    var databaseDownloadEntry = await context.Downloads.FindAsync(downloader.Filename);
-                    if (databaseDownloadEntry != null)
+                    using (var context = this.getContext())
                     {
-                        context.Downloads.Update(databaseDownloadEntry);
-                        using var sha256 = SHA256.Create();
-                        using var fileStream = await file.GetStreamAsync(cancellationToken);
-
-                        databaseDownloadEntry.Sha256 = BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
-                        databaseDownloadEntry.Date = DateTime.Now;
-                        databaseDownloadEntry.FtpPath = file.FullPath(Separator);
-
-                        this.logger.Info($"Uploading '{downloader.Filename}' to FTP");
-                        await this.ftpClient.UploadFileAsync(file, cancellationToken);
-                        databaseDownloadEntry.DownloadStatus = DownloadStatus.Available;
+                        context.ChangeTracker.AutoDetectChangesEnabled = false;
+                        await context.Downloads.AddAsync(new Download()
+                        {
+                            Name = downloadClient.Filename,
+                            Size = downloadClient.Filesize,
+                            DownloadStatus = DownloadStatus.Downloading,
+                        }, token);
 
                         context.ChangeTracker.DetectChanges();
-                        await context.SaveChangesAsync();
+                        await context.SaveChangesAsync(token);
+                    }
+
+                    using var file = new Filesystem.File(
+                        downloadClient.Filename,
+                        this.downloadDirectory,
+                        getStream,
+                        onDispose);
+
+                    this.logger.Info($"Start download '{downloadClient.Filename}'");
+                    start = DateTime.Now;
+                    using (var stream = await file.GetStreamAsync(token))
+                    {
+                        await downloadClient.WriteToStream(stream, token);
+                    }
+
+                    this.logger.Info($"Download finished '{downloadClient.Filename}' in {(DateTime.Now - start).TotalSeconds} seconds");
+                    this.downloadStatus.TryRemove(downloadClient.Filename, out _);
+
+                    this.logger.Info($"Executing post download for '{downloadClient.Filename}'");
+                    await this.PostDownload(downloadClient, file, token);
+                    this.logger.Info($"Download completed '{downloadClient.Filename}'");
+
+                    this.logger.Info($"Releasing IrcConnection for '{downloadClient.Filename}'");
+                    await this.ircConnection.Release(token);
+                }
+                else
+                {
+                    this.logger.Error("Couldn't add download in downloadstatus list because it exists already. This should never happen!");
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Exception occured while downloading");
+            }
+        }
+
+        private async Task PostDownload(DccClient downloadClient, Filesystem.File file, CancellationToken token)
+        {
+            using var context = this.getContext();
+            context.ChangeTracker.AutoDetectChangesEnabled = false;
+            var databaseDownloadEntry = await context.Downloads.FindAsync(new object[] { downloadClient.Filename }, cancellationToken: token);
+            if (databaseDownloadEntry != null)
+            {
+                context.Downloads.Update(databaseDownloadEntry);
+                using var sha256 = SHA256.Create();
+                using (var fileStream = await file.GetStreamAsync(token))
+                {
+                    databaseDownloadEntry.Sha256 = BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
+                }
+
+                databaseDownloadEntry.Date = DateTime.Now;
+                databaseDownloadEntry.FtpPath = file.FullPath(Separator);
+
+                this.logger.Info($"Uploading '{downloadClient.Filename}' to FTP");
+                await this.ftpClient.UploadFileAsync(file, token);
+                databaseDownloadEntry.DownloadStatus = DownloadStatus.Available;
+
+                context.ChangeTracker.DetectChanges();
+                await context.SaveChangesAsync(token);
+            }
+        }
+
+        private async Task<bool> AlreadyDownloaded(DownloadRequest downloadRequest, CancellationToken token)
+        {
+            using (var context = this.getContext())
+            {
+                var existingDownload = (await context.Downloads.FindAsync(new object[] { downloadRequest.FileName }, token));
+                if (existingDownload != null)
+                {
+                    if (existingDownload.DownloadStatus == DownloadStatus.Available)
+                    {
+                        this.logger.Info($"Already downloaded '{downloadRequest.FileName}'");
+                        return true;
+                    }
+                    else
+                    {
+                        context.Remove(existingDownload);
+                        await context.SaveChangesAsync(token);
+                        this.logger.Info($"Download for '{downloadRequest.FileName}' didn't finish successfully, redownloading ...");
+                        return false;
                     }
                 }
-                this.logger.Info($"Download completed '{downloader.Filename}'");
             }
+
+            this.logger.Info($"'{downloadRequest.FileName}' is not yet downloaded!");
+            return false;
         }
 
         private void UpdateProgress(DccClient downloader, ulong downloadedBytes)
@@ -252,15 +297,6 @@ namespace Module.IrcAnime.Cida.Services
             {
                 downloadProgress.DownloadedBytes = downloadedBytes;
             }
-        }
-
-        private class CreateDownloaderContext
-        {
-            public string Filename { get; set; }
-
-            public DccClient Downloader { get; set; }
-
-            public ManualResetEventSlim ManualResetEvent { get; } = new ManualResetEventSlim(false);
         }
     }
 }

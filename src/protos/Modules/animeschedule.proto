@@ -1,0 +1,297 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+package animeschedule;
+
+service AnimeScheduleService {
+    rpc Version (VersionRequest) returns (VersionResponse);
+    rpc CreateSchedule (CreateScheduleRequest) returns (CreateScheduleResponse);
+    rpc CreateDiscordWebhook (CreateDiscordWebhookRequest) returns (CreateWebhookResponse);
+    rpc AssignWebhookToSchedule (AssignWebhookToScheduleRequest) returns (AssignWebhookToScheduleResponse);
+    rpc UnassignWebhookToSchedule (UnassignWebhookToScheduleRequest) returns (UnassignWebhookToScheduleResponse);
+    rpc CreateAnime (CreateAnimeRequest) returns (CreateAnimeResponse);
+    rpc AssignAnimeInfoToSchedule (AssignAnimeInfoToScheduleRequest) returns (AssignAnimeInfoToScheduleResponse);
+    rpc UnassignAnimeInfoToSchedule (UnassignAnimeInfoToScheduleRequest) returns (UnassignAnimeInfoToScheduleResponse);
+    rpc GetSchedules (GetSchedulesRequest) returns (GetSchedulesResponse);
+    rpc GetAnimesBySchedule (GetAnimesByScheduleRequest) returns (GetAnimesByScheduleResponse);
+    rpc GetAnimes (GetAnimesRequest) returns (GetAnimesResponse);
+    rpc StopSchedule (StopScheduleRequest) returns (StopScheduleResponse);
+    rpc ForceRunSchedule (ForceRunScheduleRequest) returns (ForceRunScheduleResponse);
+    rpc StartSchedule (StartScheduleRequest) returns (StartScheduleResponse);
+    rpc TestAnime (TestAnimeRequest) returns (TestAnimeResponse);
+    rpc GetWebhooks (GetWebhooksRequest) returns (GetWebhooksResponse);
+    rpc GetSchedulesByWebhook (GetSchedulesByWebhookRequest) returns (GetSchedulesByWebhookResponse);
+}
+
+enum AnimeInfoType {
+    CRUNCHYROLL = 0;
+    NIBL = 1;
+}
+
+message CreateScheduleRequest {
+    int32 ScheduleId = 1; // Ignored unless Override is true
+    string Name = 2;
+    google.protobuf.Timestamp StartDate = 3;
+    google.protobuf.Duration Interval = 4;
+    bool Override = 5; // Overrides Name, StartDate, Interval on Schedule with ScheduleId
+}
+
+message CreateScheduleResponse {
+    int32 ScheduleId = 1;
+    enum Result {
+        SUCCESS = 0;
+        ALREADYEXISTS = 1;
+        SCHEDULENOTFOUND = 2; // Only returned if Override was true
+        UNKNOWN = 3;
+    }
+    Result CreateResult = 2;
+}
+
+message CreateDiscordWebhookRequest {
+    uint64 WebhookId = 1;
+    string WebhookToken = 2;
+}
+
+message CreateWebhookResponse {
+    enum Result {
+        SUCCESS = 0;
+        ALREADYEXISTS = 1;
+        INVALIDWEBHOOK = 2;
+        UNKNOWN = 3;
+    }
+    Result CreateResult = 1;
+}
+
+message AssignWebhookToScheduleRequest {
+    uint64 WebhookId = 1;
+    int32 ScheduleId = 2;
+}
+
+message AssignWebhookToScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        ALREADYEXISTS = 1;
+        WEBHOOKNOTFOUND = 2;
+        SCHEDULENOTFOUND = 3;
+        UNKNOWN = 4;
+    }
+    Result AssignResult = 1;
+}
+
+
+message UnassignWebhookToScheduleRequest {
+    uint64 WebhookId = 1;
+    int32 ScheduleId = 2;
+}
+
+message UnassignWebhookToScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
+    }
+    Result AssignResult = 1;
+}
+
+message CreateAnimeRequest {
+    int32 Id = 1;
+    string Identifier = 2;
+    AnimeInfoType Type = 3;
+    string Folder = 4;
+    string Filter = 5;
+    bool Override = 6;
+}
+
+message CreateAnimeResponse {
+    enum Result {
+        SUCCESS = 0;
+        ALREADYEXISTS = 1;
+        ANIMEINFONOTFOUND = 2; // Only returned if Override was true
+        ANIMENOTFOUND = 3;
+        MISSINGFOLDER = 4;
+        TYPECHANGED = 5;
+        UNKNOWN = 6;
+    }
+    Result CreateResult = 1;
+}
+
+message AssignAnimeInfoToScheduleRequest {
+    int32 AnimeId = 1;
+    int32 ScheduleId = 2;
+}
+
+message AssignAnimeInfoToScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        ALREADYEXISTS = 1;
+        ANIMEINFONOTFOUND = 2;
+        SCHEDULENOTFOUND = 3;
+        UNKNOWN = 4;
+    }
+    Result AssignResult = 1;
+}
+
+message UnassignAnimeInfoToScheduleRequest {
+    int32 AnimeId = 1;
+    int32 ScheduleId = 2;
+}
+
+message UnassignAnimeInfoToScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
+    }
+    Result AssignResult = 1;
+}
+
+message GetSchedulesRequest {
+}
+
+message GetSchedulesResponse {
+    message ScheduleItem {
+        enum ScheduleState {
+            Running = 0;
+            Stopped = 1;
+            Waiting = 2;
+        }
+        int32 ScheduleId = 1;
+        string Name = 2;
+        google.protobuf.Timestamp StartDate = 3;
+        google.protobuf.Duration Interval = 4;
+        ScheduleState State = 5;
+    }
+
+    repeated ScheduleItem Schedules = 1;
+}
+
+message GetAnimesByScheduleRequest {
+    int32 ScheduleId = 1;
+}
+
+message GetAnimesByScheduleResponse {
+    message AnimeItem {
+        int32 Id = 1;
+        string Identifier = 2;
+        AnimeInfoType Type = 3;
+        string Folder = 4; // Only valid value if Type == NIBL
+        string Filter = 5;
+    }
+
+    repeated AnimeItem Animes = 1;
+}
+
+message GetAnimesRequest {
+}
+
+message GetAnimesResponse {
+    message AnimeItem {
+        int32 Id = 1;
+        string Identifier = 2;
+        AnimeInfoType Type = 3;
+        string Folder = 4; // Only valid value if Type == NIBL
+        string Filter = 5;
+    }
+
+    repeated AnimeItem Animes = 1;
+}
+
+message StopScheduleRequest {
+    int32 ScheduleId = 1;
+}
+
+message StopScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
+    }
+    Result StopResult = 1;
+}
+
+message ForceRunScheduleRequest {
+    int32 ScheduleId = 1;
+}
+
+message ForceRunScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        NOTEXISTS = 1;
+        UNKNOWN = 2;
+    }
+    Result ForceRunResult = 1;
+}
+
+message StartScheduleRequest {
+    int32 ScheduleId = 1;
+}
+
+message StartScheduleResponse {
+    enum Result {
+        SUCCESS = 0;
+        NOTEXISTSORRUNNING = 1;
+        UNKNOWN = 2;
+    }
+    Result StartResult = 1;
+}
+
+message TestAnimeRequest {
+    int32 Id = 1;
+    string Identifier = 2;
+    AnimeInfoType Type = 3;
+    string Filter = 5;
+}
+
+message TestAnimeResponse {
+    message AnimeItem {
+        string EpisodeName = 1;
+        double EpisodeNumber = 2;
+        string SeasonTitle = 3;
+        string SeriesTitle = 4;
+    }
+
+    repeated AnimeItem Animes = 1;
+}
+
+message GetWebhooksRequest {
+}
+
+message GetWebhooksResponse {
+    message WebhhokItem {
+        uint64 WebhookId = 1;
+        string WebhookToken = 2;
+    }
+
+    repeated WebhhokItem Webhooks = 1;
+}
+
+message GetSchedulesByWebhookRequest {
+    uint64 WebhookId = 1;
+}
+
+message GetSchedulesByWebhookResponse {
+    message ScheduleItem {
+        enum ScheduleState {
+            Running = 0;
+            Stopped = 1;
+            Waiting = 2;
+        }
+        int32 ScheduleId = 1;
+        string Name = 2;
+        google.protobuf.Timestamp StartDate = 3;
+        google.protobuf.Duration Interval = 4;
+        ScheduleState State = 5;
+    }
+
+    repeated ScheduleItem Schedules = 1;
+}
+
+
+message VersionRequest {
+}
+
+message VersionResponse {
+    int32 Version = 1;
+}

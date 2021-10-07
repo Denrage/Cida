@@ -21,6 +21,11 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
 
         public async Task<string> GetDatabaseConnectionStringAsync(Guid moduleId, string password)
         {
+            if (this.Context.Modules is null || this.Context.Databases is null)
+            {
+                throw new InvalidOperationException("Database is not initialized!");
+            }
+
             var moduleInformation = await this.Context.Modules.FindAsync(moduleId);
 
             if (moduleInformation == null)
@@ -55,13 +60,20 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
 
         protected virtual async Task<DatabaseInformation> CreateDatabaseAsync(Guid moduleId, string password, ModuleInformation moduleInformation)
         {
+            if (this.Context.Databases is null)
+            {
+                throw new InvalidOperationException("Database is not initialized!");
+            }
+
             var databaseInformation = new DatabaseInformation()
             {
-                Module = moduleInformation,
+                DatabaseName = $"ModuleDb_{moduleId:N}",
                 Username = $"ModuleUser_{moduleId:N}",
                 Password = password,
-                DatabaseName = $"ModuleDb_{moduleId:N}",
+                ModuleId = moduleId,
+                Module = moduleInformation,
             };
+
             await this.Context.Databases.AddAsync(databaseInformation);
             await this.Context.SaveChangesAsync();
             return databaseInformation;

@@ -9,7 +9,9 @@ namespace Cida.Server.Infrastructure.Database
     {
         private readonly GlobalConfigurationService configurationService;
 
-        public event Action ConnectionStringUpdated;
+        public event Action? ConnectionStringUpdated;
+
+        public string? ConnectionString { get; private set; }
 
         public CidaDbConnectionProvider(GlobalConfigurationService configurationService)
         {
@@ -17,7 +19,6 @@ namespace Cida.Server.Infrastructure.Database
             this.configurationService.ConfigurationChanged += this.UpdateConnectionString;
         }
 
-        public string ConnectionString { get; private set; }
 
         public DbConnection GetDatabaseConnection()
         {

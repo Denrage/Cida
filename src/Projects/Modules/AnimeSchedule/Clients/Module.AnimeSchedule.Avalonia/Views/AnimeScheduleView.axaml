@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Module.AnimeSchedule.Avalonia.Views.AnimeScheduleView">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Cida.Client.Avalonia/Assets/SideBar.xaml"/>
+  </UserControl.Styles>
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude  Source="avares://Module.IrcAnime.Avalonia/Icons/Icons.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <TabControl Classes="sidebar" Name="Sidebar" Grid.Column="0">
+    <TabItem Header="Schedules">
+      <ContentControl Content="{Binding Schedules}"/>
+    </TabItem>
+    <TabItem Header="Animes">
+      <ContentControl Content="{Binding Animes}"/>
+    </TabItem>
+    <TabItem Header="Webhooks">
+      <ContentControl Content="{Binding Webhooks}"/>
+    </TabItem>
+  </TabControl>
+</UserControl>

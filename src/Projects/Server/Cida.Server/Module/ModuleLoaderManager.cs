@@ -50,7 +50,7 @@ namespace Cida.Server.Module
             GlobalConfigurationService globalConfigurationService,
             IModuleFtpClientFactory moduleFtpClientFactory,
             IModuleLoggerFactory moduleLoggerFactory,
-            IEnumerable<string> unpackedModuleDirectories = null)
+            IEnumerable<string>? unpackedModuleDirectories = null)
         {
             this.moduleDirectory = moduleDirectory;
             this.unpackedModuleDirectories = unpackedModuleDirectories ?? Array.Empty<string>();
@@ -71,9 +71,9 @@ namespace Cida.Server.Module
             }
         }
 
-        public async Task<IModule> LoadUnpacked(string unpackedModule)
+        public async Task<IModule?> LoadUnpacked(string unpackedModule)
         {
-            CidaModule module = null;
+            CidaModule? module = null;
             this.logger.Info($"Loading unpacked module '{unpackedModule}'");
             try
             {
@@ -92,7 +92,7 @@ namespace Cida.Server.Module
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex, "Error parsing module '{unpackedModule}'");
+                this.logger.Error(ex, $"Error parsing module '{unpackedModule}'");
             }
 
             if (module != null)
@@ -106,9 +106,9 @@ namespace Cida.Server.Module
             return null;
         }
 
-        public async Task<IModule> LoadPacked(IEnumerable<byte> bytes)
+        public async Task<IModule?> LoadPacked(IEnumerable<byte> bytes)
         {
-            CidaModule module = null;
+            CidaModule? module = null;
             this.logger.Info($"Loading packed module from Database");
             try
             {
@@ -140,9 +140,9 @@ namespace Cida.Server.Module
             return null;
         }
 
-        public async Task<IModule> LoadPacked(string file)
+        public async Task<IModule?> LoadPacked(string file)
         {
-            CidaModule module = null;
+            CidaModule? module = null;
             this.logger.Info($"Loading packed module '{file}'");
             try
             {
@@ -229,6 +229,13 @@ namespace Cida.Server.Module
             {
                 using var requestedFile = new Cida.Api.Models.Filesystem.File(Path.GetFileName(path), this.ModuleDirectory, null);
                 using var file = await this.ftpClient.GetFileAsync(requestedFile, cancellationToken);
+
+                if(file.Equals(Cida.Api.Models.Filesystem.File.EmptyFile))
+                {
+                    this.logger.Warn($"Error occured on downloading module file: '{path}'");
+                    continue;
+                }
+
                 await using var stream = await file.GetStreamAsync(cancellationToken);
                 using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream, cancellationToken);
@@ -285,7 +292,7 @@ namespace Cida.Server.Module
             }
         }
 
-        private async Task<IModule> LoadModule(CidaModule module)
+        private async Task<IModule?> LoadModule(CidaModule module)
         {
             try
             {

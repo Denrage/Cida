@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Module.AnimeSchedule.Avalonia.Views.Schedules.ScheduleView">
+  <Grid ColumnDefinitions="3*,2*">
+    <Grid Grid.Column="0" RowDefinitions="*,Auto">
+      <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled">
+        <ListBox Items="{Binding Schedules}" SelectedItem="{Binding SelectedSchedule}" >
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="5" BorderBrush="Black" BorderThickness="2">
+                <Grid Height="48" ColumnDefinitions="7*,*,*,*" RowDefinitions="*,*">
+                  <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="{Binding Name}"/>
+                    <TextBlock Margin="20,0,0,0" Text="{Binding State}"/>
+                  </StackPanel>
+                  <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Interval}"/>
+                  <Button Grid.Column="1" Grid.RowSpan="2" Content="Start" Command="{Binding $parent[UserControl].DataContext.StartSchedule}" CommandParameter="{Binding .}" />
+                  <Button Grid.Column="2" Grid.RowSpan="2" Content="Stop" Command="{Binding $parent[UserControl].DataContext.StopSchedule}" CommandParameter="{Binding .}" />
+                  <Button Grid.Column="3" Grid.RowSpan="2" Content="Run" Command="{Binding $parent[UserControl].DataContext.RunSchedule}" CommandParameter="{Binding .}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </ScrollViewer>
+      <Grid Grid.Row="1" ColumnDefinitions="*,*">
+        <Button Grid.Column="0" Content="Create" Command="{Binding Create}"/>
+        <Button Grid.Column="1" Content="Edit" Command="{Binding Edit}"/>
+      </Grid>
+    </Grid>
+    <Grid Grid.Column="1">
+      <ContentControl IsVisible="{Binding SubViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" Grid.Column="1" Content="{Binding SubViewModel}"/>
+    </Grid>
+  </Grid>
+</UserControl>

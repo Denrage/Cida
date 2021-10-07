@@ -1,16 +1,10 @@
 ﻿using Cida.Api.Models.Filesystem;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Cida.Api
+namespace Cida.Api;
+
+public interface IFtpClient
 {
-    public interface IFtpClient
-    {
-        Task<File> DownloadFileAsync(File file, CancellationToken cancellationToken);
+    Task<Models.Filesystem.File> DownloadFileAsync(Models.Filesystem.File file, CancellationToken cancellationToken);
         
-        Task UploadFileAsync(File file, CancellationToken cancellationToken);
-    }
+    Task UploadFileAsync(Models.Filesystem.File file, CancellationToken cancellationToken);
 }

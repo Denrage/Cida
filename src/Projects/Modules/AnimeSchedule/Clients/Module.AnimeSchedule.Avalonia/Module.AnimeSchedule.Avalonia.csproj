@@ -1,0 +1,80 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <ImplicitUsings>true</ImplicitUsings>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <Compile Update="**\*.xaml.cs">
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
+    <AvaloniaResource Include="**\*.xaml">
+      <SubType>Designer</SubType>
+    </AvaloniaResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.7" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.7" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.7" />
+    <PackageReference Include="Google.Protobuf" Version="3.17.3" />
+    <PackageReference Include="Grpc" Version="2.40.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.40.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <Protobuf Include="../../../../../protos/Modules/animeschedule.proto" Link="animeschedule.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Views\AnimeScheduleView.axaml.cs">
+      <DependentUpon>AnimeScheduleView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Schedules\ScheduleDetailView.axaml.cs">
+      <DependentUpon>ScheduleDetailView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Animes\AnimeTestResultView.axaml.cs">
+      <DependentUpon>AnimeTestResultView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Animes\AnimeEditView.axaml.cs">
+      <DependentUpon>AnimeEditView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Animes\AnimeDetailView.axaml.cs">
+      <DependentUpon>AnimeDetailView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Schedules\EditScheduleView.axaml.cs">
+      <DependentUpon>EditScheduleView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Animes\AnimeView.axaml.cs">
+      <DependentUpon>AnimeView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Schedules\ScheduleAnimesView.axaml.cs">
+      <DependentUpon>ScheduleAnimesView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Schedules\ScheduleView.axaml.cs">
+      <DependentUpon>ScheduleView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Webhooks\WebhookView.axaml.cs">
+      <DependentUpon>WebhookView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Webhooks\WebhookDetailView.axaml.cs">
+      <DependentUpon>WebhookDetailView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Webhooks\WebhookEditView.axaml.cs">
+      <DependentUpon>WebhookEditView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Webhooks\WebhookSchedulesView.axaml.cs">
+      <DependentUpon>WebhookSchedulesView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="PackagesInfo.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

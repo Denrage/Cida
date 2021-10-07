@@ -40,9 +40,9 @@ message DownloadRequest {
         string BotName = 1;
         int64 PackageNumber = 2;
         string FileName = 3;
-	}
+    }
 
-    Request DownloadRequest = 1;
+    repeated Request DownloadRequest = 1;
 }
 
 message DownloadResponse {
@@ -59,7 +59,7 @@ message DownloadStatusResponse {
         uint64 DownloadedBytes = 2;
         uint64 Filesize = 3;
         bool Downloaded = 4;
-	}
+    }
 
     repeated DownloadStatus Status = 1;
 }
@@ -82,7 +82,7 @@ message DownloadedFilesResponse {
     message File {
      string Filename = 1;
      uint64 Filesize = 3;
-	}
+    }
 
     repeated File Files = 1;
 }

@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <LangVersion>8.0</LangVersion>
+    <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
 
 
@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Views\DownloadsView.xaml" />
-    <None Remove="Views\SchedulingView.xaml" />
     <None Remove="Views\SearchView.xaml" />
     <None Remove="Views\SettingsView.xaml" />
   </ItemGroup>
@@ -35,12 +34,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.0" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.14.0" />
-    <PackageReference Include="Grpc" Version="2.35.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.35.0">
+    <PackageReference Include="Avalonia" Version="0.10.7" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.7" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.7" />
+    <PackageReference Include="Google.Protobuf" Version="3.17.3" />
+    <PackageReference Include="Grpc" Version="2.40.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.40.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -50,9 +49,6 @@
     <ProjectReference Include="..\..\..\..\Clients\Cida.Client.Avalonia.Api\Cida.Client.Avalonia.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaResource Update="Views\SchedulingView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </AvaloniaResource>
     <AvaloniaResource Update="Views\SettingsView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaResource>
@@ -64,9 +60,6 @@
     </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Views\SchedulingView.xaml.cs">
-      <DependentUpon>%(Filename)</DependentUpon>
-    </Compile>
     <Compile Update="Views\SettingsView.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>

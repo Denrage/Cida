@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
 using Grpc.Core.Utils;
 using Ircanime;
 using System;
@@ -13,43 +14,24 @@ namespace TestApplication
     {
         private static void Main(string[] args)
         {
-            var filename = "[HorribleSubs] Sword Art Online - Alicization - War of Underworld - 16 [1080p].mkv";
             var channel = new Channel("127.0.0.1:31564", ChannelCredentials.Insecure);
-            var client = new IrcAnimeService.IrcAnimeServiceClient(channel);
-            //var results = client.Search(new SearchRequest()
-            //{
-            //    SearchTerm = "Sword Art Online",
-            //});
+            var client = new Animeschedule.AnimeScheduleService.AnimeScheduleServiceClient(channel);
 
-            //foreach (var result in results.SearchResults)
-            //{
-            //Console.WriteLine($"Botname:{result.BotName};Filename:{result.FileName};Filesize:{result.FileSize};PackageNumber:{result.PackageNumber}");
-            //}
-
-            //client.Download(new DownloadRequest()
-            //{
-            //    DownloadRequest_ = new DownloadRequest.Types.Request()
-            //    {
-            //        BotName = "CR-ARUTHA|NEW",
-            //        FileName = filename,
-            //        PackageNumber = 10734
-            //    }
-            //});
-
-            //while (true)
-            //{
-            //    var downloadStatus = client.DownloadStatus(new DownloadStatusRequest());
-            //    foreach (var status in downloadStatus.Status.Where(x => !x.Downloaded))
-            //    {
-            //        Console.WriteLine($"{status.Filename}: {((double)status.DownloadedBytes / (double)status.Filesize) * 100}%");
-            //    }
-            //    Thread.Sleep(3000);
-            //}
-
-            client.File(new FileRequest()
+            var result = client.TestAnime(new Animeschedule.TestAnimeRequest()
             {
-                FileName = "[HorribleSubs] Sword Art Online - Alicization - War of Underworld - 17 [1080p].mkv",
+                Id = 108465,
+                Identifier = "Mushoku Tensei",
+                Filter = "",
+                Type = Animeschedule.AnimeInfoType.Nibl,
             });
+
+            foreach (var item in result.Animes)
+            {
+                Console.WriteLine($"Name: '{item.EpisodeName}' \t Number: '{item.EpisodeNumber}' \t Season: '{item.SeasonTitle}' \t Series: '{item.SeriesTitle}'");
+            }
+
+            Console.WriteLine("Done");
+            Console.ReadLine();
         }
     }
 }

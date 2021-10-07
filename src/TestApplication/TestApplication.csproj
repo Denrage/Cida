@@ -2,13 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.14.0" />
-    <PackageReference Include="Grpc" Version="2.35.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.35.0">
+    <PackageReference Include="Google.Protobuf" Version="3.17.3" />
+    <PackageReference Include="Grpc" Version="2.40.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.40.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -16,6 +17,7 @@
     <Protobuf Include="../protos/Modules/hsnr.proto" Link="hsnr.proto" />
     <Protobuf Include="../protos/Modules/crunchyroll.proto" Link="crunchyroll.proto" />
     <Protobuf Include="../protos/Modules/ircanime.proto" Link="ircanime.proto" />
+    <Protobuf Include="../protos/Modules/animeschedule.proto" Link="animeschedule.proto" />
   </ItemGroup>
 
 </Project>

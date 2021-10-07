@@ -15,11 +15,11 @@ namespace Cida.Server.Infrastructure
     public class InterNodeConnectionManager
     {
         private readonly Grpc.Core.Server server;
-        private IList<Channel> connections;
+        private IList<Channel>? connections;
         private readonly IInfrastructureConfiguration configuration;
         private readonly GlobalConfigurationService globalConfigurationService;
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
-        private CidaInfrastructureService.CidaInfrastructureServiceClient client;
+        private CidaInfrastructureService.CidaInfrastructureServiceClient? client;
 
         // TODO: Better dependency injection
         public InterNodeConnectionManager(IInfrastructureConfiguration configuration,
@@ -64,6 +64,10 @@ namespace Cida.Server.Infrastructure
         private async Task InitializeClient(Endpoint endpoint)
         {
             // TODO: Add algorithm to use more than one other connection
+            if (this.connections is null)
+            {
+                throw new InvalidOperationException($"{nameof(this.Start)} needs to be called before using this method!");
+            }
             if (this.connections.Count == 0 && this.client == null)
             {
                 this.logger.Info($"Connecting to {endpoint.Host}:{endpoint.Port}");
@@ -101,7 +105,7 @@ namespace Cida.Server.Infrastructure
         {
             private readonly ILogger logger;
             private readonly GlobalConfigurationService globalConfigurationService;
-            public event Action<Endpoint> OnSynchronize;
+            public event Action<Endpoint>? OnSynchronize;
 
             public CidaInfrastructureServiceImplementation(ILogger logger,
                 GlobalConfigurationService globalConfigurationService)

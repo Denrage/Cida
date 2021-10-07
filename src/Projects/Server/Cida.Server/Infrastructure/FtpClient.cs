@@ -1,201 +1,194 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Filesystem = Cida.Api.Models.Filesystem;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+﻿using Filesystem = Cida.Api.Models.Filesystem;
 using NLog;
 using Directory = Cida.Api.Models.Filesystem.Directory;
-using System.Threading;
+using Cida.Api;
 
-namespace Cida.Server.Infrastructure
+namespace Cida.Server.Infrastructure;
+
+public class FtpClient : IFtpClient
 {
-    public class FtpClient : IFtpClient
+    private const string Separator = "/";
+    private readonly ILogger logger;
+    private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "FtpDownloads");
+    private GlobalConfigurationManager.ExternalServerConnectionManager settings = null!;
+
+    public FtpClient(GlobalConfigurationService globalConfiguration, ILogger logger)
     {
-        private const string Separator = "/";
-        private readonly ILogger logger;
-        private readonly string tempFolder = Path.Combine(Path.GetTempPath(), "FtpDownloads");
-        private GlobalConfigurationManager.ExternalServerConnectionManager settings;
+        this.logger = logger;
 
-        public FtpClient(GlobalConfigurationService globalConfiguration, ILogger logger)
+        globalConfiguration.ConfigurationChanged += () => this.settings = globalConfiguration.ConfigurationManager.Ftp;
+
+        if (System.IO.Directory.Exists(tempFolder))
         {
-            this.logger = logger;
-            globalConfiguration.ConfigurationChanged +=
-                () => this.settings = globalConfiguration.ConfigurationManager.Ftp;
-
-            if (System.IO.Directory.Exists(tempFolder))
+            logger.Info($"Clearing ftp temp folder : '{tempFolder}'");
+            foreach (var file in System.IO.Directory.GetFiles(tempFolder))
             {
-                logger.Info($"Clearing ftp temp folder : '{tempFolder}'");
-                foreach (var file in System.IO.Directory.GetFiles(tempFolder))
-                {
-                    File.Delete(file);
-                }
+                File.Delete(file);
+            }
+        }
+    }
+
+    private FluentFTP.FtpClient CreateClient()
+    {
+        var client = new FluentFTP.FtpClient(this.settings.Host, this.settings.Port, this.settings.Username, this.settings.Password);
+        client.OnLogEvent += (traceLevel, message) =>
+        {
+            var logLevel = LogLevel.Info;
+            switch (traceLevel)
+            {
+                case FluentFTP.FtpTraceLevel.Verbose:
+                    logLevel = LogLevel.Debug;
+                    break;
+                case FluentFTP.FtpTraceLevel.Info:
+                    logLevel = LogLevel.Info;
+                    break;
+                case FluentFTP.FtpTraceLevel.Warn:
+                    logLevel = LogLevel.Warn;
+                    break;
+                case FluentFTP.FtpTraceLevel.Error:
+                    logLevel = LogLevel.Error;
+                    break;
+                default:
+                    logLevel = LogLevel.Info;
+                    break;
+            }
+
+            this.logger.Log(logLevel, message);
+        };
+
+        return client;
+    }
+
+    private async Task<bool> EnsureConnect(FluentFTP.FtpClient client, CancellationToken cancellationToken)
+    {
+        return await client.AutoConnectAsync(cancellationToken) != null;
+    }
+
+    public async Task<IEnumerable<string>> GetFilesAsync(Directory directory, CancellationToken cancellationToken)
+    {
+        this.logger.Info("Getting files for path: {value1}", directory.FullPath(Separator));
+        using var client = this.CreateClient();
+        if (!await this.EnsureConnect(client, cancellationToken))
+        {
+            this.logger.Warn("Could not ensure connection!");
+            return Enumerable.Empty<string>();
+        }
+        var items = await client.GetListingAsync(directory.FullPath(Separator), cancellationToken);
+
+        return items.Select(x => x.Name);
+    }
+
+    public async Task<Filesystem.File> GetFileAsync(Filesystem.File file, CancellationToken cancellationToken)
+    {
+        this.logger.Info("Downloading File: {value1}", file.FullPath(Separator));
+        using var client = this.CreateClient();
+        if (!await this.EnsureConnect(client, cancellationToken))
+        {
+            this.logger.Warn("Could not ensure connection!");
+            return Filesystem.File.EmptyFile;
+        }
+
+        System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
+        var downloadResult = await client.DownloadFileAsync(
+            Path.Combine(this.tempFolder, file.Name),
+            file.FullPath(Separator),
+            token: cancellationToken);
+
+        if (downloadResult == FluentFTP.FtpStatus.Failed)
+        {
+            this.logger.Warn("FTP download failed!");
+            return Filesystem.File.EmptyFile;
+        }
+
+        async Task<Stream> getStream(CancellationToken cancellationToken)
+            => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.OpenOrCreate));
+
+        void onDispose()
+        {
+            if (File.Exists(Path.Combine(this.tempFolder, file.Name)))
+            {
+                File.Delete(Path.Combine(this.tempFolder, file.Name));
             }
         }
 
-        public async Task<IEnumerable<string>> GetFilesAsync(Directory directory, CancellationToken cancellationToken)
-        {
-            this.logger.Info("Getting files for path: {value1}", directory.FullPath(Separator));
-            var request = this.CreateRequest(directory.FullPath(Separator));
-            request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
-            using var cancellationRegister = cancellationToken.Register(() => request.Abort());
+        return file.ReplaceContent(getStream, onDispose);
+    }
 
-            using var response = await request.GetResponseAsync();
-            await using var responseStream = response.GetResponseStream();
-
-            if (responseStream != null)
-            {
-                using var streamReader = new StreamReader(responseStream);
-
-                return (await streamReader.ReadToEndAsync().ConfigureAwait(false))
-                    .Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            }
-
-            return Array.Empty<string>();
-        }
-
-        public async Task<Filesystem.File> GetFileAsync(Filesystem.File file, CancellationToken cancellationToken)
-        {
-            this.logger.Info("Downloading File: {value1}", file.FullPath(Separator));
-            var request = this.CreateRequest(file.FullPath(Separator));
-            request.Method = WebRequestMethods.Ftp.DownloadFile;
-            using var cancellationRegister = cancellationToken.Register(() => request.Abort());
-
-            using var response = await request.GetResponseAsync();
-            await using var responseStream = response.GetResponseStream();
-
-            if (responseStream != null)
-            {
-                System.IO.Directory.CreateDirectory(this.tempFolder ?? throw new InvalidOperationException());
-
-                async Task<Stream> getStream(CancellationToken cancellationToken)
-                    => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, file.Name), FileMode.OpenOrCreate));
-
-                void onDispose()
-                {
-                    if (File.Exists(Path.Combine(this.tempFolder, file.Name)))
-                    {
-                        File.Delete(Path.Combine(this.tempFolder, file.Name));
-                    }
-                }
-                using (var stream = await getStream(cancellationToken))
-                {
-                    await responseStream.CopyToAsync(stream, cancellationToken);
-                }
-
-                this.logger.Info("Downloaded File: {value1}", file.FullPath());
-                return file.ReplaceContent(getStream, onDispose);
-            }
-
-            return null;
-        }
-
-        public async Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken)
+    public async Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken)
+    {
+        try
         {
             this.logger.Info("Uploading file: {value1}", file.FullPath(Separator));
-
-            var directories = new List<Directory>();
-            var currentDir = file.Directory;
-            while (currentDir != null)
+            using var client = this.CreateClient();
+            if (!await this.EnsureConnect(client, cancellationToken))
             {
-                directories.Add(currentDir);
-                currentDir = currentDir.Directory;
+                this.logger.Warn("Could not ensure connection!");
             }
 
-            directories.Reverse();
+            string fileGuid = Guid.NewGuid().ToString();
 
-            foreach (var directory in directories)
+            async Task<Stream> getStream(CancellationToken cancellationToken)
+                => await Task.FromResult(new FileStream(Path.Combine(this.tempFolder, fileGuid), FileMode.OpenOrCreate));
+
+            void onDispose()
             {
-                var createDirectoryRequest = this.CreateRequest(directory.FullPath((Separator)));
-                createDirectoryRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
-                using var createDirectoryRegister = cancellationToken.Register(() => createDirectoryRequest.Abort());
-                try
+                if (File.Exists(Path.Combine(this.tempFolder, fileGuid)))
                 {
-                    using var createDirectoryResponse = await createDirectoryRequest.GetResponseAsync();
-                }
-                catch (WebException ex)
-                {
-                    if (ex.Response is FtpWebResponse makeDirectoryResponse)
-                    {
-                        // If File is unavailable the folder already exists
-                        if (makeDirectoryResponse.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
-                        {
-                            this.logger.Error(ex);
-                        }
-                    }
-                    else
-                    {
-                        this.logger.Error(ex);
-                    }
+                    File.Delete(Path.Combine(this.tempFolder, fileGuid));
                 }
             }
 
-            var request = this.CreateRequest(file.FullPath(Separator));
-            request.Method = WebRequestMethods.Ftp.UploadFile;
-            using var cancellationRegister = cancellationToken.Register(() => request.Abort());
+            var tempFile = new Filesystem.File(file.Name, file.Directory, getStream, onDispose);
+            await file.CopyToAsync(tempFile, cancellationToken);
 
-            await using var stream = await request.GetRequestStreamAsync();
-            await using var fileStream = await file.GetStreamAsync(cancellationToken);
-            await fileStream.CopyToAsync(stream, cancellationToken);
-            using var response = await request.GetResponseAsync();
+            var uploadResult = await client.UploadFileAsync(Path.Combine(this.tempFolder, fileGuid), file.FullPath(Separator), createRemoteDir: true, token: cancellationToken);
+
+            if (uploadResult == FluentFTP.FtpStatus.Failed)
+            {
+                this.logger.Warn("Upload failed!");
+                return;
+            }
+
             this.logger.Info("Uploaded file: {value1}", file.FullPath(Separator));
         }
-
-        private FtpWebRequest CreateRequest(string path)
+        catch (Exception ex)
         {
-            var result = (FtpWebRequest)WebRequest.Create(
-                $"ftp://{this.settings.Host}:{this.settings.Port}{Separator}{path}");
-            result.Credentials = new NetworkCredential(this.settings.Username, this.settings.Password);
-            return result;
-        }
-
-        public bool ValidateConfiguration(ExternalServerConnection ftpConnection)
-        {
-            if (string.IsNullOrEmpty(ftpConnection.Host) || string.IsNullOrEmpty(ftpConnection.Username))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool TryConnect(ExternalServerConnection ftpConnection, out Exception occuredException)
-        {
-            try
-            {
-                var result = (FtpWebRequest)WebRequest.Create($"ftp://{ftpConnection.Host}:{ftpConnection.Port}");
-                result.Credentials = new NetworkCredential(ftpConnection.Username, ftpConnection.Password);
-                result.Method = WebRequestMethods.Ftp.ListDirectory;
-                using var response = (FtpWebResponse)result.GetResponse();
-
-                // Maybe response will not be disposed correctly?
-                if (response.StatusCode != FtpStatusCode.OpeningData &&
-                    response.StatusCode != FtpStatusCode.DataAlreadyOpen)
-                {
-                    occuredException =
-                        new InvalidOperationException($"Unexpected StatusCode '{response.StatusCode}'");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                occuredException = ex;
-                return false;
-            }
-
-            occuredException = null;
-            return true;
+            this.logger.Error(ex, "Error occured while uploading file");
         }
     }
 
-    // TODO: Move out
-    public interface IFtpClient
+    public bool ValidateConfiguration(ExternalServerConnection ftpConnection)
     {
-        Task<IEnumerable<string>> GetFilesAsync(Directory directory, CancellationToken cancellationToken);
+        if (string.IsNullOrEmpty(ftpConnection.Host) || string.IsNullOrEmpty(ftpConnection.Username))
+        {
+            return false;
+        }
 
-        Task<Filesystem.File> GetFileAsync(Filesystem.File file, CancellationToken cancellationToken);
-
-        Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken);
+        return true;
     }
+
+    public bool TryConnect(ExternalServerConnection ftpConnection, out Exception? occuredException)
+    {
+        try
+        {
+            var verifyClient = new FluentFTP.FtpClient(ftpConnection.Host, ftpConnection.Port, ftpConnection.Username, ftpConnection.Password);
+            occuredException = null;
+            return verifyClient.AutoConnect() != null;
+        }
+        catch (Exception ex)
+        {
+            occuredException = ex;
+            return false;
+        }
+    }
+}
+
+// TODO: Move out
+public interface IFtpClient
+{
+    Task<IEnumerable<string>> GetFilesAsync(Directory directory, CancellationToken cancellationToken);
+
+    Task<Filesystem.File> GetFileAsync(Filesystem.File file, CancellationToken cancellationToken);
+
+    Task SaveFileAsync(Filesystem.File file, CancellationToken cancellationToken);
 }

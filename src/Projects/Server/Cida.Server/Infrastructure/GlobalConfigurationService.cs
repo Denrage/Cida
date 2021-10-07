@@ -6,14 +6,14 @@ namespace Cida.Server.Infrastructure
     public class GlobalConfigurationService
     {
         private readonly ILogger logger;
-        public event Action ConfigurationChanged;
+        public event Action? ConfigurationChanged;
 
         public GlobalConfigurationManager ConfigurationManager { get; private set; }
 
         // TODO: give back a copy
         public GlobalConfiguration Configuration { get; private set; }
 
-        public GlobalConfigurationService(ILogger logger, GlobalConfiguration configuration = default)
+        public GlobalConfigurationService(ILogger logger, GlobalConfiguration? configuration = default)
         {
             this.logger = logger;
             this.Configuration = configuration ?? new GlobalConfiguration();

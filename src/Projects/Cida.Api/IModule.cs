@@ -9,6 +9,6 @@ namespace Cida.Api
     {
         IEnumerable<ServerServiceDefinition> GrpcServices { get; }
 
-        Task Load(IDatabaseConnector connector, IFtpClient ftpClient, Directory moduleDirectory, IModuleLogger moduleLogger);
+        Task Load(IDatabaseConnector connector, IFtpClient ftpClient, Models.Filesystem.Directory moduleDirectory, IModuleLogger moduleLogger);
     }
 }
