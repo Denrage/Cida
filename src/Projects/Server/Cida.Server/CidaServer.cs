@@ -5,6 +5,7 @@ using Cida.Server.Api;
 using Cida.Server.Infrastructure;
 using Cida.Server.Infrastructure.Database;
 using Cida.Server.Infrastructure.Database.EFC;
+using Cida.Server.Infrastructure.Database.ProviderLoader;
 using Cida.Server.Interfaces;
 using Cida.Server.Module;
 using NLog;
@@ -18,6 +19,7 @@ namespace Cida.Server
         private readonly GrpcManager grpcManager;
         private readonly ModuleLoaderManager moduleLoader;
         private readonly InterNodeConnectionManager interNodeConnectionManager;
+        private readonly DatabaseProviderLoader databaseProviderLoader;
         private GlobalConfigurationService globalConfigurationService;
         private FtpClient ftpClient;
         private CidaDbConnectionProvider databaseProvider;
@@ -30,12 +32,14 @@ namespace Cida.Server
             this.grpcManager = new GrpcManager(settingsProvider.Get<GrpcConfiguration>(), this.logger);
             this.globalConfigurationService = new GlobalConfigurationService(this.logger);
             this.ftpClient = new FtpClient(this.globalConfigurationService, this.logger);
-            this.databaseProvider = new CidaDbConnectionProvider(this.globalConfigurationService);
-            this.cidaContext = new CidaContext(this.databaseProvider);
+            this.databaseProviderLoader = new DatabaseProviderLoader(Path.Combine(workingDirectory, DatabaseProviderLoader.DatabaseProviderFolderName), this.logger, this.globalConfigurationService);
+            this.databaseProviderLoader.Load();
+            this.databaseProvider = new CidaDbConnectionProvider(this.globalConfigurationService, databaseProviderLoader);
+            this.cidaContext = new CidaContext(this.databaseProvider, this.databaseProviderLoader);
             this.moduleLoader = new ModuleLoaderManager(
                 Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName),
                 this.grpcManager, this.ftpClient, this.cidaContext,
-                new DatabaseConnector(this.cidaContext, this.databaseProvider, this.globalConfigurationService),
+                new DatabaseConnector(this.cidaContext, this.databaseProvider, this.globalConfigurationService, this.databaseProviderLoader),
                 this.logger,
                 this.globalConfigurationService,
                 new ModuleFtpClientFactory(ftpClient),

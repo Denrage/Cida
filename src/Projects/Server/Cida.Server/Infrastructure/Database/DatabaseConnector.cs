@@ -1,23 +1,34 @@
 ﻿using Cida.Server.Infrastructure.Database.BaseClasses;
 using Cida.Server.Infrastructure.Database.BaseClasses.EFC;
 using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+using Cida.Server.Infrastructure.Database.ProviderLoader;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading.Tasks;
 
 namespace Cida.Server.Infrastructure.Database
 {
     public class DatabaseConnector : DatabaseConnectorBase
     {
         private CidaDbConnectionProvider databaseConnectionProvider;
+        private readonly IDatabaseProvidersProvider databaseProvider;
 
-        public DatabaseConnector(CidaContextBase context, CidaDbConnectionProvider databaseConnectionProvider, GlobalConfigurationService globalConfigurationService) : base(context, globalConfigurationService)
+        public DatabaseConnector(
+            CidaContextBase context, 
+            CidaDbConnectionProvider databaseConnectionProvider, 
+            GlobalConfigurationService globalConfigurationService,
+            IDatabaseProvidersProvider databaseProvider) 
+            : base(context, globalConfigurationService)
         {
             this.databaseConnectionProvider = databaseConnectionProvider;
+            this.databaseProvider = databaseProvider;
         }        
 
         private async Task CreateDatabaseInstanceAsync(Guid moduleId, string password)
         {
+            if (this.databaseProvider.SelectedProvider is null)
+            {
+                throw new InvalidOperationException("There is no selected database provider available");
+            }
+
             var dbName = $"ModuleDb_{moduleId:N}";
             var username = $"ModuleUser_{moduleId:N}";
 
@@ -26,14 +37,8 @@ namespace Cida.Server.Infrastructure.Database
                 await dbConnection.OpenAsync();
                 var transaction = await dbConnection.BeginTransactionAsync();
 
-                var createDbSql = $@"   CREATE DATABASE {dbName};
-                                ";
-                var createUserSql = $@" USE [master];
-                                    CREATE LOGIN [{username}] WITH PASSWORD=N'{password}', CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF;
-                                    USE [{dbName}];
-                                    CREATE USER [{username}] FOR LOGIN [{username}];
-                                    ALTER ROLE [db_owner] ADD MEMBER [{username}];
-                                ";
+                var createDbSql = this.databaseProvider.SelectedProvider.CreateDbSql(dbName);
+                var createUserSql = this.databaseProvider.SelectedProvider.CreateUserSql(username, password, dbName); 
                 await this.Context.Database.ExecuteSqlRawAsync(createDbSql);
                 await this.Context.Database.ExecuteSqlRawAsync(createUserSql);
                 await transaction.CommitAsync();

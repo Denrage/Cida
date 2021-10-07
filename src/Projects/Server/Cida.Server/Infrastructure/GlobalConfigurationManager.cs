@@ -43,6 +43,8 @@ namespace Cida.Server.Infrastructure
 
             public string DatabaseName => this.configuration.DatabaseName;
 
+            public string DatabaseType => this.configuration.DatabaseType;
+
             public ExternalServerConnectionManager Connection { get; }
 
             public DatabaseConnectionManager(DatabaseConnection configuration )
@@ -76,7 +78,9 @@ namespace Cida.Server.Infrastructure
     public class DatabaseConnection
     {
         public string DatabaseName { get; set; } = string.Empty;
-        
+
+        public string DatabaseType { get; set; } = string.Empty;
+
         public ExternalServerConnection Connection { get; set; } = new ExternalServerConnection();
     }
 }

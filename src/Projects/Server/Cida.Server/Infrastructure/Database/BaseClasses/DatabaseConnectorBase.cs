@@ -40,12 +40,10 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
             {
                 databaseInformation = await this.CreateDatabaseAsync(moduleId, password, moduleInformation);
             }
-
             else if (databases.Count() > 1)
             {
                 throw new Exception($"Multiple databases ({databases.Count()}) found.");
             }
-
             else
             {
                 databaseInformation = databases.First();
