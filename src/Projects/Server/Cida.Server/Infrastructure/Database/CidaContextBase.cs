@@ -1,7 +1,7 @@
-﻿using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+﻿using Cida.Server.Infrastructure.Database.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cida.Server.Infrastructure.Database.BaseClasses.EFC;
+namespace Cida.Server.Infrastructure.Database;
 
 public abstract class CidaContextBase : DbContext
 {

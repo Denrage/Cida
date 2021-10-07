@@ -2,72 +2,71 @@
 using Cida.Server.Infrastructure.Database.ProviderLoader;
 using System.Data.Common;
 
-namespace Cida.Server.Infrastructure.Database
+namespace Cida.Server.Infrastructure.Database;
+
+public class CidaDbConnectionProvider
 {
-    public class CidaDbConnectionProvider
+    private readonly GlobalConfigurationService configurationService;
+    private readonly IDatabaseProvidersProvider databaseProvidersProvider;
+
+    public event Action? ConnectionStringUpdated;
+
+    public string? ConnectionString { get; private set; }
+
+    public CidaDbConnectionProvider(GlobalConfigurationService configurationService, IDatabaseProvidersProvider databaseProvidersProvider)
     {
-        private readonly GlobalConfigurationService configurationService;
-        private readonly IDatabaseProvidersProvider databaseProvidersProvider;
+        this.configurationService = configurationService;
+        this.databaseProvidersProvider = databaseProvidersProvider;
+        this.configurationService.ConfigurationChanged += this.UpdateConnectionString;
+    }
 
-        public event Action? ConnectionStringUpdated;
 
-        public string? ConnectionString { get; private set; }
-
-        public CidaDbConnectionProvider(GlobalConfigurationService configurationService, IDatabaseProvidersProvider databaseProvidersProvider)
+    public DbConnection GetDatabaseConnection()
+    {
+        if (this.databaseProvidersProvider.SelectedProvider is null || this.ConnectionString is null)
         {
-            this.configurationService = configurationService;
-            this.databaseProvidersProvider = databaseProvidersProvider;
-            this.configurationService.ConfigurationChanged += this.UpdateConnectionString;
+            throw new ArgumentNullException($"{nameof(this.databaseProvidersProvider.SelectedProvider)} or {nameof(this.ConnectionString)}");
         }
 
+        return this.databaseProvidersProvider.SelectedProvider.GetDbConnection(this.ConnectionString);
+    }
 
-        public DbConnection GetDatabaseConnection()
+    private void UpdateConnectionString()
+    {
+        if (this.configurationService.ConfigurationManager?.Database?.Connection?.Host != null)
         {
-            if (this.databaseProvidersProvider.SelectedProvider is null || this.ConnectionString is null)
-            {
-                throw new ArgumentNullException($"{nameof(this.databaseProvidersProvider.SelectedProvider)} or {nameof(this.ConnectionString)}");
-            }
+            this.ConnectionString = this.configurationService.ConfigurationManager.Database.ToConnectionString();
+            this.ConnectionStringUpdated?.Invoke();
+        }
+    }
 
-            return this.databaseProvidersProvider.SelectedProvider.GetDbConnection(this.ConnectionString);
+    public bool ValidateConfiguration(DatabaseConnection connectionSettings)
+    {
+        if (string.IsNullOrEmpty(connectionSettings.DatabaseName))
+        {
+            return false;
         }
 
-        private void UpdateConnectionString()
+        if (string.IsNullOrEmpty(connectionSettings.DatabaseType))
         {
-            if (this.configurationService.ConfigurationManager?.Database?.Connection?.Host != null)
-            {
-                this.ConnectionString = this.configurationService.ConfigurationManager.Database.ToConnectionString();
-                this.ConnectionStringUpdated?.Invoke();
-            }
+            return false;
+        }
+        else if (!this.databaseProvidersProvider.Providers.Where(x => x.DatabaseType == connectionSettings.DatabaseType).Any())
+        {
+            return false;
         }
 
-        public bool ValidateConfiguration(DatabaseConnection connectionSettings)
+        if (connectionSettings.Connection == null)
         {
-            if (string.IsNullOrEmpty(connectionSettings.DatabaseName))
-            {
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(connectionSettings.DatabaseType))
-            {
-                return false;
-            }
-            else if (!this.databaseProvidersProvider.Providers.Where(x => x.DatabaseType == connectionSettings.DatabaseType).Any())
-            {
-                return false;
-            }
-
-            if (connectionSettings.Connection == null)
-            {
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(connectionSettings.Connection.Host) ||
-                string.IsNullOrEmpty(connectionSettings.Connection.Username))
-            {
-                return false;
-            }
-
-            return true;
+            return false;
         }
+
+        if (string.IsNullOrEmpty(connectionSettings.Connection.Host) ||
+            string.IsNullOrEmpty(connectionSettings.Connection.Username))
+        {
+            return false;
+        }
+
+        return true;
     }
 }

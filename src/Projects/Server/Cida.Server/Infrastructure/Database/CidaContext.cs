@@ -1,8 +1,7 @@
-﻿using Cida.Server.Infrastructure.Database.BaseClasses.EFC;
-using Cida.Server.Infrastructure.Database.ProviderLoader;
+﻿using Cida.Server.Infrastructure.Database.ProviderLoader;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cida.Server.Infrastructure.Database.EFC;
+namespace Cida.Server.Infrastructure.Database;
 
 public class CidaContext : CidaContextBase
 {
@@ -17,8 +16,8 @@ public class CidaContext : CidaContextBase
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var connection = this.databaseConnectionProvider.GetDatabaseConnection();
+        var connection = databaseConnectionProvider.GetDatabaseConnection();
 
-        this.databaseProvider.SelectedProvider?.OnConfiguring(optionsBuilder, connection);
+        databaseProvider.SelectedProvider?.OnConfiguring(optionsBuilder, connection);
     }
 }

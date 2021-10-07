@@ -1,0 +1,4 @@
+{
+  "assemblyFile": "Cida.DatabaseProvider.MySql.dll",
+  "entryType": "Cida.DatabaseProvider.MySql.MySqlDatabaseProvider"
+}

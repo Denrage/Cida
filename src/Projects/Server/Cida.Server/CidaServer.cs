@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Cida.Server.Api;
 using Cida.Server.Infrastructure;
 using Cida.Server.Infrastructure.Database;
-using Cida.Server.Infrastructure.Database.EFC;
 using Cida.Server.Infrastructure.Database.ProviderLoader;
 using Cida.Server.Interfaces;
 using Cida.Server.Module;

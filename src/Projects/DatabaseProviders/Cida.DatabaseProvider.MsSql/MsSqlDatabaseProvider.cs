@@ -3,9 +3,9 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 
-namespace Cida.DatabaseProvider.Mssql;
+namespace Cida.DatabaseProvider.MsSql;
 
-public class MssqlDatabaseProvider : IDatabaseProvider
+public class MsSqlDatabaseProvider : IDatabaseProvider
 {
     public const string DatabaseTypeString = "Mssql";
 

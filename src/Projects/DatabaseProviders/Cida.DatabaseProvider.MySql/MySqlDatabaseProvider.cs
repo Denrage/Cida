@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 using System.Data.Common;
 
-namespace Cida.DatabaseProvider.Mysql;
+namespace Cida.DatabaseProvider.MySql;
 
-public class MysqlDatabaseProvider : IDatabaseProvider
+public class MySqlDatabaseProvider : IDatabaseProvider
 {
     public const string DatabaseTypeString = "Mysql";
 

@@ -1,0 +1,4 @@
+{
+  "assemblyFile": "Cida.DatabaseProvider.MsSql.dll",
+  "entryType": "Cida.DatabaseProvider.MsSql.MsSqlDatabaseProvider"
+}
