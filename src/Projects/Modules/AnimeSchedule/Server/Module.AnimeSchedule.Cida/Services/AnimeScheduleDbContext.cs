@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Cida.Api;
+using Microsoft.EntityFrameworkCore;
 using Module.AnimeSchedule.Cida.Models;
 using static Module.AnimeSchedule.Cida.Services.Source.NiblAnimeInfoHandler;
 
@@ -7,6 +8,7 @@ namespace Module.AnimeSchedule.Cida.Services;
 public class AnimeScheduleDbContext : DbContext
 {
     private readonly string connectionString;
+    private readonly IDatabaseProvider databaseProvider;
 
     public DbSet<Schedule> Schedules {  get; set; }
 
@@ -26,9 +28,10 @@ public class AnimeScheduleDbContext : DbContext
 
     public DbSet<DiscordWebhook> DiscordWebhooks {  get; set; }
 
-    public AnimeScheduleDbContext(string connectionString)
+    public AnimeScheduleDbContext(string connectionString, IDatabaseProvider databaseProvider)
     {
         this.connectionString = connectionString;
+        this.databaseProvider = databaseProvider;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -64,6 +67,6 @@ public class AnimeScheduleDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer(connectionString);
+        this.databaseProvider.OnConfiguring(optionsBuilder, this.connectionString); 
     }
 }

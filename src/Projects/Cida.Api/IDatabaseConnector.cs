@@ -1,10 +1,8 @@
-using System;
-using System.Threading.Tasks;
+namespace Cida.Api;
 
-namespace Cida.Api
+public interface IDatabaseConnector
 {
-    public interface IDatabaseConnector
-    {
-        Task<string> GetDatabaseConnectionStringAsync(Guid moduleId, string password);
-    }
+    Task<string> GetDatabaseConnectionStringAsync(Guid moduleId, string password);
+
+    IDatabaseProvider GetDatabaseProvider();
 }

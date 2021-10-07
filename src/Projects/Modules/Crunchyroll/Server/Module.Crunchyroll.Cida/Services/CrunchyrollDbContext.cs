@@ -1,3 +1,4 @@
+using Cida.Api;
 using Microsoft.EntityFrameworkCore;
 using Module.Crunchyroll.Libs.Models.Database;
 
@@ -6,14 +7,17 @@ namespace Module.Crunchyroll.Cida.Services
     public class CrunchyrollDbContext : DbContext
     {
         private readonly string connectionString;
+        private readonly IDatabaseProvider databaseProvider;
+
         public DbSet<Anime> Animes { get; set; }
         public DbSet<Image> Images { get; set; }
         public DbSet<Episode> Episodes { get; set; }
         public DbSet<Collection> Collections { get; set; }
 
-        public CrunchyrollDbContext(string connectionString)
+        public CrunchyrollDbContext(string connectionString, IDatabaseProvider databaseProvider)
         {
             this.connectionString = connectionString;
+            this.databaseProvider = databaseProvider;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,7 +49,7 @@ namespace Module.Crunchyroll.Cida.Services
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(this.connectionString);
+            this.databaseProvider.OnConfiguring(optionsBuilder, this.connectionString);
         }
     }
 }

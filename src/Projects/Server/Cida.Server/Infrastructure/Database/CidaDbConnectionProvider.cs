@@ -1,7 +1,5 @@
 ﻿using Cida.Server.Infrastructure.Database.Extensions;
 using Cida.Server.Infrastructure.Database.ProviderLoader;
-using Microsoft.Data.SqlClient;
-using System;
 using System.Data.Common;
 
 namespace Cida.Server.Infrastructure.Database
@@ -25,7 +23,12 @@ namespace Cida.Server.Infrastructure.Database
 
         public DbConnection GetDatabaseConnection()
         {
-            return new SqlConnection(this.ConnectionString);
+            if (this.databaseProvidersProvider.SelectedProvider is null || this.ConnectionString is null)
+            {
+                throw new ArgumentNullException($"{nameof(this.databaseProvidersProvider.SelectedProvider)} or {nameof(this.ConnectionString)}");
+            }
+
+            return this.databaseProvidersProvider.SelectedProvider.GetDbConnection(this.ConnectionString);
         }
 
         private void UpdateConnectionString()

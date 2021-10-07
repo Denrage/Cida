@@ -1,9 +1,7 @@
 ﻿using Cida.Server.Infrastructure.Database.BaseClasses.EFC;
 using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
-using Microsoft.Data.SqlClient;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Data.SqlClient;
+using Cida.Server.Infrastructure.Database.ProviderLoader;
 using Cida.Api;
 
 namespace Cida.Server.Infrastructure.Database.BaseClasses
@@ -13,10 +11,13 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
         protected CidaContextBase Context;
         protected GlobalConfigurationService GlobalConfigurationService;
 
-        public DatabaseConnectorBase(CidaContextBase context, GlobalConfigurationService globalConfigurationService)
+        protected IDatabaseProvidersProvider DatabaseProvidersProvider { get; }
+
+        public DatabaseConnectorBase(CidaContextBase context, GlobalConfigurationService globalConfigurationService, IDatabaseProvidersProvider databaseProvidersProvider)
         {
             this.Context = context;
             this.GlobalConfigurationService = globalConfigurationService;
+            DatabaseProvidersProvider = databaseProvidersProvider;
         }
 
         public async Task<string> GetDatabaseConnectionStringAsync(Guid moduleId, string password)
@@ -89,5 +90,8 @@ namespace Cida.Server.Infrastructure.Database.BaseClasses
 
             return connectionStringBuilder.ToString();
         }
+
+        public IDatabaseProvider GetDatabaseProvider()
+            => this.DatabaseProvidersProvider.SelectedProvider;
     }
 }

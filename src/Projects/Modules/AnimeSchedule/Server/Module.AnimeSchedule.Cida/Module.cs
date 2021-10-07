@@ -21,6 +21,7 @@ public class Module : IModule
 
     private const string Id = "32527EDA-48D9-4B38-B320-946FEDB56A05";
     private string connectionString;
+    private IDatabaseProvider databaseProvider;
 
     public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
@@ -28,6 +29,8 @@ public class Module : IModule
     {
         this.connectionString =
             await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
+
+        this.databaseProvider = databaseConnector.GetDatabaseProvider();
 
         using (var context = this.GetContext())
         {
@@ -63,7 +66,7 @@ public class Module : IModule
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
     }
 
-    private AnimeScheduleDbContext GetContext() => new AnimeScheduleDbContext(this.connectionString);
+    private AnimeScheduleDbContext GetContext() => new AnimeScheduleDbContext(this.connectionString, this.databaseProvider);
 
     public class ScheduleAnimeImplementation : AnimeScheduleService.AnimeScheduleServiceBase
     {

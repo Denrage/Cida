@@ -1,4 +1,4 @@
-﻿using Cida.Api.Database;
+﻿using Cida.Api;
 
 namespace Cida.Server.Infrastructure.Database.ProviderLoader
 {

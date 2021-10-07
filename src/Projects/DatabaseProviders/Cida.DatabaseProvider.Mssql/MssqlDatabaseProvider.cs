@@ -1,4 +1,5 @@
-﻿using Cida.Api.Database;
+﻿using Cida.Api;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 
@@ -20,8 +21,14 @@ public class MssqlDatabaseProvider : IDatabaseProvider
                CREATE USER [{username}] FOR LOGIN [{username}];
                ALTER ROLE [db_owner] ADD MEMBER [{username}];";
 
+    public DbConnection GetDbConnection(string connectionString)
+        => new SqlConnection(connectionString);
+
     public void OnConfiguring(DbContextOptionsBuilder optionsBuilder, DbConnection connection)
-    {
-        optionsBuilder.UseSqlServer(connection);
-    }
+        => optionsBuilder.UseSqlServer(connection);
+    
+
+    public void OnConfiguring(DbContextOptionsBuilder optionsBuilder, string connectionString)
+        => optionsBuilder.UseSqlServer(connectionString);
+    
 }

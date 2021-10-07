@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Cida.Api;
 using Microsoft.EntityFrameworkCore;
 using Module.Crunchyroll.Cida.Extensions;
 using Module.Crunchyroll.Libs.Models.Database;
@@ -18,6 +19,7 @@ namespace Module.Crunchyroll.Cida.Services
     public class AnimeSearchCache
     {
         private readonly string connectionString;
+        private readonly IDatabaseProvider databaseProvider;
         private readonly CrunchyrollApiService apiService;
         private const string SearchEndpoint = "https://crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates";
 
@@ -25,9 +27,10 @@ namespace Module.Crunchyroll.Cida.Services
 
         public List<SearchItem> Items { get; set; }
 
-        public AnimeSearchCache(string connectionString, CrunchyrollApiService apiService)
+        public AnimeSearchCache(string connectionString, IDatabaseProvider databaseProvider, CrunchyrollApiService apiService)
         {
             this.connectionString = connectionString;
+            this.databaseProvider = databaseProvider;
             this.apiService = apiService;
             using (var context = this.GetContext())
             {
@@ -36,7 +39,7 @@ namespace Module.Crunchyroll.Cida.Services
             Task.Run(async () => await this.Refresh());
         }
 
-        public CrunchyrollDbContext GetContext() => new CrunchyrollDbContext(this.connectionString);
+        public CrunchyrollDbContext GetContext() => new CrunchyrollDbContext(this.connectionString, this.databaseProvider);
 
         public async Task Refresh()
         {

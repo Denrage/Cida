@@ -9,22 +9,20 @@ namespace Cida.Server.Infrastructure.Database
     public class DatabaseConnector : DatabaseConnectorBase
     {
         private CidaDbConnectionProvider databaseConnectionProvider;
-        private readonly IDatabaseProvidersProvider databaseProvider;
-
+        
         public DatabaseConnector(
             CidaContextBase context, 
             CidaDbConnectionProvider databaseConnectionProvider, 
             GlobalConfigurationService globalConfigurationService,
             IDatabaseProvidersProvider databaseProvider) 
-            : base(context, globalConfigurationService)
+            : base(context, globalConfigurationService, databaseProvider)
         {
             this.databaseConnectionProvider = databaseConnectionProvider;
-            this.databaseProvider = databaseProvider;
         }        
 
         private async Task CreateDatabaseInstanceAsync(Guid moduleId, string password)
         {
-            if (this.databaseProvider.SelectedProvider is null)
+            if (this.DatabaseProvidersProvider.SelectedProvider is null)
             {
                 throw new InvalidOperationException("There is no selected database provider available");
             }
@@ -37,8 +35,9 @@ namespace Cida.Server.Infrastructure.Database
                 await dbConnection.OpenAsync();
                 var transaction = await dbConnection.BeginTransactionAsync();
 
-                var createDbSql = this.databaseProvider.SelectedProvider.CreateDbSql(dbName);
-                var createUserSql = this.databaseProvider.SelectedProvider.CreateUserSql(username, password, dbName); 
+                var createDbSql = this.DatabaseProvidersProvider.SelectedProvider.CreateDbSql(dbName);
+                var createUserSql = this.DatabaseProvidersProvider.SelectedProvider.CreateUserSql(username, password, dbName); 
+                
                 await this.Context.Database.ExecuteSqlRawAsync(createDbSql);
                 await this.Context.Database.ExecuteSqlRawAsync(createUserSql);
                 await transaction.CommitAsync();

@@ -22,7 +22,7 @@ public class Module : API.IModule
     {
         this.connectionString =
             await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
-        this.cache = new AnimeSearchCache(this.connectionString, new CrunchyrollApiService());
+        this.cache = new AnimeSearchCache(this.connectionString, databaseConnector.GetDatabaseProvider(), new CrunchyrollApiService());
         this.GrpcServices = new[] { CrunchyrollService.BindService(new CrunchyRollImplementation(this.cache)), };
         Console.WriteLine("Loaded CR");
     }
