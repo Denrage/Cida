@@ -84,6 +84,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DatabaseProviders", "Databa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.DatabaseProvider.Mssql", "Projects\DatabaseProviders\Cida.DatabaseProvider.Mssql\Cida.DatabaseProvider.Mssql.csproj", "{2CE5AB4F-61CF-407C-9C50-85A916F9BF91}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cida.DatabaseProvider.Mysql", "Projects\DatabaseProviders\Cida.DatabaseProvider.Mysql\Cida.DatabaseProvider.Mysql.csproj", "{2C9B986F-55A8-49D3-A38E-D8901FA4A5D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -159,6 +160,10 @@ Global
 		{2CE5AB4F-61CF-407C-9C50-85A916F9BF91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CE5AB4F-61CF-407C-9C50-85A916F9BF91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CE5AB4F-61CF-407C-9C50-85A916F9BF91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C9B986F-55A8-49D3-A38E-D8901FA4A5D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C9B986F-55A8-49D3-A38E-D8901FA4A5D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C9B986F-55A8-49D3-A38E-D8901FA4A5D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C9B986F-55A8-49D3-A38E-D8901FA4A5D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -191,6 +196,7 @@ Global
 		{2EF96D1C-F107-4D2E-8832-3943A64AEFA8} = {33A1B139-51C7-461E-959D-6C0119F32897}
 		{484C4224-1694-4ACC-AB32-B4429D2E3029} = {2EF96D1C-F107-4D2E-8832-3943A64AEFA8}
 		{2CE5AB4F-61CF-407C-9C50-85A916F9BF91} = {649AF826-0F26-420F-8773-2DC0E64B14CA}
+		{2C9B986F-55A8-49D3-A38E-D8901FA4A5D4} = {649AF826-0F26-420F-8773-2DC0E64B14CA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD4E48FF-111A-4466-A02E-3AA5EFC36655}
