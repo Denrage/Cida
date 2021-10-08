@@ -21,25 +21,20 @@ namespace Module.Crunchyroll.Cida.Services
         private readonly string connectionString;
         private readonly IDatabaseProvider databaseProvider;
         private readonly CrunchyrollApiService apiService;
+        private readonly Func<CrunchyrollDbContext> getContext;
         private const string SearchEndpoint = "https://crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates";
 
         private readonly List<string> ignoreIds = new List<string>();
 
         public List<SearchItem> Items { get; set; }
 
-        public AnimeSearchCache(string connectionString, IDatabaseProvider databaseProvider, CrunchyrollApiService apiService)
+        public AnimeSearchCache(Func<CrunchyrollDbContext> getContext, CrunchyrollApiService apiService)
         {
-            this.connectionString = connectionString;
-            this.databaseProvider = databaseProvider;
             this.apiService = apiService;
-            using (var context = this.GetContext())
-            {
-                context.Database.EnsureCreated();
-            }
+            this.getContext = getContext;
             Task.Run(async () => await this.Refresh());
         }
 
-        public CrunchyrollDbContext GetContext() => new CrunchyrollDbContext(this.connectionString, this.databaseProvider);
 
         public async Task Refresh()
         {
@@ -72,7 +67,7 @@ namespace Module.Crunchyroll.Cida.Services
 
             const int maxSearchResults = 50;
 
-            using var context = this.GetContext();
+            using var context = this.getContext();
             context.ChangeTracker.AutoDetectChangesEnabled = false;
             foreach (var item in ratios
                 .Where(x => x.ratio >= threshold)
@@ -118,7 +113,7 @@ namespace Module.Crunchyroll.Cida.Services
         public async Task<IEnumerable<Episode>> GetEpisodesAsync(string collectionId, CancellationToken cancellationToken = default)
         {
             var result = new List<Episode>();
-            using var context = this.GetContext();
+            using var context = this.getContext();
             context.ChangeTracker.AutoDetectChangesEnabled = false;
 
             var collection = await context.Collections
@@ -153,7 +148,7 @@ namespace Module.Crunchyroll.Cida.Services
         public async Task<IEnumerable<Collection>> GetCollectionsAsync(string seriesId, CancellationToken cancellationToken = default)
         {
             var result = new List<Collection>();
-            using var context = this.GetContext();
+            using var context = this.getContext();
             context.ChangeTracker.AutoDetectChangesEnabled = false;
 
             var series = await context.Animes

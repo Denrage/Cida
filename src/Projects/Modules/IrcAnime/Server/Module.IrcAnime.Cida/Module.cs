@@ -39,6 +39,13 @@ namespace Module.IrcAnime.Cida
             {
                 await context.Database.EnsureCreatedAsync();
             }
+            databaseConnector.OnConnectionChanged += async () =>
+            {
+                using (var context = this.GetContext())
+                {
+                    await context.Database.EnsureCreatedAsync();
+                }
+            };
 
             this.searchService = new SearchService(moduleLogger.CreateSubLogger("Search-Service"));
             this.downloadService = new DownloadService("irc.rizon.net", 6667, this.GetContext, ftpClient, downloadDirectory, moduleLogger);

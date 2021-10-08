@@ -7,33 +7,42 @@ namespace Cida.Server.Infrastructure.Database;
 
 public abstract class DatabaseConnectorBase : IDatabaseConnector
 {
-    protected CidaContextBase Context;
+    public event Action? OnConnectionChanged;
+
+    protected Func<CidaContextBase> GetContext { get; }
     protected GlobalConfigurationService GlobalConfigurationService;
-
     protected IDatabaseProvidersProvider DatabaseProvidersProvider { get; }
+    protected CidaDbConnectionProvider DbConnectionProvider { get; }
 
-    public DatabaseConnectorBase(CidaContextBase context, GlobalConfigurationService globalConfigurationService, IDatabaseProvidersProvider databaseProvidersProvider)
+    public DatabaseConnectorBase(
+        Func<CidaContextBase> getContext, 
+        GlobalConfigurationService globalConfigurationService, 
+        IDatabaseProvidersProvider databaseProvidersProvider,
+        CidaDbConnectionProvider dbConnectionProvider)
     {
-        Context = context;
-        GlobalConfigurationService = globalConfigurationService;
-        DatabaseProvidersProvider = databaseProvidersProvider;
+        this.GetContext = getContext;
+        this.GlobalConfigurationService = globalConfigurationService;
+        this.DatabaseProvidersProvider = databaseProvidersProvider;
+        this.DbConnectionProvider = dbConnectionProvider;
+        this.DbConnectionProvider.ConnectionStringUpdated += OnConnectionChanged;
     }
 
     public async Task<string> GetDatabaseConnectionStringAsync(Guid moduleId, string password)
     {
-        if (Context.Modules is null || Context.Databases is null)
+        using var context = this.GetContext();
+        if (context.Modules is null || context.Databases is null)
         {
             throw new InvalidOperationException("Database is not initialized!");
         }
 
-        var moduleInformation = await Context.Modules.FindAsync(moduleId);
+        var moduleInformation = await context.Modules.FindAsync(moduleId);
 
         if (moduleInformation == null)
         {
             throw new Exception("Module not found");
         }
 
-        var databases = Context.Databases.Where(db => db.Module.ModuleId == moduleId);
+        var databases = context.Databases.Where(db => db.Module.ModuleId == moduleId);
         DatabaseInformation databaseInformation;
 
         if (databases.Count() == 0)
@@ -58,7 +67,8 @@ public abstract class DatabaseConnectorBase : IDatabaseConnector
 
     protected virtual async Task<DatabaseInformation> CreateDatabaseAsync(Guid moduleId, string password, ModuleInformation moduleInformation)
     {
-        if (Context.Databases is null)
+        using var context = this.GetContext();
+        if (context.Databases is null)
         {
             throw new InvalidOperationException("Database is not initialized!");
         }
@@ -69,11 +79,10 @@ public abstract class DatabaseConnectorBase : IDatabaseConnector
             Username = $"ModuleUser_{moduleId:N}",
             Password = password,
             ModuleId = moduleId,
-            Module = moduleInformation,
         };
 
-        await Context.Databases.AddAsync(databaseInformation);
-        await Context.SaveChangesAsync();
+        await context.Databases.AddAsync(databaseInformation);
+        await context.SaveChangesAsync();
         return databaseInformation;
     }
 

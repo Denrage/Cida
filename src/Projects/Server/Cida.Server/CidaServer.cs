@@ -22,7 +22,7 @@ namespace Cida.Server
         private GlobalConfigurationService globalConfigurationService;
         private FtpClient ftpClient;
         private CidaDbConnectionProvider databaseProvider;
-        private CidaContext cidaContext;
+        private Func<CidaContext> getContext;
 
         public CidaServer(string workingDirectory, ISettingsProvider settingsProvider, ILogger logger)
         {
@@ -34,11 +34,20 @@ namespace Cida.Server
             this.databaseProviderLoader = new DatabaseProviderLoader(Path.Combine(workingDirectory, DatabaseProviderLoader.DatabaseProviderFolderName), this.logger, this.globalConfigurationService);
             this.databaseProviderLoader.Load();
             this.databaseProvider = new CidaDbConnectionProvider(this.globalConfigurationService, databaseProviderLoader);
-            this.cidaContext = new CidaContext(this.databaseProvider, this.databaseProviderLoader);
+            this.getContext = () => new CidaContext(this.databaseProvider, this.databaseProviderLoader);
+            this.databaseProvider.ConnectionStringUpdated += () =>
+            {
+                this.logger.Info("Ensure Database");
+                using (var context = this.getContext())
+                {
+                    context.Database.EnsureCreated();
+                }
+                this.logger.Info("Database ensured");
+            };
             this.moduleLoader = new ModuleLoaderManager(
                 Path.Combine(workingDirectory, ModuleLoaderManager.ModuleFolderName),
-                this.grpcManager, this.ftpClient, this.cidaContext,
-                new DatabaseConnector(this.cidaContext, this.databaseProvider, this.globalConfigurationService, this.databaseProviderLoader),
+                this.grpcManager, this.ftpClient, this.getContext,
+                new DatabaseConnector(this.getContext, this.databaseProvider, this.globalConfigurationService, this.databaseProviderLoader),
                 this.logger,
                 this.globalConfigurationService,
                 new ModuleFtpClientFactory(ftpClient),
@@ -58,13 +67,6 @@ namespace Cida.Server
                 this.logger.Info("Saving configuration");
                 this.settingsProvider.Save(this.globalConfigurationService.Configuration);
                 this.logger.Info("Done saving configuration");
-                if (this.globalConfigurationService.ConfigurationManager?.Database?.Connection?.Host != null)
-                {
-                    //TODO: Move this somewhere else
-                    this.logger.Info("Ensure Database");
-                    this.cidaContext.Database.EnsureCreated();
-                    this.logger.Info("Database ensured");
-                }
             };
 
             await this.grpcManager.Start();

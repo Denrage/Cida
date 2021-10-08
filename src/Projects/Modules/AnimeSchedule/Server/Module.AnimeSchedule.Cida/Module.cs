@@ -37,6 +37,14 @@ public class Module : IModule
             await context.Database.EnsureCreatedAsync();
         }
 
+        databaseConnector.OnConnectionChanged += async () =>
+        {
+            using (var context = this.GetContext())
+            {
+                await context.Database.EnsureCreatedAsync();
+            }
+        };
+
         moduleLogger.Log(NLog.LogLevel.Info, "AnimeSchedule loaded successfully");
 
         var ircAnimeClient = new Ircanime.IrcAnimeService.IrcAnimeServiceClient(new Channel("127.0.0.1", 31564, ChannelCredentials.Insecure, new[] { new ChannelOption(ChannelOptions.MaxSendMessageLength, -1), new ChannelOption(ChannelOptions.MaxReceiveMessageLength, -1) }));
