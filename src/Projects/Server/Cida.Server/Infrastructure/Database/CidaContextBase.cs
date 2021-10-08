@@ -1,7 +1,7 @@
-﻿using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+﻿using Cida.Server.Infrastructure.Database.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cida.Server.Infrastructure.Database.BaseClasses.EFC;
+namespace Cida.Server.Infrastructure.Database;
 
 public abstract class CidaContextBase : DbContext
 {
@@ -20,8 +20,8 @@ public abstract class CidaContextBase : DbContext
             moduleInformation.HasKey(x => x.ModuleId);
             moduleInformation.HasOne(x => x.FtpInfomation).WithOne(x => x.Module);
 
-            moduleInformation.Property(x => x.ModuleId).IsRequired().HasComment("Unique ID of a Cida module.");
-            moduleInformation.Property(x => x.ModuleName).IsRequired().HasComment("Name of the module with the given ID.");
+            moduleInformation.Property(x => x.ModuleId).IsRequired();
+            moduleInformation.Property(x => x.ModuleName).IsRequired();
         });
 
         modelBuilder.Entity<FtpInformation>(ftpInformation =>
@@ -29,8 +29,8 @@ public abstract class CidaContextBase : DbContext
             ftpInformation.HasOne(x => x.Module).WithOne(x => x.FtpInfomation).HasForeignKey<FtpInformation>(x => x.ModuleId).IsRequired();
             ftpInformation.HasKey(x => x.ModuleId);
 
-            ftpInformation.Property(x => x.ModuleId).IsRequired().HasComment("Unique ID of a Cida modle.");
-            ftpInformation.Property(x => x.FtpPath).IsRequired().HasComment("Path of the module on FTP-Server");
+            ftpInformation.Property(x => x.ModuleId).IsRequired();
+            ftpInformation.Property(x => x.FtpPath).IsRequired();
         });
 
         modelBuilder.Entity<DatabaseInformation>(databaseInformation =>
@@ -38,9 +38,9 @@ public abstract class CidaContextBase : DbContext
             databaseInformation.HasOne(x => x.Module).WithOne(x => x.DatabaseInformation).HasForeignKey<DatabaseInformation>(x => x.ModuleId).IsRequired();
             databaseInformation.HasKey(x => x.ModuleId);
 
-            databaseInformation.Property(x => x.DatabaseName).HasComment("Database name for login.");
-            databaseInformation.Property(x => x.Username).HasComment("Username used for login to the given database.");
-            databaseInformation.Property(x => x.Password).HasComment("Password used for login to the given database.");
+            databaseInformation.Property(x => x.DatabaseName);
+            databaseInformation.Property(x => x.Username);
+            databaseInformation.Property(x => x.Password);
         });
     }
 }

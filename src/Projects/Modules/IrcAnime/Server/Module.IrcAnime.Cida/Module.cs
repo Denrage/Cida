@@ -1,4 +1,5 @@
-﻿using Cida.Api.Models.Filesystem;
+﻿using Cida.Api;
+using Cida.Api.Models.Filesystem;
 using Google.Protobuf;
 using Grpc.Core;
 using Ircanime;
@@ -16,6 +17,7 @@ namespace Module.IrcAnime.Cida
 
         private const string Id = "109F8F54-DE94-479A-840A-7B4EF0F284D2";
         private string connectionString;
+        private IDatabaseProvider databaseProvider;
         private SearchService searchService;
         private DownloadService downloadService;
         private API.Models.Filesystem.Directory moduleDirectory;
@@ -28,6 +30,8 @@ namespace Module.IrcAnime.Cida
             this.connectionString =
                 await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
 
+            this.databaseProvider = databaseConnector.GetDatabaseProvider();
+
             this.moduleDirectory = moduleDirectory;
             this.downloadDirectory = new API.Models.Filesystem.Directory("Files", moduleDirectory);
 
@@ -35,6 +39,13 @@ namespace Module.IrcAnime.Cida
             {
                 await context.Database.EnsureCreatedAsync();
             }
+            databaseConnector.OnConnectionChanged += async () =>
+            {
+                using (var context = this.GetContext())
+                {
+                    await context.Database.EnsureCreatedAsync();
+                }
+            };
 
             this.searchService = new SearchService(moduleLogger.CreateSubLogger("Search-Service"));
             this.downloadService = new DownloadService("irc.rizon.net", 6667, this.GetContext, ftpClient, downloadDirectory, moduleLogger);
@@ -44,7 +55,7 @@ namespace Module.IrcAnime.Cida
             moduleLogger.Log(NLog.LogLevel.Info, "IrcAnime loaded successfully");
         }
 
-        private IrcAnimeDbContext GetContext() => new IrcAnimeDbContext(this.connectionString);
+        private IrcAnimeDbContext GetContext() => new IrcAnimeDbContext(this.connectionString, this.databaseProvider);
 
         public class IrcAnimeImplementation : IrcAnimeService.IrcAnimeServiceBase
         {

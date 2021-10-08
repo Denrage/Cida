@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data.SqlClient;
 
 namespace Cida.Server.Infrastructure.Database.Extensions
 {
@@ -24,7 +24,7 @@ namespace Cida.Server.Infrastructure.Database.Extensions
                 DataSource = connectionSettings.Connection.Host,
                 InitialCatalog = connectionSettings.DatabaseName,
                 UserID = connectionSettings.Connection.Username,
-                Password = connectionSettings.Connection.Password
+                Password = connectionSettings.Connection.Password,
             };
 
             return connectionStringBuilder.ToString();

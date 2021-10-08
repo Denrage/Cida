@@ -40,7 +40,7 @@ public class ScheduleService
     {
         using var context = this.getContext();
 
-        var schedules = await AsyncEnumerable.Select(context.Schedules, x => x.Id).ToArrayAsync(cancellationToken);
+        var schedules = await context.Schedules.Select(x => x.Id).ToArrayAsync(cancellationToken);
         foreach (var schedule in schedules)
         {
             await this.StartSchedule(schedule);

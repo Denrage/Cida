@@ -14,15 +14,29 @@ public class Module : API.IModule
     // Hack: Remove this asap
     private const string DatabasePassword = "Crunchyroll";
     private const string Id = "6640177C-1D1E-49D4-BA57-4A770F18AA7E";
-    private string connectionString;
     private AnimeSearchCache cache;
     public IEnumerable<ServerServiceDefinition> GrpcServices { get; private set; } = Array.Empty<ServerServiceDefinition>();
 
     public async Task Load(API.IDatabaseConnector databaseConnector, API.IFtpClient ftpClient, API.Models.Filesystem.Directory moduleDirectory, API.IModuleLogger moduleLogger)
     {
-        this.connectionString =
+        var connectionString =
             await databaseConnector.GetDatabaseConnectionStringAsync(Guid.Parse(Id), DatabasePassword);
-        this.cache = new AnimeSearchCache(this.connectionString, new CrunchyrollApiService());
+        var databaseProvider = databaseConnector.GetDatabaseProvider();
+        var getContext = () => new CrunchyrollDbContext(connectionString, databaseProvider);
+        
+        using (var context = getContext())
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
+        databaseConnector.OnConnectionChanged += async () =>
+        {
+            using (var context = getContext())
+            {
+                await context.Database.EnsureCreatedAsync();
+            }
+        };
+
+        this.cache = new AnimeSearchCache(getContext, new CrunchyrollApiService());
         this.GrpcServices = new[] { CrunchyrollService.BindService(new CrunchyRollImplementation(this.cache)), };
         Console.WriteLine("Loaded CR");
     }

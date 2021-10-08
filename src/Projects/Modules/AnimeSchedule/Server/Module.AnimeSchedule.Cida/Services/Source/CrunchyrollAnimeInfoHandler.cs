@@ -121,7 +121,7 @@ public class CrunchyrollAnimeInfoHandler : AnimeInfoHandlerBase
                     {
                         using (var context = this.GetContext())
                         {
-                            var lastEpisode = await AsyncEnumerable.OrderByDescending(context.Episodes, x => x.EpisodeNumber).FirstOrDefaultAsync(cancellationToken);
+                            var lastEpisode = await context.Episodes.OrderByDescending(x => x.EpisodeNumber).FirstOrDefaultAsync(cancellationToken);
                             episodeNumber = (lastEpisode?.EpisodeNumber ?? 0) + 0.5;
                         }
                     }

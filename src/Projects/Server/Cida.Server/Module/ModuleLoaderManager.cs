@@ -9,8 +9,8 @@ using Cida.Api;
 using Cida.Server.Api;
 using Cida.Server.Extensions;
 using Cida.Server.Infrastructure;
-using Cida.Server.Infrastructure.Database.EFC;
-using Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+using Cida.Server.Infrastructure.Database;
+using Cida.Server.Infrastructure.Database.Models;
 using Cida.Server.Interfaces;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +28,7 @@ namespace Cida.Server.Module
         private readonly IEnumerable<string> unpackedModuleDirectories;
         private readonly IGrpcRegistrar grpcRegistrar;
         private readonly Infrastructure.IFtpClient ftpClient;
-        private readonly CidaContext databaseContext;
+        private readonly Func<CidaContext> getDatabaseContext;
         private readonly IDatabaseConnector databaseConnector;
         private readonly ILogger logger;
         private readonly GlobalConfigurationService globalConfigurationService;
@@ -44,7 +44,7 @@ namespace Cida.Server.Module
             string moduleDirectory,
             IGrpcRegistrar grpcRegistrar,
             Infrastructure.IFtpClient ftpClient,
-            CidaContext databaseContext,
+            Func<CidaContext> getDatabaseContext,
             IDatabaseConnector databaseConnector,
             ILogger logger,
             GlobalConfigurationService globalConfigurationService,
@@ -56,7 +56,7 @@ namespace Cida.Server.Module
             this.unpackedModuleDirectories = unpackedModuleDirectories ?? Array.Empty<string>();
             this.grpcRegistrar = grpcRegistrar;
             this.ftpClient = ftpClient;
-            this.databaseContext = databaseContext;
+            this.getDatabaseContext = getDatabaseContext;
             this.databaseConnector = databaseConnector;
             this.logger = logger;
             this.globalConfigurationService = globalConfigurationService;
@@ -78,16 +78,19 @@ namespace Cida.Server.Module
             try
             {
                 module = CidaModule.Unpacked(unpackedModule);
-                if (!await this.databaseContext.Modules
-                    .AnyAsync(x => x.ModuleId == module.Metadata.Id))
+                using (var context = this.getDatabaseContext())
                 {
-                    await this.databaseContext.Modules.AddAsync(new ModuleInformation()
+                    if (!await context.Modules
+                        .AnyAsync(x => x.ModuleId == module.Metadata.Id))
                     {
-                        ModuleId = module.Metadata.Id,
-                        ModuleName = module.Metadata.Name,
-                    });
+                        await context.Modules.AddAsync(new ModuleInformation()
+                        {
+                            ModuleId = module.Metadata.Id,
+                            ModuleName = module.Metadata.Name,
+                        });
 
-                    await this.databaseContext.SaveChangesAsync();
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -113,16 +116,19 @@ namespace Cida.Server.Module
             try
             {
                 module = CidaModule.Extract(bytes.ToArray());
-                if (!await this.databaseContext.Modules
-                    .AnyAsync(x => x.ModuleId == module.Metadata.Id))
+                using (var context = this.getDatabaseContext())
                 {
-                    await this.databaseContext.Modules.AddAsync(new ModuleInformation()
+                    if (!await context.Modules
+                        .AnyAsync(x => x.ModuleId == module.Metadata.Id))
                     {
-                        ModuleId = module.Metadata.Id,
-                        ModuleName = module.Metadata.Name,
-                    });
+                        await context.Modules.AddAsync(new ModuleInformation()
+                        {
+                            ModuleId = module.Metadata.Id,
+                            ModuleName = module.Metadata.Name,
+                        });
 
-                    await this.databaseContext.SaveChangesAsync();
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -147,16 +153,19 @@ namespace Cida.Server.Module
             try
             {
                 module = CidaModule.Extract(file);
-                if (!await this.databaseContext.Modules
-                    .AnyAsync(x => x.ModuleId == module.Metadata.Id))
+                using (var context = this.getDatabaseContext())
                 {
-                    await this.databaseContext.Modules.AddAsync(new ModuleInformation()
+                    if (!await context.Modules
+                        .AnyAsync(x => x.ModuleId == module.Metadata.Id))
                     {
-                        ModuleId = module.Metadata.Id,
-                        ModuleName = module.Metadata.Name,
-                    });
+                        await context.Modules.AddAsync(new ModuleInformation()
+                        {
+                            ModuleId = module.Metadata.Id,
+                            ModuleName = module.Metadata.Name,
+                        });
 
-                    await this.databaseContext.SaveChangesAsync();
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -224,7 +233,10 @@ namespace Cida.Server.Module
             this.logger.Info("Loading Database modules");
             var services = new List<ServerServiceDefinition>();
             // TODO: Save locally
-            var modulePaths = await this.databaseContext.FtpPaths.ToArrayAsync(cancellationToken);
+
+            using var context = this.getDatabaseContext();
+
+            var modulePaths = await context.FtpPaths.ToArrayAsync(cancellationToken);
             foreach (var path in modulePaths.Where(x => !this.Modules.Contains(x.ModuleId)).Select(x => x.FtpPath))
             {
                 using var requestedFile = new Cida.Api.Models.Filesystem.File(Path.GetFileName(path), this.ModuleDirectory, null);
@@ -254,7 +266,8 @@ namespace Cida.Server.Module
         {
             this.logger.Info("Upload modules");
             // TODO: Move this to somewhere where it gets called everytime a module gets loaded
-            var modulesInDatabase = await this.databaseContext.FtpPaths.ToArrayAsync(cancellationToken);
+            using var context = this.getDatabaseContext();
+            var modulesInDatabase = await context.FtpPaths.ToArrayAsync(cancellationToken);
             var notUploaded = this.modules.Where(module =>
                     modulesInDatabase.FirstOrDefault(x =>
                         Path.GetFileNameWithoutExtension(x.FtpPath) == module.Value.Metadata.IdToString()) ==
@@ -275,13 +288,13 @@ namespace Cida.Server.Module
                     using var file = new Cida.Api.Models.Filesystem.File($"{module.Value.Metadata.IdToString()}.{ModuleFileExtension}", this.ModuleDirectory, getStream);
                     await this.ftpClient.SaveFileAsync(file, cancellationToken);
 
-                    await this.databaseContext.FtpPaths.AddAsync(new FtpInformation()
+                    await context.FtpPaths.AddAsync(new FtpInformation()
                     {
                         FtpPath = file.FullPath("/"),
                         ModuleId = module.Value.Metadata.Id,
                     }, cancellationToken);
 
-                    await this.databaseContext.SaveChangesAsync(cancellationToken);
+                    await context.SaveChangesAsync(cancellationToken);
                 }
                 catch (Exception ex)
                 {

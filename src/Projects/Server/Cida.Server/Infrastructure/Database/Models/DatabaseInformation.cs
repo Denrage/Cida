@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Cida.Server.Infrastructure.Database.Models.DatabaseModels;
+﻿namespace Cida.Server.Infrastructure.Database.Models;
 
 public class DatabaseInformation
 {
