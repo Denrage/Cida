@@ -30,7 +30,7 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.7" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.7" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="*" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.7" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.7" />
     <PackageReference Include="Google.Protobuf" Version="3.17.3" />
     <PackageReference Include="Grpc" Version="2.40.0" />

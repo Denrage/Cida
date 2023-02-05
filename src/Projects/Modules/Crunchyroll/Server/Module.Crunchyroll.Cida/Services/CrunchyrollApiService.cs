@@ -47,7 +47,7 @@ public class CrunchyrollApiService
     {
         const string detailCollectionsUrlPart = "info.0.json";
 
-        var request = new RestRequest(detailCollectionsUrlPart, Method.GET);
+        var request = new RestRequest(detailCollectionsUrlPart, Method.Get);
         request.AddParameter("collection_id", collectionId);
         request.AddParameter("limit", int.MaxValue);
 
@@ -58,7 +58,7 @@ public class CrunchyrollApiService
     {
         const string listCollectionsUrlPart = "list_collections.0.json";
 
-        var request = new RestRequest(listCollectionsUrlPart, Method.GET);
+        var request = new RestRequest(listCollectionsUrlPart, Method.Get);
         request.AddParameter("series_id", seriesId);
         request.AddParameter("limit", int.MaxValue);
 
@@ -110,7 +110,7 @@ public class CrunchyrollApiService
     {
         const string infoApiCommand = "info.0.json";
 
-        var request = new RestRequest(infoApiCommand, Method.GET);
+        var request = new RestRequest(infoApiCommand, Method.Get);
         request.AddParameter("series_id", seriesId);
         return await this.ExecuteRequestAsync<Libs.Models.Details.Details>(request, cancellationToken);
     }
@@ -134,7 +134,7 @@ public class CrunchyrollApiService
     {
         const string listMediaUrlPart = "list_media.0.json";
 
-        var request = new RestRequest(listMediaUrlPart, Method.GET);
+        var request = new RestRequest(listMediaUrlPart, Method.Get);
         request.AddParameter("collection_id", collectionId);
         request.AddParameter("limit", int.MaxValue);
 
@@ -145,7 +145,7 @@ public class CrunchyrollApiService
     public async Task<Libs.Models.Episode.Stream> GetStreamUrl(string mediaId, string language, CancellationToken cancellationToken = default)
     {
         const string infoApiCommand = "info.0.json";
-        var request = new RestRequest(infoApiCommand, Method.GET);
+        var request = new RestRequest(infoApiCommand, Method.Get);
         request.AddParameter("media_id", mediaId);
         request.AddParameter("fields", "media.stream_data");
         request.AddParameter("locale", language);
