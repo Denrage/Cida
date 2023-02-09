@@ -129,7 +129,6 @@ public class CrunchyrollApiService
         return null;
     }
 
-
     public async Task<IEnumerable<Episode>> GetEpisodes(string collectionId, CancellationToken cancellationToken = default)
     {
         const string listMediaUrlPart = "list_media.0.json";
