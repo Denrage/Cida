@@ -29,7 +29,7 @@ namespace Module.Crunchyroll.Cida.Services.Sessions
 
         protected override RestRequest GenerateRestRequest()
         {
-            var request = new RestRequest(CrunchyrollApiCommand, Method.GET);
+            var request = new RestRequest(CrunchyrollApiCommand, Method.Get);
             request.AddParameter("api_ver", "1.0");
             request.AddParameter("device_type", this.deviceType);
             request.AddParameter("access_token", this.accessToken);

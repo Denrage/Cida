@@ -20,7 +20,7 @@ namespace Module.Crunchyroll.Cida.Services.Sessions
 
         protected override RestRequest GenerateRestRequest()
         {
-            var request = new RestRequest(this.command, Method.GET);
+            var request = new RestRequest(this.command, Method.Get);
             request.AddParameter("version", "1.1");
             // Maybe user_id
             return request;
